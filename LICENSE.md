@@ -9,12 +9,11 @@ Parameters
 
 Licensor:             	SmartContract Chainlink Limited SEZC
 
-Licensed Work:     	Many Chain Multisig System
-The Licensed Work is (c) 2024 SmartContract Chainlink Limited SEZC
+Licensed Work:     	    CRE SDK (Go) The Licensed Work is (c) 2024 SmartContract Chainlink Limited SEZC
 
 Additional Use Grant:	Any uses listed and defined in this repository
 
-Change Date:       	January 28, 2029
+Change Date:       	    May 20, 2029
 
 Change License:     	MIT
 
