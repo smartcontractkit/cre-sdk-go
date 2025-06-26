@@ -225,7 +225,7 @@ var File_capabilities_networking_http_v1alpha_trigger_proto protoreflect.FileDes
 
 const file_capabilities_networking_http_v1alpha_trigger_proto_rawDesc = "" +
 	"\n" +
-	"2capabilities/networking/http/v1alpha/trigger.proto\x12$capabilities.networking.http.v1alpha\x1a*tools/generator/v1alpha/cre_metadata.proto\x1a\x1cgoogle/protobuf/struct.proto\"f\n" +
+	"2capabilities/networking/http/v1alpha/trigger.proto\x12$capabilities.networking.http.v1alpha\x1a\x1cgoogle/protobuf/struct.proto\x1a*tools/generator/v1alpha/cre_metadata.proto\"f\n" +
 	"\x06Config\x12\\\n" +
 	"\x0fauthorized_keys\x18\x01 \x03(\v23.capabilities.networking.http.v1alpha.AuthorizedKeyR\x0eauthorizedKeys\"\x7f\n" +
 	"\aPayload\x12-\n" +

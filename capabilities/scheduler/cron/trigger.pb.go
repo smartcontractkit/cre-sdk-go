@@ -160,7 +160,7 @@ var File_capabilities_scheduler_cron_v1_trigger_proto protoreflect.FileDescripto
 
 const file_capabilities_scheduler_cron_v1_trigger_proto_rawDesc = "" +
 	"\n" +
-	",capabilities/scheduler/cron/v1/trigger.proto\x12\x1ecapabilities.scheduler.cron.v1\x1a*tools/generator/v1alpha/cre_metadata.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"$\n" +
+	",capabilities/scheduler/cron/v1/trigger.proto\x12\x1ecapabilities.scheduler.cron.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a*tools/generator/v1alpha/cre_metadata.proto\"$\n" +
 	"\x06Config\x12\x1a\n" +
 	"\bschedule\x18\x01 \x01(\tR\bschedule\"_\n" +
 	"\aPayload\x12T\n" +

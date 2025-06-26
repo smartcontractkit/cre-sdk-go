@@ -1,6 +1,10 @@
 package main
 
-import "github.com/smartcontractkit/cre-sdk-go/generator/protos"
+import (
+	"os"
+
+	"github.com/smartcontractkit/cre-sdk-go/generator/protos"
+)
 
 func main() {
 	internalProtos := []*protos.CapabilityConfig{
@@ -17,6 +21,9 @@ func main() {
 
 	for _, proto := range internalProtos {
 		internalProtosToDir[proto.Pkg] = proto
+		if err := os.MkdirAll(proto.Pkg, os.ModePerm); err != nil {
+			panic(err)
+		}
 	}
 
 	if err := protos.GenerateMany(internalProtosToDir); err != nil {
