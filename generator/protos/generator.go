@@ -42,9 +42,9 @@ func Generate(config *CapabilityConfig) error {
 		}
 	}
 
-	/*if err := os.RemoveAll("capabilities"); err != nil {
+	if err := os.RemoveAll("capabilities"); err != nil {
 		return fmt.Errorf("failed to remove capabilities directory %w", err)
-	}*/
+	}
 
 	return nil
 }
