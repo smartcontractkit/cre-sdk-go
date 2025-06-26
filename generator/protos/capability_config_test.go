@@ -44,19 +44,38 @@ func TestFullGoPackageName(t *testing.T) {
 }
 
 func TestFullProtoFiles(t *testing.T) {
-	config := &protos.CapabilityConfig{
-		Category:     "data",
-		Pkg:          "analytics",
-		MajorVersion: 2,
-		Files:        []string{"query.proto", "response.proto"},
-	}
+	t.Run("Production version", func(t *testing.T) {
+		config := &protos.CapabilityConfig{
+			Category:     "data",
+			Pkg:          "analytics",
+			MajorVersion: 2,
+			Files:        []string{"query.proto", "response.proto"},
+		}
 
-	expected := []string{
-		filepath.Join("capabilities", "data", "analytics", "v2", "query.proto"),
-		filepath.Join("capabilities", "data", "analytics", "v2", "response.proto"),
-	}
+		expected := []string{
+			filepath.Join("capabilities", "data", "analytics", "v2", "query.proto"),
+			filepath.Join("capabilities", "data", "analytics", "v2", "response.proto"),
+		}
 
-	assert.Equal(t, expected, config.FullProtoFiles())
+		assert.Equal(t, expected, config.FullProtoFiles())
+	})
+
+	t.Run("Prerelease version", func(t *testing.T) {
+		config := &protos.CapabilityConfig{
+			Category:      "data",
+			Pkg:           "analytics",
+			MajorVersion:  2,
+			Files:         []string{"query.proto", "response.proto"},
+			PreReleaseTag: "alpha",
+		}
+
+		expected := []string{
+			filepath.Join("capabilities", "data", "analytics", "v2alpha", "query.proto"),
+			filepath.Join("capabilities", "data", "analytics", "v2alpha", "response.proto"),
+		}
+
+		assert.Equal(t, expected, config.FullProtoFiles())
+	})
 }
 
 func TestCapabilityConfig_Validate(t *testing.T) {
