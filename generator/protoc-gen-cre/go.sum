@@ -6,8 +6,6 @@ github.com/smartcontractkit/chainlink-common v0.7.1-0.20250626104054-ed255ff3857
 github.com/smartcontractkit/chainlink-common v0.7.1-0.20250626104054-ed255ff38577/go.mod h1:plVu/MNDcoGbX++P0Dhv8gTtpafG98HqG6BfNj+dfE0=
 github.com/smartcontractkit/chainlink-common/pkg/values v0.0.0-20250626104054-ed255ff38577 h1:UtQvZywuJ5w8l5Sfy1I1i+xMdBvV1nruuATnU7gCfME=
 github.com/smartcontractkit/chainlink-common/pkg/values v0.0.0-20250626104054-ed255ff38577/go.mod h1:QUEPHdSkH19Or+E1iMGG+rDQ6jpCTIbm//9Osa6MXDE=
-github.com/smartcontractkit/cre-sdk-go v0.0.0-20250626082839-98ce2f3d3ae0 h1:t+xzOAZiapioQyZfvRBfske9Ke04Ylc8Vo/imZdUs98=
-github.com/smartcontractkit/cre-sdk-go v0.0.0-20250626082839-98ce2f3d3ae0/go.mod h1:/Vj4mcvy0SO6baLEjZ1K5lNYWM5fyvT3LG6i6gwAUmk=
 golang.org/x/mod v0.24.0 h1:ZfthKaKaT4NrhGVZHO1/WDTwGES4De8KtWO0SIbNJMU=
 golang.org/x/mod v0.24.0/go.mod h1:IXM97Txy2VM4PJ3gI61r1YEk/gAj6zAHN3AdZt6S9Ww=
 golang.org/x/sync v0.12.0 h1:MHc5BpPuC30uJk597Ri8TV3CNZcTLu6B6z4lJy+g6Jw=
