@@ -78,22 +78,19 @@ func installProtocGen() error {
 	if err != nil {
 		return fmt.Errorf("failed to get module version: %w\nOutput: %s", err, out)
 	}
-
 	version := strings.TrimSpace(string(out))
 
-	cmd = exec.Command("go", "install", "github.com/smartcontractkit/cre-sdk-go/generator/protoc-gen-cre@"+version)
-	cmd.Env = append(os.Environ(), "GOBIN=./.tools")
+	if err := os.MkdirAll(".tools", os.ModePerm); err != nil {
+		return fmt.Errorf("failed to create tools directory: %w", err)
+	}
+
+	binPath := ".tools/protoc-gen-cre"
+	cmd = exec.Command("go", "build", "-o", binPath, "github.com/smartcontractkit/cre-sdk-go/generator/protoc-gen-cre@"+version)
+	cmd.Env = os.Environ()
 	out, err = cmd.CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("failed to build protoc-gen-cre: %w\nOutput: %s", err, out)
 	}
 
-	if err = os.MkdirAll(".tools", os.ModePerm); err != nil {
-		return fmt.Errorf("failed to create tools directory: %w", err)
-	}
-
-	if err = os.Rename(cmd.Dir+"/protoc-gen-cre", ".tools/protoc-gen-cre"); err != nil {
-		return fmt.Errorf("failed to move protoc-gen-cre: %w", err)
-	}
 	return nil
 }
