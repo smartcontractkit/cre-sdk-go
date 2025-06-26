@@ -2,6 +2,8 @@ package main
 
 import (
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/smartcontractkit/cre-sdk-go/generator/protos"
 )
@@ -62,8 +64,15 @@ func main() {
 	internalProtosToDir := map[string]*protos.CapabilityConfig{}
 
 	for _, proto := range internalProtos {
-		internalProtosToDir[proto.Pkg] = proto
-		if err := os.MkdirAll(proto.Pkg, os.ModePerm); err != nil {
+		key := proto.Pkg
+		categoryParts := strings.Split(proto.Category, string(filepath.Separator))
+		if len(categoryParts) > 1 {
+			prefix := filepath.Join(categoryParts[1:]...)
+			key = filepath.Join(prefix, key)
+		}
+
+		internalProtosToDir[key] = proto
+		if err := os.MkdirAll(key, os.ModePerm); err != nil {
 			panic(err)
 		}
 	}
