@@ -39,6 +39,24 @@ func main() {
 			MajorVersion: 1,
 			Files:        []string{"node_action.proto"},
 		},
+		{
+			Category:     "internal",
+			Pkg:          "importclash",
+			MajorVersion: 1,
+			Files:        []string{"clash.proto"},
+		},
+		{
+			Category:     "internal/importclash",
+			Pkg:          "p1",
+			MajorVersion: 1,
+			Files:        []string{"import.proto"},
+		},
+		{
+			Category:     "internal/importclash",
+			Pkg:          "p2",
+			MajorVersion: 1,
+			Files:        []string{"import.proto"},
+		},
 	}
 
 	internalProtosToDir := map[string]*protos.CapabilityConfig{}

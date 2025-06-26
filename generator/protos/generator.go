@@ -45,9 +45,9 @@ func GenerateMany(dirToConfig map[string]*CapabilityConfig) error {
 	}
 
 	for from, config := range dirToConfig {
-		for i, file := range config.FullProtoFiles() {
+		for _, file := range config.FullProtoFiles() {
 			file = strings.Replace(file, ".proto", ".pb.go", 1)
-			to := strings.Replace(config.Files[i], ".proto", ".pb.go", 1)
+			to := ExtractRelativePath(file)
 			if err := os.Rename(path.Join(from, file), path.Join(from, to)); err != nil {
 				return fmt.Errorf("failed to move generated file %s: %w", file, err)
 			}
@@ -59,6 +59,20 @@ func GenerateMany(dirToConfig map[string]*CapabilityConfig) error {
 	}
 
 	return nil
+}
+
+func ExtractRelativePath(path string) string {
+	// The first three are capabilities/<category>/<pkg> that we remove to get the proto in the right place
+	// We also remove the version at the end because the package we're generating in will already have it
+
+	sep := string(filepath.Separator)
+	parts := strings.Split(path, sep)
+
+	dirParts := parts[3 : len(parts)-2]
+	filename := parts[len(parts)-1]
+	relParts := append(dirParts, filename)
+
+	return filepath.Join(relParts...)
 }
 
 func createGenerator() *pkg.ProtocGen {
