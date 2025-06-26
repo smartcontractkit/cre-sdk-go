@@ -24,6 +24,19 @@ func TestRegisterCapability(t *testing.T) {
 	assert.Contains(t, err.Error(), "capability already exists:")
 }
 
+func TestForceRegisterCapability(t *testing.T) {
+	r := registry.GetRegistry(t)
+	c1 := &basictriggermock.BasicCapability{}
+	c2 := &basictriggermock.BasicCapability{}
+
+	r.ForceRegisterCapability(c1)
+	r.ForceRegisterCapability(c2)
+
+	actual, err := r.GetCapability(c1.ID())
+	require.NoError(t, err)
+	assert.Equal(t, c2, actual)
+}
+
 func TestGetCapability(t *testing.T) {
 	r := registry.GetRegistry(t)
 	c1 := &basictriggermock.BasicCapability{}

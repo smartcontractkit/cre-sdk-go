@@ -37,8 +37,9 @@ func (r *Registry) RegisterCapability(c Capability) error {
 	defer r.lock.Unlock()
 	_, ok := r.capabilities[c.ID()]
 	if ok {
-		return errors.New("Capability" + c.ID() + " already exists")
+		return errors.New("capability already exists: " + c.ID())
 	}
+	r.capabilities[c.ID()] = c
 	return nil
 }
 

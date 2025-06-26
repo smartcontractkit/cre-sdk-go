@@ -1,6 +1,5 @@
 package testutils
 
-/*
 import (
 	"context"
 	"errors"
@@ -8,8 +7,8 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/smartcontractkit/chainlink-common/pkg/capabilities/v2/consensus/consensusmock"
 	valuespb "github.com/smartcontractkit/chainlink-common/pkg/values/pb"
+	"github.com/smartcontractkit/cre-sdk-go/internal/capabilities/consensus/mock"
 	"github.com/smartcontractkit/cre-sdk-go/internal/sdkimpl"
 	"github.com/smartcontractkit/cre-sdk-go/sdk"
 	"github.com/smartcontractkit/cre-sdk-go/sdk/pb"
@@ -147,4 +146,3 @@ func (rh *runtimeHelpers) AwaitSecrets(req *pb.AwaitSecretsRequest, _ uint64) (*
 }
 
 func (rh *runtimeHelpers) SwitchModes(_ pb.Mode) {}
-*/

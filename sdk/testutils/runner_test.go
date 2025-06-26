@@ -1,25 +1,23 @@
 package testutils_test
 
-/*
 import (
 	"context"
 	"errors"
 	"strings"
 	"testing"
 
-	"github.com/smartcontractkit/chainlink-common/pkg/workflows/testhelpers/v2"
+	"github.com/smartcontractkit/cre-sdk-go/sdk/testutils"
 	"google.golang.org/protobuf/proto"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/smartcontractkit/cre-sdk-go/internal/capabilitiesactionandtrigger"
-	actionandtriggermock "github.com/smartcontractkit/cre-sdk-go/internal/capabilitiesactionandtrigger/action_and_triggermock"
-	"github.com/smartcontractkit/cre-sdk-go/internal/capabilitiesbasictrigger"
-	basictriggermock "github.com/smartcontractkit/cre-sdk-go/internal/capabilitiesbasictrigger/basic_triggermock"
+	"github.com/smartcontractkit/cre-sdk-go/internal/capabilities/actionandtrigger"
+	"github.com/smartcontractkit/cre-sdk-go/internal/capabilities/actionandtrigger/mock"
+	"github.com/smartcontractkit/cre-sdk-go/internal/capabilities/basictrigger"
+	basictriggermock "github.com/smartcontractkit/cre-sdk-go/internal/capabilities/basictrigger/mock"
 	"github.com/smartcontractkit/cre-sdk-go/sdk"
 	"github.com/smartcontractkit/cre-sdk-go/sdk/pb"
-	"github.com/smartcontractkit/cre-sdk-go/sdk/testutils"
 )
 
 func TestRunner_TriggerFires(t *testing.T) {
@@ -486,16 +484,17 @@ func TestRunner_ReturnsTriggerErrorsWithoutRunningTheWorkflow(t *testing.T) {
 }
 
 func TestRunner_FullWorkflow(t *testing.T) {
-	testhelpers.SetupExpectedCalls(t)
+	// TODO: rtinianov NOW
+	/*testutils.SetupExpectedCalls(t)
 	runner := testutils.NewRunner(t, "unused")
-	testhelpers.RunTestWorkflow(runner)
+	testutils.RunTestWorkflow(runner)
 	ran, result, err := runner.Result()
 	require.NoError(t, err)
 	assert.True(t, ran)
-	assert.Equal(t, testhelpers.TestWorkflowExpectedResult(), result)
+	assert.Equal(t, testutils.TestWorkflowExpectedResult(), result)
 	logs := runner.Logs()
 	require.Len(t, logs, 1)
-	assert.True(t, strings.Contains(logs[0], "Hi"))
+	assert.True(t, strings.Contains(logs[0], "Hi"))*/
 }
 
 func runWorkflows(runner sdk.Runner[string], workflows sdk.Workflow[string]) {
@@ -503,4 +502,3 @@ func runWorkflows(runner sdk.Runner[string], workflows sdk.Workflow[string]) {
 		return workflows, nil
 	})
 }
-*/

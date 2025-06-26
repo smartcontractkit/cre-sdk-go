@@ -1,25 +1,23 @@
 package testutils_test
 
-/*
 import (
 	"context"
 	"errors"
 	"strings"
 	"testing"
 
-	basicactionmock "github.com/smartcontractkit/cre-sdk-go/internal/capabilitiesbasicaction/basic_actionmock"
-	"google.golang.org/protobuf/proto"
-
+	basicactionmock "github.com/smartcontractkit/cre-sdk-go/internal/capabilities/basicaction/mock"
+	"github.com/smartcontractkit/cre-sdk-go/sdk/testutils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/proto"
 
-	"github.com/smartcontractkit/cre-sdk-go/internal/capabilitiesbasicaction"
-	"github.com/smartcontractkit/cre-sdk-go/internal/capabilitiesbasictrigger"
-	basictriggermock "github.com/smartcontractkit/cre-sdk-go/internal/capabilitiesbasictrigger/basic_triggermock"
-	"github.com/smartcontractkit/cre-sdk-go/internal/capabilitiesnodeaction"
-	nodeactionmock "github.com/smartcontractkit/cre-sdk-go/internal/capabilitiesnodeaction/node_actionmock"
+	"github.com/smartcontractkit/cre-sdk-go/internal/capabilities/basicaction"
+	"github.com/smartcontractkit/cre-sdk-go/internal/capabilities/basictrigger"
+	"github.com/smartcontractkit/cre-sdk-go/internal/capabilities/basictrigger/mock"
+	"github.com/smartcontractkit/cre-sdk-go/internal/capabilities/nodeaction"
+	"github.com/smartcontractkit/cre-sdk-go/internal/capabilities/nodeaction/mock"
 	"github.com/smartcontractkit/cre-sdk-go/sdk"
-	"github.com/smartcontractkit/cre-sdk-go/sdk/testutils"
 )
 
 func TestRuntime_CallCapability(t *testing.T) {
@@ -210,4 +208,3 @@ func TestRuntime_ConsensusReturnsErrors(t *testing.T) {
 	_, _, err = runner.Result()
 	require.Equal(t, err, anyErr)
 }
-*/
