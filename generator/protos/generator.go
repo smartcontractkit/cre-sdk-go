@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/smartcontractkit/chainlink-common/pkg/values/installer/pkg"
@@ -17,11 +18,11 @@ func Generate(config *CapabilityConfig) error {
 }
 
 func GenerateMany(dirToConfig map[string]*CapabilityConfig) error {
-	protocDir, err := installProtocGen()
-	if err != nil {
+	if err := installProtocGen(); err != nil {
 		return err
 	}
-	gen := createGenerator(protocDir)
+
+	gen := createGenerator()
 
 	fileToFrom := map[string]string{}
 	for from, config := range dirToConfig {
@@ -60,8 +61,8 @@ func GenerateMany(dirToConfig map[string]*CapabilityConfig) error {
 	return nil
 }
 
-func createGenerator(protocDir string) *pkg.ProtocGen {
-	gen := &pkg.ProtocGen{Plugins: []pkg.Plugin{{Name: "cre", Path: protocDir}}}
+func createGenerator() *pkg.ProtocGen {
+	gen := &pkg.ProtocGen{Plugins: []pkg.Plugin{{Name: "cre", Path: ".tools"}}}
 	gen.LinkPackage(pkg.Packages{Go: "github.com/smartcontractkit/cre-sdk-go/generator/protoc-gen-cre/pb", Proto: "tools/generator/v1alpha/cre_metadata.proto"})
 	gen.LinkPackage(pkg.Packages{Go: "github.com/smartcontractkit/cre-sdk-go/sdk/pb", Proto: "sdk/v1alpha/sdk.proto"})
 	return gen
@@ -73,31 +74,35 @@ func link(gen *pkg.ProtocGen, config *CapabilityConfig) {
 	}
 }
 
-func installProtocGen() (string, error) {
+func installProtocGen() error {
 	cmd := exec.Command("go", "list", "-m", "-f", "{{.Version}}", "github.com/smartcontractkit/cre-sdk-go/generator/protos")
 	out, err := cmd.Output()
 	if err != nil {
-		return "", fmt.Errorf("failed to get module version: %w\nOutput: %s", err, out)
+		return fmt.Errorf("failed to get module version: %w\nOutput: %s", err, out)
 	}
 	version := strings.TrimSpace(string(out))
 
 	cmd = exec.Command("go", "mod", "download", "-json", "github.com/smartcontractkit/cre-sdk-go/generator/protoc-gen-cre@"+version)
 	out, err = cmd.Output()
 	if err != nil {
-		return "", fmt.Errorf("failed to download module: %w\nOutput: %s", err, out)
+		return fmt.Errorf("failed to download module: %w\nOutput: %s", err, out)
 	}
 
 	var mod struct{ Dir string }
 	if err = json.Unmarshal(out, &mod); err != nil {
-		return "", fmt.Errorf("failed to parse go mod download output: %w", err)
+		return fmt.Errorf("failed to parse go mod download output: %w", err)
 	}
 
-	cmd = exec.Command("go", "build", mod.Dir)
+	absDir, err := filepath.Abs(".tools")
+	if err != nil {
+		return fmt.Errorf("failed to get absolute path for .tools directory: %w", err)
+	}
+	cmd = exec.Command("go", "build", "-o", absDir, ".")
 	cmd.Dir = mod.Dir
 	out, err = cmd.CombinedOutput()
 	if err != nil {
-		return "", fmt.Errorf("failed to build protoc-gen-cre: %w\nOutput: %s", err, out)
+		return fmt.Errorf("failed to build protoc-gen-cre: %w\nOutput: %s", err, out)
 	}
 
-	return cmd.Dir, nil
+	return nil
 }
