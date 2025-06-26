@@ -15,6 +15,30 @@ func main() {
 			PreReleaseTag: "alpha",
 			Files:         []string{"consensus.proto"},
 		},
+		{
+			Category:     "internal",
+			Pkg:          "actionandtrigger",
+			MajorVersion: 1,
+			Files:        []string{"action_and_trigger.proto"},
+		},
+		{
+			Category:     "internal",
+			Pkg:          "basicaction",
+			MajorVersion: 1,
+			Files:        []string{"basic_action.proto"},
+		},
+		{
+			Category:     "internal",
+			Pkg:          "basictrigger",
+			MajorVersion: 1,
+			Files:        []string{"basic_trigger.proto"},
+		},
+		{
+			Category:     "internal",
+			Pkg:          "nodeaction",
+			MajorVersion: 1,
+			Files:        []string{"node_action.proto"},
+		},
 	}
 
 	internalProtosToDir := map[string]*protos.CapabilityConfig{}
