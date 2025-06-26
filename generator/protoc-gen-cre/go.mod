@@ -3,8 +3,8 @@ module github.com/smartcontractkit/cre-sdk-go/generator/protoc-gen-cre
 go 1.24.4
 
 require (
-	github.com/smartcontractkit/chainlink-common v0.7.1-0.20250626104054-ed255ff38577
-	github.com/smartcontractkit/chainlink-common/pkg/values v0.0.0-20250626161505-c2f203274b69
+	github.com/smartcontractkit/chainlink-common v0.7.1-0.20250626192802-ba22aca9d350
+	github.com/smartcontractkit/chainlink-common/pkg/values v0.0.0-20250626192802-ba22aca9d350
 	google.golang.org/protobuf v1.36.6
 )
 
