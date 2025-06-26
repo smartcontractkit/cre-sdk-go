@@ -120,8 +120,8 @@ const file_capabilities_internal_nodeaction_v1_node_action_proto_rawDesc = "" +
 	"\vinput_thing\x18\x01 \x01(\bR\n" +
 	"inputThing\"0\n" +
 	"\vNodeOutputs\x12!\n" +
-	"\foutput_thing\x18\x01 \x01(\x05R\voutputThing2\xae\x01\n" +
-	"\x12BasicActionService\x12r\n" +
+	"\foutput_thing\x18\x01 \x01(\x05R\voutputThing2\xa7\x01\n" +
+	"\vBasicAction\x12r\n" +
 	"\rPerformAction\x12/.capabilities.internal.nodeaction.v1.NodeInputs\x1a0.capabilities.internal.nodeaction.v1.NodeOutputs\x1a$\x82\xb5\x18 \b\x02\x12\x1cbasic-test-node-action@1.0.0b\x06proto3"
 
 var (
@@ -142,8 +142,8 @@ var file_capabilities_internal_nodeaction_v1_node_action_proto_goTypes = []any{
 	(*NodeOutputs)(nil), // 1: capabilities.internal.nodeaction.v1.NodeOutputs
 }
 var file_capabilities_internal_nodeaction_v1_node_action_proto_depIdxs = []int32{
-	0, // 0: capabilities.internal.nodeaction.v1.BasicActionService.PerformAction:input_type -> capabilities.internal.nodeaction.v1.NodeInputs
-	1, // 1: capabilities.internal.nodeaction.v1.BasicActionService.PerformAction:output_type -> capabilities.internal.nodeaction.v1.NodeOutputs
+	0, // 0: capabilities.internal.nodeaction.v1.BasicAction.PerformAction:input_type -> capabilities.internal.nodeaction.v1.NodeInputs
+	1, // 1: capabilities.internal.nodeaction.v1.BasicAction.PerformAction:output_type -> capabilities.internal.nodeaction.v1.NodeOutputs
 	1, // [1:2] is the sub-list for method output_type
 	0, // [0:1] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name

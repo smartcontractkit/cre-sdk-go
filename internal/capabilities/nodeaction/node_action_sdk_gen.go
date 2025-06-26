@@ -11,11 +11,11 @@ import (
 	sdkpb "github.com/smartcontractkit/cre-sdk-go/sdk/pb"
 )
 
-type BasicActionService struct {
+type BasicAction struct {
 	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 allow defaults for capabilities
 }
 
-func (c *BasicActionService) PerformAction(runtime sdk.NodeRuntime, input *NodeInputs) sdk.Promise[*NodeOutputs] {
+func (c *BasicAction) PerformAction(runtime sdk.NodeRuntime, input *NodeInputs) sdk.Promise[*NodeOutputs] {
 	wrapped, err := anypb.New(input)
 	if err != nil {
 		return sdk.PromiseFromResult[*NodeOutputs](nil, err)

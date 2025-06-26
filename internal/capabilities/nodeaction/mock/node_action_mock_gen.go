@@ -18,19 +18,19 @@ import (
 // avoid unused imports
 var _ = registry.Registry{}
 
-func NewBasicActionServiceCapability(t testing.TB) (*BasicActionServiceCapability, error) {
-	c := &BasicActionServiceCapability{}
+func NewBasicActionCapability(t testing.TB) (*BasicActionCapability, error) {
+	c := &BasicActionCapability{}
 	reg := registry.GetRegistry(t)
 	err := reg.RegisterCapability(c)
 	return c, err
 }
 
-type BasicActionServiceCapability struct {
+type BasicActionCapability struct {
 	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
 	PerformAction func(ctx context.Context, input *nodeaction.NodeInputs) (*nodeaction.NodeOutputs, error)
 }
 
-func (cap *BasicActionServiceCapability) Invoke(ctx context.Context, request *sdkpb.CapabilityRequest) *sdkpb.CapabilityResponse {
+func (cap *BasicActionCapability) Invoke(ctx context.Context, request *sdkpb.CapabilityRequest) *sdkpb.CapabilityResponse {
 	capResp := &sdkpb.CapabilityResponse{}
 	switch request.Method {
 	case "PerformAction":
@@ -61,10 +61,10 @@ func (cap *BasicActionServiceCapability) Invoke(ctx context.Context, request *sd
 	return capResp
 }
 
-func (cap *BasicActionServiceCapability) InvokeTrigger(ctx context.Context, request *sdkpb.TriggerSubscription) (*sdkpb.Trigger, error) {
+func (cap *BasicActionCapability) InvokeTrigger(ctx context.Context, request *sdkpb.TriggerSubscription) (*sdkpb.Trigger, error) {
 	return nil, fmt.Errorf("method %s not found", request.Method)
 }
 
-func (cap *BasicActionServiceCapability) ID() string {
+func (cap *BasicActionCapability) ID() string {
 	return "basic-test-node-action@1.0.0"
 }
