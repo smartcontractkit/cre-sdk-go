@@ -2,16 +2,9 @@ module github.com/smartcontractkit/cre-sdk-go/capabilities/scheduler/cron
 
 go 1.24.4
 
-replace (
-	github.com/smartcontractkit/cre-sdk-go => ../../..
-	github.com/smartcontractkit/cre-sdk-go/generator/protoc-gen-cre => ../../../generator/protoc-gen-cre
-	github.com/smartcontractkit/cre-sdk-go/generator/protos => ../../../generator/protos
-)
-
 require (
-	github.com/smartcontractkit/cre-sdk-go v0.0.0-00010101000000-000000000000
-	github.com/smartcontractkit/cre-sdk-go/generator/protoc-gen-cre v0.0.0-00010101000000-000000000000
-	github.com/smartcontractkit/cre-sdk-go/generator/protos v0.0.0-00010101000000-000000000000
+	github.com/smartcontractkit/cre-sdk-go v0.0.0-20250626082839-98ce2f3d3ae0
+	github.com/smartcontractkit/cre-sdk-go/generator/protos v0.0.0-20250626082839-98ce2f3d3ae0
 	google.golang.org/protobuf v1.36.6
 )
 
