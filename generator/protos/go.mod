@@ -3,7 +3,7 @@ module github.com/smartcontractkit/cre-sdk-go/generator/protos
 go 1.24.4
 
 require (
-	github.com/smartcontractkit/chainlink-common/pkg/values v0.0.0-20250626143527-fb5d7ec6cac2
+	github.com/smartcontractkit/chainlink-common/pkg/values v0.0.0-20250626161505-c2f203274b69
 	github.com/stretchr/testify v1.10.0
 )
 

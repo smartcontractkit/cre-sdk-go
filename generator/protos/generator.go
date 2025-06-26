@@ -32,6 +32,7 @@ func GenerateMany(dirToConfig map[string]*CapabilityConfig) error {
 		link(gen, config)
 	}
 
+	fmt.Println("Generating capabilities")
 	errMap := gen.GenerateMany(fileToFrom)
 	if len(errMap) > 0 {
 		var errStrings []string
@@ -44,6 +45,7 @@ func GenerateMany(dirToConfig map[string]*CapabilityConfig) error {
 		return errors.New(strings.Join(errStrings, ""))
 	}
 
+	fmt.Println("Moving generated files to correct locations")
 	for from, config := range dirToConfig {
 		for i, file := range config.FullProtoFiles() {
 			file = strings.Replace(file, ".proto", ".pb.go", 1)
@@ -75,6 +77,7 @@ func link(gen *pkg.ProtocGen, config *CapabilityConfig) {
 }
 
 func installProtocGen() error {
+	fmt.Println("Finding version to use for protoc-gen-cre.")
 	cmd := exec.Command("go", "list", "-m", "-f", "{{.Version}}", "github.com/smartcontractkit/cre-sdk-go/generator/protos")
 	out, err := cmd.Output()
 	if err != nil {
@@ -82,6 +85,7 @@ func installProtocGen() error {
 	}
 	version := strings.TrimSpace(string(out))
 
+	fmt.Printf("Downloading protoc-gen-cre version %s\n", version)
 	cmd = exec.Command("go", "mod", "download", "-json", "github.com/smartcontractkit/cre-sdk-go/generator/protoc-gen-cre@"+version)
 	out, err = cmd.Output()
 	if err != nil {
@@ -97,6 +101,8 @@ func installProtocGen() error {
 	if err != nil {
 		return fmt.Errorf("failed to get absolute path for .tools directory: %w", err)
 	}
+
+	fmt.Println("Building protoc-gen-cre")
 	cmd = exec.Command("go", "build", "-o", absDir, ".")
 	cmd.Dir = mod.Dir
 	out, err = cmd.CombinedOutput()

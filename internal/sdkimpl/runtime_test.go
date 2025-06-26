@@ -1,6 +1,5 @@
 package sdkimpl_test
 
-/*
 import (
 	"context"
 	"errors"
@@ -8,20 +7,20 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/smartcontractkit/chainlink-common/pkg/capabilities/v2/consensus/consensusmock"
-	"github.com/smartcontractkit/chainlink-common/pkg/capabilities/v2/protoc/pkg/test_capabilities/actionandtrigger"
-	actionandtriggermock "github.com/smartcontractkit/chainlink-common/pkg/capabilities/v2/protoc/pkg/test_capabilities/actionandtrigger/action_and_triggermock"
-	"github.com/smartcontractkit/chainlink-common/pkg/capabilities/v2/protoc/pkg/test_capabilities/basicaction"
-	basicactionmock "github.com/smartcontractkit/chainlink-common/pkg/capabilities/v2/protoc/pkg/test_capabilities/basicaction/basic_actionmock"
-	"github.com/smartcontractkit/chainlink-common/pkg/capabilities/v2/protoc/pkg/test_capabilities/basictrigger"
-	basictriggermock "github.com/smartcontractkit/chainlink-common/pkg/capabilities/v2/protoc/pkg/test_capabilities/basictrigger/basic_triggermock"
-	"github.com/smartcontractkit/chainlink-common/pkg/capabilities/v2/protoc/pkg/test_capabilities/nodeaction"
-	nodeactionmock "github.com/smartcontractkit/chainlink-common/pkg/capabilities/v2/protoc/pkg/test_capabilities/nodeaction/node_actionmock"
 	valuespb "github.com/smartcontractkit/chainlink-common/pkg/values/pb"
-	"github.com/smartcontractkit/chainlink-common/pkg/workflows/internal/v2/sdkimpl"
-	"github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2"
-	"github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
-	"github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/testutils"
+	"github.com/smartcontractkit/cre-sdk-go/internal/capabilities/actionandtrigger"
+	"github.com/smartcontractkit/cre-sdk-go/internal/capabilities/actionandtrigger/mock"
+	"github.com/smartcontractkit/cre-sdk-go/internal/capabilities/basicaction"
+	"github.com/smartcontractkit/cre-sdk-go/internal/capabilities/basicaction/mock"
+	"github.com/smartcontractkit/cre-sdk-go/internal/capabilities/basictrigger"
+	"github.com/smartcontractkit/cre-sdk-go/internal/capabilities/basictrigger/mock"
+	"github.com/smartcontractkit/cre-sdk-go/internal/capabilities/consensus/mock"
+	"github.com/smartcontractkit/cre-sdk-go/internal/capabilities/nodeaction"
+	"github.com/smartcontractkit/cre-sdk-go/internal/capabilities/nodeaction/mock"
+	"github.com/smartcontractkit/cre-sdk-go/internal/sdkimpl"
+	"github.com/smartcontractkit/cre-sdk-go/sdk"
+	"github.com/smartcontractkit/cre-sdk-go/sdk/pb"
+	"github.com/smartcontractkit/cre-sdk-go/sdk/testutils"
 	"google.golang.org/protobuf/proto"
 
 	"github.com/stretchr/testify/assert"
@@ -383,4 +382,3 @@ type awaitOverride struct {
 func (a *awaitOverride) Await(request *pb.AwaitCapabilitiesRequest, maxResponseSize uint64) (*pb.AwaitCapabilitiesResponse, error) {
 	return a.await(request, maxResponseSize)
 }
-*/
