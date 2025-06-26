@@ -1,6 +1,7 @@
 package protos
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -80,12 +81,24 @@ func installProtocGen() error {
 	}
 	version := strings.TrimSpace(string(out))
 
+	cmd = exec.Command("go", "mod", "download", "-json", "github.com/smartcontractkit/cre-sdk-go/generator/protoc-gen-cre@"+version)
+	out, err = cmd.Output()
+	if err != nil {
+		return fmt.Errorf("failed to download module: %w\nOutput: %s", err, out)
+	}
+
+	var mod struct{ Dir string }
+	if err = json.Unmarshal(out, &mod); err != nil {
+		return fmt.Errorf("failed to parse go mod download output: %w", err)
+	}
+
+	// Step 3: Build from the local Dir
 	if err := os.MkdirAll(".tools", os.ModePerm); err != nil {
 		return fmt.Errorf("failed to create tools directory: %w", err)
 	}
 
 	binPath := ".tools/protoc-gen-cre"
-	cmd = exec.Command("go", "build", "-o", binPath, "github.com/smartcontractkit/cre-sdk-go/generator/protoc-gen-cre@"+version)
+	cmd = exec.Command("go", "build", "-o", binPath, mod.Dir)
 	cmd.Env = os.Environ()
 	out, err = cmd.CombinedOutput()
 	if err != nil {
