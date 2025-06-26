@@ -1,5 +1,6 @@
 package registry
 
+/*
 import (
 	"context"
 	"fmt"
@@ -96,3 +97,4 @@ func (f *FakeWrapper) ID() string {
 }
 
 var _ Capability = (*FakeWrapper)(nil)
+*/

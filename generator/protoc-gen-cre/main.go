@@ -8,6 +8,7 @@ import (
 	"google.golang.org/protobuf/compiler/protogen"
 )
 
+// TODO pb may need its own go mod... :'(, or generate in internal...
 func main() {
 	protogen.Options{}.Run(func(plugin *protogen.Plugin) error {
 		for _, file := range plugin.Files {

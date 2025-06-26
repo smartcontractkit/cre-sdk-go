@@ -1,8 +1,10 @@
-package main
+package protos
 
 import (
 	"errors"
 	"fmt"
+	"path"
+	"strconv"
 )
 
 type CapabilityConfig struct {
@@ -14,17 +16,25 @@ type CapabilityConfig struct {
 }
 
 func (c *CapabilityConfig) FullGoPackageName() string {
-	// TODO internal to internal/capabilities or make new generator...?
 	base := "github.com/smartcontractkit/cre-sdk-go/capabilities/" + c.Category + "/" + c.Pkg
 
 	if c.Category == "internal" {
-		base = "github.com/smartcontractkit/cre-sdk-go/internal/" + c.Category + "/" + c.Pkg
+		base = "github.com/smartcontractkit/cre-sdk-go/internal/capabilities/" + c.Pkg
 	}
 
 	if c.MajorVersion == 1 {
 		return base
 	}
 	return fmt.Sprintf("%s/v%d", base, c.MajorVersion)
+}
+
+func (c *CapabilityConfig) FullProtoFiles() []string {
+	protoDir := path.Join("capabilities", c.Category, c.Pkg, strconv.Itoa(c.MajorVersion))
+	fullFiles := make([]string, len(c.Files))
+	for i, file := range c.Files {
+		fullFiles[i] = path.Join(protoDir, file)
+	}
+	return fullFiles
 }
 
 func (c *CapabilityConfig) Validate() error {

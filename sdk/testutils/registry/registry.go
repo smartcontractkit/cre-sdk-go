@@ -1,5 +1,6 @@
 package registry
 
+/*
 import (
 	"sync"
 	"testing"
@@ -51,3 +52,4 @@ func (r *Registry) GetCapability(id string) (Capability, error) {
 
 	return &FakeWrapper{BaseCapability: v1Capability, tb: r.tb}, nil
 }
+*/

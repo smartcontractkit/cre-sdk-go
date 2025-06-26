@@ -10,7 +10,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/smartcontractkit/chainlink-common/pkg/values"
-	"github.com/smartcontractkit/chainlink-common/pkg/workflows/internal/v2/sdkimpl"
+	"github.com/smartcontractkit/cre-sdk-go/internal/sdkimpl"
 	"github.com/smartcontractkit/cre-sdk-go/sdk/testutils/registry"
 
 	"github.com/smartcontractkit/cre-sdk-go/sdk"

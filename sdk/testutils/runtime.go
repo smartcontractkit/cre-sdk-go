@@ -1,5 +1,6 @@
 package testutils
 
+/*
 import (
 	"context"
 	"errors"
@@ -146,3 +147,4 @@ func (rh *runtimeHelpers) AwaitSecrets(req *pb.AwaitSecretsRequest, _ uint64) (*
 }
 
 func (rh *runtimeHelpers) SwitchModes(_ pb.Mode) {}
+*/

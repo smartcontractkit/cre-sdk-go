@@ -1,40 +1,56 @@
-package main
+package protos_test
 
 import (
 	"testing"
 
+	"github.com/smartcontractkit/cre-sdk-go/generator/protos"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestFullGoPackageName(t *testing.T) {
-	assert.Equal(t,
-		"github.com/smartcontractkit/cre-sdk-go/capabilities/scheduler/cron",
-		(&CapabilityConfig{
-			Category:     "scheduler",
-			Pkg:          "cron",
-			MajorVersion: 1,
-		}).FullGoPackageName(),
-	)
+	t.Run("version 1", func(t *testing.T) {
+		assert.Equal(t,
+			"github.com/smartcontractkit/cre-sdk-go/capabilities/scheduler/cron",
+			(&protos.CapabilityConfig{
+				Category:     "scheduler",
+				Pkg:          "cron",
+				MajorVersion: 1,
+			}).FullGoPackageName(),
+		)
+	})
 
-	assert.Equal(t,
-		"github.com/smartcontractkit/cre-sdk-go/capabilities/stream/price/v2",
-		(&CapabilityConfig{
-			Category:     "stream",
-			Pkg:          "price",
-			MajorVersion: 2,
-		}).FullGoPackageName(),
-	)
+	t.Run("Not version 1", func(t *testing.T) {
+		assert.Equal(t,
+			"github.com/smartcontractkit/cre-sdk-go/capabilities/stream/price/v2",
+			(&protos.CapabilityConfig{
+				Category:     "stream",
+				Pkg:          "price",
+				MajorVersion: 2,
+			}).FullGoPackageName(),
+		)
+	})
+
+	t.Run("internal category", func(t *testing.T) {
+		assert.Equal(t,
+			"github.com/smartcontractkit/cre-sdk-go/internal/capabilities/cron",
+			(&protos.CapabilityConfig{
+				Category:     "internal",
+				Pkg:          "cron",
+				MajorVersion: 1,
+			}).FullGoPackageName(),
+		)
+	})
 }
 
 func TestCapabilityConfig_Validate(t *testing.T) {
 	tests := []struct {
 		name    string
-		cfg     CapabilityConfig
+		cfg     protos.CapabilityConfig
 		wantErr string
 	}{
 		{
 			name: "valid config",
-			cfg: CapabilityConfig{
+			cfg: protos.CapabilityConfig{
 				Category:     "scheduler",
 				Pkg:          "cron",
 				MajorVersion: 1,
@@ -44,7 +60,7 @@ func TestCapabilityConfig_Validate(t *testing.T) {
 		},
 		{
 			name: "missing category",
-			cfg: CapabilityConfig{
+			cfg: protos.CapabilityConfig{
 				Pkg:          "cron",
 				MajorVersion: 1,
 				Files:        []string{"a.proto"},
@@ -53,7 +69,7 @@ func TestCapabilityConfig_Validate(t *testing.T) {
 		},
 		{
 			name: "missing pkg",
-			cfg: CapabilityConfig{
+			cfg: protos.CapabilityConfig{
 				Category:     "scheduler",
 				MajorVersion: 1,
 				Files:        []string{"a.proto"},
@@ -62,7 +78,7 @@ func TestCapabilityConfig_Validate(t *testing.T) {
 		},
 		{
 			name: "invalid major version",
-			cfg: CapabilityConfig{
+			cfg: protos.CapabilityConfig{
 				Category: "scheduler",
 				Pkg:      "cron",
 				Files:    []string{"a.proto"},
@@ -71,7 +87,7 @@ func TestCapabilityConfig_Validate(t *testing.T) {
 		},
 		{
 			name: "missing files",
-			cfg: CapabilityConfig{
+			cfg: protos.CapabilityConfig{
 				Category:     "scheduler",
 				Pkg:          "cron",
 				MajorVersion: 1,

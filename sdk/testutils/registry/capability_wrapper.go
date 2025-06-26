@@ -1,5 +1,6 @@
 package registry
 
+/*
 import (
 	"context"
 	"errors"
@@ -78,3 +79,4 @@ func (c *CapabilityWrapper) Info(_ context.Context) (capabilities.CapabilityInfo
 	return capabilities.NewCapabilityInfo(
 		c.ID(), capabilities.CapabilityTypeCombined, fmt.Sprintf("Mock of capability %s", c.ID()))
 }
+*/
