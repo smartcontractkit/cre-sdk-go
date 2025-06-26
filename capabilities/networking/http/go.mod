@@ -1,4 +1,4 @@
-module github.com/smartcontractkit/cre-sdk-go/capabilities/scheduler/cron
+module github.com/smartcontractkit/cre-sdk-go/capabilities/networking/http
 
 go 1.24.4
 
