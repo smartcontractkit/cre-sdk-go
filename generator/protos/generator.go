@@ -36,14 +36,15 @@ func Generate(config *CapabilityConfig) error {
 
 	for i, file := range files {
 		file = strings.Replace(file, ".proto", ".pb.go", 1)
-		if err := os.Rename(file, config.Files[i]); err != nil {
+		to := strings.Replace(config.Files[i], ".proto", ".pb.go", 1)
+		if err := os.Rename(file, to); err != nil {
 			return fmt.Errorf("failed to move generated file %s: %w", file, err)
 		}
 	}
 
-	if err := os.RemoveAll("capabilities"); err != nil {
+	/*if err := os.RemoveAll("capabilities"); err != nil {
 		return fmt.Errorf("failed to remove capabilities directory %w", err)
-	}
+	}*/
 
 	return nil
 }
