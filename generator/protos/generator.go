@@ -47,7 +47,7 @@ func GenerateMany(dirToConfig map[string]*CapabilityConfig) error {
 	for from, config := range dirToConfig {
 		for i, file := range config.FullProtoFiles() {
 			file = strings.Replace(file, ".proto", ".pb.go", 1)
-			to := config.Files[i]
+			to := strings.Replace(config.Files[i], ".proto", ".pb.go", 1)
 			if err := os.Rename(path.Join(from, file), path.Join(from, to)); err != nil {
 				return fmt.Errorf("failed to move generated file %s: %w", file, err)
 			}
