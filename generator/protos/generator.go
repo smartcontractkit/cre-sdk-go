@@ -5,24 +5,21 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"path"
 	"strings"
 
 	"github.com/smartcontractkit/chainlink-common/pkg/values/installer/pkg"
 )
 
-func Generate(category, pkgName, version string, files ...string) error {
+func Generate(config *CapabilityConfig) error {
 	if err := installProtocGen(); err != nil {
 		return err
 	}
 
-	fullPkgName := fullGoName(category, pkgName)
-	protoDir := path.Join("capabilities", category, pkgName, version)
-
-	gen := generator(fullPkgName, protoDir, files)
+	gen := generator(config)
 	fileToFrom := map[string]string{}
+	files := config.FullProtoFiles()
 	for _, file := range files {
-		fileToFrom[path.Join(protoDir, file)] = "."
+		fileToFrom[file] = "."
 	}
 
 	errMap := gen.GenerateMany(fileToFrom)
@@ -37,36 +34,27 @@ func Generate(category, pkgName, version string, files ...string) error {
 		return errors.New(strings.Join(errStrings, ""))
 	}
 
-	for _, file := range files {
+	for i, file := range files {
 		file = strings.Replace(file, ".proto", ".pb.go", 1)
-		if err := os.Rename(path.Join(protoDir, file), file); err != nil {
+		if err := os.Rename(file, config.Files[i]); err != nil {
 			return fmt.Errorf("failed to move generated file %s: %w", file, err)
 		}
 	}
 
 	if err := os.RemoveAll("capabilities"); err != nil {
-		return fmt.Errorf("failed to remove category directory %s: %w", category, err)
+		return fmt.Errorf("failed to remove capabilities directory %w", err)
 	}
 
 	return nil
 }
 
-func fullGoName(category string, name string) string {
-	switch category {
-	case "internal":
-		return fmt.Sprintf("github.com/smartcontractkit/cre-sdk-go/internal/capabilities/%s", name)
-	default:
-		return fmt.Sprintf("github.com/smartcontractkit/cre-sdk-go/capabilities/%s/%s", category, name)
-	}
-}
-
-func generator(pkgName, protoDir string, files []string) *pkg.ProtocGen {
+func generator(config *CapabilityConfig) *pkg.ProtocGen {
 	gen := &pkg.ProtocGen{Plugins: []pkg.Plugin{{Name: "cre", Path: ".tools"}}}
 	gen.AddSourceDirectories(".")
 	gen.LinkPackage(pkg.Packages{Go: "github.com/smartcontractkit/cre-sdk-go/generator/protoc-gen-cre/pb", Proto: "tools/generator/v1alpha/cre_metadata.proto"})
 	gen.LinkPackage(pkg.Packages{Go: "github.com/smartcontractkit/cre-sdk-go/sdk/pb", Proto: "sdk/v1alpha/sdk.proto"})
-	for _, file := range files {
-		gen.LinkPackage(pkg.Packages{Go: pkgName, Proto: path.Join(protoDir, file)})
+	for _, file := range config.FullProtoFiles() {
+		gen.LinkPackage(pkg.Packages{Go: config.FullGoPackageName(), Proto: file})
 	}
 	return gen
 }

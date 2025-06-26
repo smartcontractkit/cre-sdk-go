@@ -1,6 +1,7 @@
 package protos_test
 
 import (
+	"path/filepath"
 	"testing"
 
 	"github.com/smartcontractkit/cre-sdk-go/generator/protos"
@@ -40,6 +41,22 @@ func TestFullGoPackageName(t *testing.T) {
 			}).FullGoPackageName(),
 		)
 	})
+}
+
+func TestFullProtoFiles(t *testing.T) {
+	config := &protos.CapabilityConfig{
+		Category:     "data",
+		Pkg:          "analytics",
+		MajorVersion: 2,
+		Files:        []string{"query.proto", "response.proto"},
+	}
+
+	expected := []string{
+		filepath.Join("capabilities", "data", "analytics", "v2", "query.proto"),
+		filepath.Join("capabilities", "data", "analytics", "v2", "response.proto"),
+	}
+
+	assert.Equal(t, expected, config.FullProtoFiles())
 }
 
 func TestCapabilityConfig_Validate(t *testing.T) {

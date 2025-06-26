@@ -29,7 +29,7 @@ func (c *CapabilityConfig) FullGoPackageName() string {
 }
 
 func (c *CapabilityConfig) FullProtoFiles() []string {
-	protoDir := path.Join("capabilities", c.Category, c.Pkg, strconv.Itoa(c.MajorVersion))
+	protoDir := path.Join("capabilities", c.Category, c.Pkg, "v"+strconv.Itoa(c.MajorVersion))
 	fullFiles := make([]string, len(c.Files))
 	for i, file := range c.Files {
 		fullFiles[i] = path.Join(protoDir, file)
