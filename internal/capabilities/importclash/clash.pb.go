@@ -7,9 +7,9 @@
 package importclash
 
 import (
-	_ "github.com/smartcontractkit/cre-sdk-go/generator/protoc-gen-cre/pb"
 	p1 "github.com/smartcontractkit/cre-sdk-go/internal/capabilities/importclash/p1"
 	p2 "github.com/smartcontractkit/cre-sdk-go/internal/capabilities/importclash/p2"
+	_ "github.com/smartcontractkit/cre-sdk-go/sdk/pb"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"

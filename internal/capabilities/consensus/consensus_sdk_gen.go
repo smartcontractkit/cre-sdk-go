@@ -9,7 +9,7 @@ import (
 
 	"github.com/smartcontractkit/chainlink-common/pkg/values/pb"
 	"github.com/smartcontractkit/cre-sdk-go/sdk"
-	pb1 "github.com/smartcontractkit/cre-sdk-go/sdk/pb"
+	pb2 "github.com/smartcontractkit/cre-sdk-go/sdk/pb"
 	sdkpb "github.com/smartcontractkit/cre-sdk-go/sdk/pb"
 )
 
@@ -17,7 +17,7 @@ type Consensus struct {
 	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 allow defaults for capabilities
 }
 
-func (c *Consensus) Simple(runtime sdk.Runtime, input *pb1.SimpleConsensusInputs) sdk.Promise[*pb.Value] {
+func (c *Consensus) Simple(runtime sdk.Runtime, input *pb2.SimpleConsensusInputs) sdk.Promise[*pb.Value] {
 	wrapped, err := anypb.New(input)
 	if err != nil {
 		return sdk.PromiseFromResult[*pb.Value](nil, err)

@@ -6,7 +6,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/shopspring/decimal v1.4.0
 	github.com/smartcontractkit/chainlink-common/pkg/values v0.0.0-20250626143527-fb5d7ec6cac2
-	github.com/smartcontractkit/cre-sdk-go/generator/protos v0.0.0-20250626153756-e93d85a2deec
+	github.com/smartcontractkit/cre-sdk-go/generator/protos v0.0.0-20250626155935-1f181b192260
 	github.com/stretchr/testify v1.10.0
 	google.golang.org/protobuf v1.36.6
 )

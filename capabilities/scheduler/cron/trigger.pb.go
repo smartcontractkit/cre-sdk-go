@@ -7,7 +7,7 @@
 package cron
 
 import (
-	_ "github.com/smartcontractkit/cre-sdk-go/generator/protoc-gen-cre/pb"
+	_ "github.com/smartcontractkit/cre-sdk-go/sdk/pb"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"

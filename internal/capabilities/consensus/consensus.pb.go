@@ -8,7 +8,6 @@ package consensus
 
 import (
 	pb1 "github.com/smartcontractkit/chainlink-common/pkg/values/pb"
-	_ "github.com/smartcontractkit/cre-sdk-go/generator/protoc-gen-cre/pb"
 	pb "github.com/smartcontractkit/cre-sdk-go/sdk/pb"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
