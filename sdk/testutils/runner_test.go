@@ -484,8 +484,7 @@ func TestRunner_ReturnsTriggerErrorsWithoutRunningTheWorkflow(t *testing.T) {
 }
 
 func TestRunner_FullWorkflow(t *testing.T) {
-	// TODO: rtinianov NOW
-	/*testutils.SetupExpectedCalls(t)
+	testutils.SetupExpectedCalls(t)
 	runner := testutils.NewRunner(t, "unused")
 	testutils.RunTestWorkflow(runner)
 	ran, result, err := runner.Result()
@@ -494,7 +493,7 @@ func TestRunner_FullWorkflow(t *testing.T) {
 	assert.Equal(t, testutils.TestWorkflowExpectedResult(), result)
 	logs := runner.Logs()
 	require.Len(t, logs, 1)
-	assert.True(t, strings.Contains(logs[0], "Hi"))*/
+	assert.True(t, strings.Contains(logs[0], "Hi"))
 }
 
 func runWorkflows(runner sdk.Runner[string], workflows sdk.Workflow[string]) {

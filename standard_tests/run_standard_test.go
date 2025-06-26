@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"testing"
 
@@ -12,7 +13,7 @@ import (
 )
 
 // TODO this should be a tag on common
-const commonVersion = "c2f203274b69ab67e2e1bdaaad86b7d60e883fb6"
+const commonVersion = "6d35905cbe3dfe3599c05068005c93c11c094f8c"
 
 func TestRunStandardTest(t *testing.T) {
 	t.Parallel()
@@ -32,11 +33,14 @@ func TestRunStandardTest(t *testing.T) {
 
 	fmt.Println("Building standard tests")
 	cmd = exec.Command("go", "test", "-c", "-o", absDir, ".")
-	cmd.Dir = mod.Dir
+	cmd.Dir = path.Join(mod.Dir, "pkg", "workflows", "wasm", "host")
 	out, err = cmd.CombinedOutput()
-	require.NoError(t, err, out)
+	require.NoError(t, err, string(out))
 
-	fmt.Println("Verifying standard tests")
-	cmd = exec.Command(absDir, "-")
+	fmt.Println("Running standard tests")
+	cmd = exec.Command(path.Join(absDir, "host.test"), "-test.v", "-test.run", "^TestStandard", "-path=impl")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 
+	require.NoError(t, cmd.Run())
 }
