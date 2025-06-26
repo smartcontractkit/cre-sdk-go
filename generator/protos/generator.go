@@ -73,18 +73,21 @@ func link(gen *pkg.ProtocGen, config *CapabilityConfig) {
 }
 
 func installProtocGen() error {
-	// TODO have something ensure the two of them have the same version of values
-	// Maybe use debug.ReadBuildInfo() to get the right generator
+	cmd := exec.Command("go", "list", "-m", "-f", "{{.Version}}", "github.com/smartcontractkit/cre-sdk-go/generator/protos")
+	out, err := cmd.Output()
+	if err != nil {
+		return fmt.Errorf("failed to get module version: %w\nOutput: %s", err, out)
+	}
 
-	// Running in capabilities/*/*
-	// install the proto-gen-cre from the same version this tool is in
+	version := strings.TrimSpace(string(out))
 
-	cmd := exec.Command("go", "build", ".")
-	cmd.Dir = "../../../generator/protoc-gen-cre"
-	out, err := cmd.CombinedOutput()
+	cmd = exec.Command("go", "install", "github.com/smartcontractkit/cre-sdk-go/generator/protoc-gen-cre@"+version)
+	cmd.Env = append(os.Environ(), "GOBIN=./.tools")
+	out, err = cmd.CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("failed to build protoc-gen-cre: %w\nOutput: %s", err, out)
 	}
+
 	if err = os.MkdirAll(".tools", os.ModePerm); err != nil {
 		return fmt.Errorf("failed to create tools directory: %w", err)
 	}
