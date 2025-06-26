@@ -1,0 +1,4 @@
+package sdk
+
+func DoNothing() {
+}
