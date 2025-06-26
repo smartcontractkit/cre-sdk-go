@@ -4,7 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"path"
+	"path/filepath"
 	"strconv"
+	"strings"
 )
 
 type CapabilityConfig struct {
@@ -18,8 +20,8 @@ type CapabilityConfig struct {
 func (c *CapabilityConfig) FullGoPackageName() string {
 	base := "github.com/smartcontractkit/cre-sdk-go/capabilities/" + c.Category + "/" + c.Pkg
 
-	if c.Category == "internal" {
-		base = "github.com/smartcontractkit/cre-sdk-go/internal/capabilities/" + c.Pkg
+	if strings.Split(c.Category, string(filepath.Separator))[0] == "internal" {
+		base = strings.Replace(base, "capabilities/internal", "internal/capabilities", 1)
 	}
 
 	if c.MajorVersion == 1 {

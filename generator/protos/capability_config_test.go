@@ -20,6 +20,17 @@ func TestFullGoPackageName(t *testing.T) {
 		)
 	})
 
+	t.Run("version 1 nested", func(t *testing.T) {
+		assert.Equal(t,
+			"github.com/smartcontractkit/cre-sdk-go/capabilities/scheduler/something/cron",
+			(&protos.CapabilityConfig{
+				Category:     "scheduler/something",
+				Pkg:          "cron",
+				MajorVersion: 1,
+			}).FullGoPackageName(),
+		)
+	})
+
 	t.Run("Not version 1", func(t *testing.T) {
 		assert.Equal(t,
 			"github.com/smartcontractkit/cre-sdk-go/capabilities/stream/price/v2",
@@ -36,6 +47,17 @@ func TestFullGoPackageName(t *testing.T) {
 			"github.com/smartcontractkit/cre-sdk-go/internal/capabilities/cron",
 			(&protos.CapabilityConfig{
 				Category:     "internal",
+				Pkg:          "cron",
+				MajorVersion: 1,
+			}).FullGoPackageName(),
+		)
+	})
+
+	t.Run("internal category nested", func(t *testing.T) {
+		assert.Equal(t,
+			"github.com/smartcontractkit/cre-sdk-go/internal/capabilities/something/cron",
+			(&protos.CapabilityConfig{
+				Category:     "internal/something",
 				Pkg:          "cron",
 				MajorVersion: 1,
 			}).FullGoPackageName(),
