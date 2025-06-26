@@ -13,8 +13,6 @@ func main() {
 		panic(fmt.Errorf("failed to generate sdk proto: %w", err))
 	}
 
-	// Make a local copy of sdk proto so that we can use it without a circular dependency on sdk.
-	// This is safe because the SDK will have its values package version enforced by the version of this library it uses.
 	gen.LinkPackage(pkg.Packages{Go: "github.com/smartcontractkit/cre-sdk-go/pb", Proto: "tools/generator/v1alpha/cre_metadata.proto"})
 	if err := gen.Generate("tools/generator/v1alpha/cre_metadata.proto", "."); err != nil {
 		panic(fmt.Errorf("failed to generate protobuf metadata: %w", err))

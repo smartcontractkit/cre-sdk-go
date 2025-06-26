@@ -1,13 +1,9 @@
 package registry
 
-/*
 import (
+	"errors"
 	"sync"
 	"testing"
-
-	"github.com/smartcontractkit/chainlink-common/pkg/capabilities/registry"
-	"github.com/smartcontractkit/chainlink-common/pkg/logger"
-	"github.com/smartcontractkit/chainlink-common/pkg/types/core"
 )
 
 var testRegistries = map[testing.TB]*Registry{}
@@ -21,7 +17,7 @@ func GetRegistry(tb testing.TB) *Registry {
 		return r
 	}
 
-	r := &Registry{tb: tb, CapabilitiesRegistryBase: registry.NewBaseRegistry(logger.Test(tb))}
+	r := &Registry{tb: tb, capabilities: map[string]Capability{}}
 	testRegistries[tb] = r
 	tb.Cleanup(func() {
 		delete(testRegistries, tb)
@@ -31,25 +27,33 @@ func GetRegistry(tb testing.TB) *Registry {
 
 // Registry is meant to be used with GetRegistry, do not use it directly.
 type Registry struct {
-	core.CapabilitiesRegistryBase
-	tb testing.TB
+	capabilities map[string]Capability
+	tb           testing.TB
+	lock         sync.Mutex
 }
 
 func (r *Registry) RegisterCapability(c Capability) error {
-	return r.Add(r.tb.Context(), &CapabilityWrapper{Capability: c})
+	r.lock.Lock()
+	defer r.lock.Unlock()
+	_, ok := r.capabilities[c.ID()]
+	if ok {
+		return errors.New("Capability" + c.ID() + " already exists")
+	}
+	return nil
+}
+
+func (r *Registry) ForceRegisterCapability(c Capability) {
+	r.lock.Lock()
+	defer r.lock.Unlock()
+	r.capabilities[c.ID()] = c
 }
 
 func (r *Registry) GetCapability(id string) (Capability, error) {
-	v1Capability, err := r.Get(r.tb.Context(), id)
-	if err != nil {
-		return nil, err
+	r.lock.Lock()
+	defer r.lock.Unlock()
+	c, ok := r.capabilities[id]
+	if !ok {
+		return nil, errors.New("capability not found: " + id)
 	}
-
-	capability, ok := v1Capability.(Capability)
-	if ok {
-		return capability, nil
-	}
-
-	return &FakeWrapper{BaseCapability: v1Capability, tb: r.tb}, nil
+	return c, nil
 }
-*/

@@ -1,6 +1,5 @@
 package registry
 
-/*
 import (
 	"context"
 
@@ -20,4 +19,3 @@ func (n ErrNoTriggerStub) Error() string {
 }
 
 var _ error = ErrNoTriggerStub("")
-*/

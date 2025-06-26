@@ -7,17 +7,17 @@ import (
 	"strings"
 	"testing"
 
-	basicactionmock "github.com/smartcontractkit/cre-sdk-go/capabilities/test/basicaction/basic_actionmock"
+	basicactionmock "github.com/smartcontractkit/cre-sdk-go/internal/capabilitiesbasicaction/basic_actionmock"
 	"google.golang.org/protobuf/proto"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/smartcontractkit/cre-sdk-go/capabilities/test/basicaction"
-	"github.com/smartcontractkit/cre-sdk-go/capabilities/test/basictrigger"
-	basictriggermock "github.com/smartcontractkit/cre-sdk-go/capabilities/test/basictrigger/basic_triggermock"
-	"github.com/smartcontractkit/cre-sdk-go/capabilities/test/nodeaction"
-	nodeactionmock "github.com/smartcontractkit/cre-sdk-go/capabilities/test/nodeaction/node_actionmock"
+	"github.com/smartcontractkit/cre-sdk-go/internal/capabilitiesbasicaction"
+	"github.com/smartcontractkit/cre-sdk-go/internal/capabilitiesbasictrigger"
+	basictriggermock "github.com/smartcontractkit/cre-sdk-go/internal/capabilitiesbasictrigger/basic_triggermock"
+	"github.com/smartcontractkit/cre-sdk-go/internal/capabilitiesnodeaction"
+	nodeactionmock "github.com/smartcontractkit/cre-sdk-go/internal/capabilitiesnodeaction/node_actionmock"
 	"github.com/smartcontractkit/cre-sdk-go/sdk"
 	"github.com/smartcontractkit/cre-sdk-go/sdk/testutils"
 )

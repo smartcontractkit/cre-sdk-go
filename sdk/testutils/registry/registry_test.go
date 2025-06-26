@@ -1,14 +1,13 @@
 package registry_test
 
-/*
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	basicactionmock "github.com/smartcontractkit/cre-sdk-go/capabilities/test/basicaction/basic_actionmock"
-	basictriggermock "github.com/smartcontractkit/cre-sdk-go/capabilities/test/basictrigger/basic_triggermock"
+	"github.com/smartcontractkit/cre-sdk-go/internal/capabilities/basicaction/mock"
+	"github.com/smartcontractkit/cre-sdk-go/internal/capabilities/basictrigger/mock"
 	"github.com/smartcontractkit/cre-sdk-go/sdk/testutils/registry"
 )
 
@@ -49,4 +48,3 @@ func TestGetCapability(t *testing.T) {
 	_, err = r.GetCapability(notReal)
 	require.Error(t, err)
 }
-*/
