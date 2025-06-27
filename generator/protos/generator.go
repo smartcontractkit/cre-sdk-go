@@ -1,15 +1,13 @@
 package protos
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
-	"os/exec"
 	"path"
-	"path/filepath"
 	"strings"
 
+	"github.com/smartcontractkit/chainlink-common/pkg/capabilities/v2/protoc/installer"
 	"github.com/smartcontractkit/chainlink-common/pkg/values/installer/pkg"
 )
 
@@ -18,7 +16,7 @@ func Generate(config *CapabilityConfig) error {
 }
 
 func GenerateMany(dirToConfig map[string]*CapabilityConfig) error {
-	if err := installProtocGen(); err != nil {
+	if err := installer.InstallProtocGenToDir("cre", "github.com/smartcontractkit/cre-sdk-go/generator/protos"); err != nil {
 		return err
 	}
 
@@ -74,41 +72,4 @@ func link(gen *pkg.ProtocGen, config *CapabilityConfig) {
 	for _, file := range config.FullProtoFiles() {
 		gen.LinkPackage(pkg.Packages{Go: config.FullGoPackageName(), Proto: file})
 	}
-}
-
-func installProtocGen() error {
-	fmt.Println("Finding version to use for protoc-gen-cre.")
-	cmd := exec.Command("go", "list", "-m", "-f", "{{.Version}}", "github.com/smartcontractkit/cre-sdk-go/generator/protos")
-	out, err := cmd.Output()
-	if err != nil {
-		return fmt.Errorf("failed to get module version: %w\nOutput: %s", err, out)
-	}
-	version := strings.TrimSpace(string(out))
-
-	fmt.Printf("Downloading protoc-gen-cre version %s\n", version)
-	cmd = exec.Command("go", "mod", "download", "-json", "github.com/smartcontractkit/cre-sdk-go/generator/protoc-gen-cre@"+version)
-	out, err = cmd.Output()
-	if err != nil {
-		return fmt.Errorf("failed to download module: %w\nOutput: %s", err, out)
-	}
-
-	var mod struct{ Dir string }
-	if err = json.Unmarshal(out, &mod); err != nil {
-		return fmt.Errorf("failed to parse go mod download output: %w", err)
-	}
-
-	absDir, err := filepath.Abs(".tools")
-	if err != nil {
-		return fmt.Errorf("failed to get absolute path for .tools directory: %w", err)
-	}
-
-	fmt.Println("Building protoc-gen-cre")
-	cmd = exec.Command("go", "build", "-o", absDir, ".")
-	cmd.Dir = mod.Dir
-	out, err = cmd.CombinedOutput()
-	if err != nil {
-		return fmt.Errorf("failed to build protoc-gen-cre: %w\nOutput: %s", err, out)
-	}
-
-	return nil
 }
