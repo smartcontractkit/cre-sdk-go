@@ -110,7 +110,7 @@ func NodeModeCallInDonMode() error {
 	return nodeModeCallInDonMode
 }
 
-var donModeCallInNodeMode = errors.New("cannot use the Runtime inside RunInNodeMode")
+var donModeCallInNodeMode = errors.New("cannot use Runtime inside RunInNodeMode")
 
 func DonModeCallInNodeMode() error {
 	return donModeCallInNodeMode

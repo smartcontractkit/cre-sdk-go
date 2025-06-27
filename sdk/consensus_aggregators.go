@@ -180,7 +180,12 @@ func isIdenticalType(t reflect.Type) bool {
 		return true
 	case reflect.Slice, reflect.Array:
 		return isIdenticalType(t.Elem())
+	case reflect.Pointer:
+		if t == bigIntType {
+			return true
+		}
+		return t.Elem().Kind() != reflect.Pointer && isIdenticalType(t.Elem())
 	default:
-		return t == bigIntType
+		return false
 	}
 }

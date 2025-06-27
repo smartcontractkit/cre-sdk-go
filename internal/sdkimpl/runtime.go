@@ -143,7 +143,11 @@ func (d *Runtime) GetSecret(req *pb.SecretRequest) sdk.Promise[*pb.Secret] {
 }
 
 func (d *Runtime) RunInNodeMode(fn func(nodeRuntime sdk.NodeRuntime) *pb.SimpleConsensusInputs) sdk.Promise[values.Value] {
-	nrt := &NodeRuntime{RuntimeBase: d.RuntimeBase}
+	nodeBase := d.RuntimeBase
+	nodeBase.Mode = pb.Mode_MODE_NODE
+	nodeBase.source = nil
+	nodeBase.source64 = nil
+	nrt := &NodeRuntime{RuntimeBase: nodeBase}
 	nrt.nextCallId = d.nextNodeCallId
 	nrt.Mode = pb.Mode_MODE_NODE
 	d.modeErr = sdk.DonModeCallInNodeMode()

@@ -13,7 +13,7 @@ import (
 )
 
 // TODO this should be a tag on common
-const commonVersion = "ad22c0f077d3ec8df8b49934fd0143635d669301"
+const commonVersion = "96684eb98b8db2aa90d971df2290b3b0b8312ad1"
 
 func TestRunStandardTest(t *testing.T) {
 	t.Parallel()
