@@ -1,13 +1,10 @@
 package protos
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
-	"os/exec"
 	"path"
-	"path/filepath"
 	"strings"
 
 	"github.com/smartcontractkit/chainlink-common/pkg/capabilities/v2/protoc/installer"
@@ -19,7 +16,6 @@ func Generate(config *CapabilityConfig) error {
 }
 
 func GenerateMany(dirToConfig map[string]*CapabilityConfig) error {
-	_ = installProtocGen()
 	if err := installer.InstallProtocGenToDir("github.com/smartcontractkit/cre-sdk-go/generator/protoc-gen-cre", "github.com/smartcontractkit/cre-sdk-go/generator/protos"); err != nil {
 		return err
 	}
