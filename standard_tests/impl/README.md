@@ -1,1 +1,0 @@
-This ensures that the SDK is compatible with expectations in the standard.

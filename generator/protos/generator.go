@@ -16,7 +16,7 @@ func Generate(config *CapabilityConfig) error {
 }
 
 func GenerateMany(dirToConfig map[string]*CapabilityConfig) error {
-	if err := installer.InstallProtocGenToDir("cre", "github.com/smartcontractkit/cre-sdk-go/generator/protos"); err != nil {
+	if err := installer.InstallProtocGenToDir("github.com/smartcontractkit/cre-sdk-go/generator/protoc-gen-cre", "github.com/smartcontractkit/cre-sdk-go/generator/protos"); err != nil {
 		return err
 	}
 
