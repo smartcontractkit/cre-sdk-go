@@ -5,9 +5,9 @@ go 1.24.4
 require (
 	github.com/google/uuid v1.6.0
 	github.com/shopspring/decimal v1.4.0
-	github.com/smartcontractkit/chainlink-common/pkg/capabilities/v2/protoc/installer v0.0.0-20250630183252-b59dfc5db95a
-	github.com/smartcontractkit/chainlink-common/pkg/values v0.0.0-20250630180408-0893cbde533e
-	github.com/smartcontractkit/cre-sdk-go/generator/protos v0.0.0-20250630183447-cc57b0111028
+	github.com/smartcontractkit/chainlink-common/pkg/capabilities/v2/protoc/installer v0.0.0-20250630184840-a85c2c04671c
+	github.com/smartcontractkit/chainlink-common/pkg/values v0.0.0-20250630184732-499257035a0b
+	github.com/smartcontractkit/cre-sdk-go/generator/protos v0.0.0-20250630185000-ed011544198a
 	github.com/stretchr/testify v1.10.0
 	google.golang.org/protobuf v1.36.6
 )

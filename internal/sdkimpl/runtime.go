@@ -134,8 +134,8 @@ func (d *Runtime) GetSecret(req *pb.SecretRequest) sdk.Promise[*pb.Secret] {
 			return nil, fmt.Errorf("expected 1 response, got %d", len(resp.Responses))
 		}
 
-		if resp.Responses[0].GetError() != "" {
-			return nil, fmt.Errorf("error getting secret %s: %s", req.Id, resp.Responses[0].GetError())
+		if e := resp.Responses[0].GetError(); e != nil {
+			return nil, fmt.Errorf("error getting secret %s: %s", req.Id, e.Error)
 		}
 
 		return resp.Responses[0].GetSecret(), nil
