@@ -5,11 +5,13 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/smartcontractkit/chainlink-common/pkg/capabilities/v2/protoc/installer"
 	"github.com/smartcontractkit/cre-sdk-go/generator/protos"
 )
 
 func main() {
-	internalProtos := []*protos.CapabilityConfig{
+	gen := &installer.Generator{GeneratorHelper: protos.GeneratorHelper{}}
+	internalProtos := []*installer.CapabilityConfig{
 		{
 			Category:      "internal",
 			Pkg:           "consensus",
@@ -61,7 +63,7 @@ func main() {
 		},
 	}
 
-	internalProtosToDir := map[string]*protos.CapabilityConfig{}
+	internalProtosToDir := map[string]*installer.CapabilityConfig{}
 
 	for _, proto := range internalProtos {
 		key := proto.Pkg
@@ -77,7 +79,7 @@ func main() {
 		}
 	}
 
-	if err := protos.GenerateMany(internalProtosToDir); err != nil {
+	if err := gen.GenerateMany(internalProtosToDir); err != nil {
 		panic(err)
 	}
 }

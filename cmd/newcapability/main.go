@@ -1,4 +1,3 @@
-// protos/cmd/newcapability/main.go
 package main
 
 import (
@@ -64,7 +63,6 @@ func main() {
 	modPath := fmt.Sprintf("github.com/smartcontractkit/cre-sdk-go/capabilities/%s/%s", cfg.Category, cfg.Pkg)
 	execCmd(capDir, "go", "mod", "init", modPath)
 
-	// Required dependencies
 	execCmd(capDir, "go", "get", fmt.Sprintf("github.com/smartcontractkit/cre-sdk-go/generator/protos@%s", cfg.Commit))
 
 	execCmd(capDir, "go", "mod", "tidy")

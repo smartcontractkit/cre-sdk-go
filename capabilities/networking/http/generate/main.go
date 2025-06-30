@@ -1,9 +1,13 @@
 package main
 
-import "github.com/smartcontractkit/cre-sdk-go/generator/protos"
+import (
+	"github.com/smartcontractkit/chainlink-common/pkg/capabilities/v2/protoc/installer"
+	"github.com/smartcontractkit/cre-sdk-go/generator/protos"
+)
 
 func main() {
-	if err := protos.Generate(&protos.CapabilityConfig{
+    gen := installer.Generator{GeneratorHelper: protos.GeneratorHelper{}}
+	if err := gen.Generate(&installer.CapabilityConfig{
 		Category:     "networking",
 		Pkg:          "http",
 		MajorVersion: 1,
