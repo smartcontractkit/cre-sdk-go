@@ -2,8 +2,8 @@ github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc h1:U9qPSI2PIWSS1
 github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 h1:Jamvg5psRIccs7FGNTlIRMkT8wgtp5eCXdBlqhYGL6U=
 github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
-github.com/smartcontractkit/chainlink-common/pkg/capabilities/v2/protoc/installer v0.0.0-20250630180711-26ee522d77fa h1:idnIRo9gksqUiz/HbBB9enMpf1Q8ST84eEiusf74kgY=
-github.com/smartcontractkit/chainlink-common/pkg/capabilities/v2/protoc/installer v0.0.0-20250630180711-26ee522d77fa/go.mod h1:Kt4mrzGXNIgSXOt+R352hfHQfECPAm/O+wOWp8liOmA=
+github.com/smartcontractkit/chainlink-common/pkg/capabilities/v2/protoc/installer v0.0.0-20250630183252-b59dfc5db95a h1:bc8cyuDcyvHjOM1DeWrWNPLR/Ikvg96Gxg5OKw/q/Vk=
+github.com/smartcontractkit/chainlink-common/pkg/capabilities/v2/protoc/installer v0.0.0-20250630183252-b59dfc5db95a/go.mod h1:C9pVIKeXNVJ6H8VrgrBE0ClRw8k3FvraL9CMdfcMnL0=
 github.com/smartcontractkit/chainlink-common/pkg/values v0.0.0-20250630180408-0893cbde533e h1:xTJQFF13EHKDae87veSaPBXb0c9idUuo9+8STPLJx5o=
 github.com/smartcontractkit/chainlink-common/pkg/values v0.0.0-20250630180408-0893cbde533e/go.mod h1:QUEPHdSkH19Or+E1iMGG+rDQ6jpCTIbm//9Osa6MXDE=
 github.com/stretchr/testify v1.10.0 h1:Xv5erBjTwe/5IxqUQTdXv5kgmIvbHo3QQyRwhJsOfJA=
