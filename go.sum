@@ -10,12 +10,10 @@ github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 h1:Jamvg5psRI
 github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/shopspring/decimal v1.4.0 h1:bxl37RwXBklmTi0C79JfXCEBD1cqqHt0bbgBAGFp81k=
 github.com/shopspring/decimal v1.4.0/go.mod h1:gawqmDU56v4yIKSwfBSFip1HdCCXN8/+DMd9qYNcwME=
-github.com/smartcontractkit/chainlink-common/pkg/capabilities/v2/protoc/installer v0.0.0-20250630194238-3631c0f88d89 h1:2vYMPlgMzSd+D9g1PKa1KE8QPQP3FeGhWpwckOHy77s=
-github.com/smartcontractkit/chainlink-common/pkg/capabilities/v2/protoc/installer v0.0.0-20250630194238-3631c0f88d89/go.mod h1:d2AuowXRqtz7RFbzvV5NKe11KE5VDQNBW0xPI/F9f3Y=
-github.com/smartcontractkit/chainlink-common/pkg/values v0.0.0-20250630193954-65985e6645e4 h1:pruknTBOf7w6YA8vL8BCbhVeR66FlKVmRSjPflcGsEs=
-github.com/smartcontractkit/chainlink-common/pkg/values v0.0.0-20250630193954-65985e6645e4/go.mod h1:QUEPHdSkH19Or+E1iMGG+rDQ6jpCTIbm//9Osa6MXDE=
-github.com/smartcontractkit/cre-sdk-go/generator/protos v0.0.0-20250630194436-46a69396339d h1:d6c+dYictm8j+GtVI4gTAom9HXY277kNoWDh2b1CWsY=
-github.com/smartcontractkit/cre-sdk-go/generator/protos v0.0.0-20250630194436-46a69396339d/go.mod h1:ENsMaTGy/GVdqBUIWnd1yyw/OzE4joNEVHl7PrlT7IE=
+github.com/smartcontractkit/chainlink-common/pkg/values v0.0.0-20250701004702-b5cfd2343397 h1:yHQyIBLMbOQQOZfrTfHBpAisDbX/t5QL9wCSXxbQSUg=
+github.com/smartcontractkit/chainlink-common/pkg/values v0.0.0-20250701004702-b5cfd2343397/go.mod h1:QUEPHdSkH19Or+E1iMGG+rDQ6jpCTIbm//9Osa6MXDE=
+github.com/smartcontractkit/cre-sdk-go/generator/protos v0.0.0-20250701012035-bde93d975ede h1:HtXw+mnFC24v1yw4OVronLJbLDs2PPWH8dLVE7CyW2g=
+github.com/smartcontractkit/cre-sdk-go/generator/protos v0.0.0-20250701012035-bde93d975ede/go.mod h1:y3gGXjvr4fDh/I4HmHSemMgOJThnqXbA4/1NFqurm+I=
 github.com/stretchr/testify v1.10.0 h1:Xv5erBjTwe/5IxqUQTdXv5kgmIvbHo3QQyRwhJsOfJA=
 github.com/stretchr/testify v1.10.0/go.mod h1:r2ic/lqez/lEtzL7wO/rwa5dbSLXVDPFyf8C91i36aY=
 google.golang.org/protobuf v1.36.6 h1:z1NpPI8ku2WgiWnf+t9wTPsn6eP1L7ksHUlkfLvd9xY=

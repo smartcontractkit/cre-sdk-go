@@ -2,9 +2,10 @@ package protos
 
 import (
 	"fmt"
-	"github.com/smartcontractkit/chainlink-common/pkg/values/installer/pkg"
 	"path/filepath"
 	"strings"
+
+	"github.com/smartcontractkit/chainlink-common/pkg/values/installer/pkg"
 )
 
 type ProtocHelper struct{}
@@ -13,14 +14,6 @@ var _ pkg.ProtocHelper = ProtocHelper{}
 
 func (g ProtocHelper) SdkPgk() string {
 	return "github.com/smartcontractkit/cre-sdk-go/sdk/pb"
-}
-
-func (g ProtocHelper) PluginName() string {
-	return "github.com/smartcontractkit/cre-sdk-go/generator/protoc-gen-cre"
-}
-
-func (g ProtocHelper) HelperName() string {
-	return "github.com/smartcontractkit/cre-sdk-go/generator/protos"
 }
 
 func (g ProtocHelper) FullGoPackageName(c *pkg.CapabilityConfig) string {
