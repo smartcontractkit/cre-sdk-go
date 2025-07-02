@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	valuespb "github.com/smartcontractkit/chainlink-common/pkg/values/pb"
-	"github.com/smartcontractkit/cre-sdk-go/internal/capabilities/consensus/mock"
+	consensusmock "github.com/smartcontractkit/cre-sdk-go/internal/capabilities/consensus/mock"
 	"github.com/smartcontractkit/cre-sdk-go/internal/sdkimpl"
 	"github.com/smartcontractkit/cre-sdk-go/sdk"
 	"github.com/smartcontractkit/cre-sdk-go/sdk/pb"
@@ -30,16 +30,35 @@ func newRuntime(tb testing.TB, sourceFn func() rand.Source, secrets map[string]s
 	}
 }
 
-func defaultSimpleConsensus(_ context.Context, input *pb.SimpleConsensusInputs) (*valuespb.Value, error) {
+func defaultSimpleConsensus(_ context.Context, input *pb.SimpleConsensusInputs) (*pb.ConsensusOutputs, error) {
+	mapProto := &valuespb.Map{
+		Fields: map[string]*valuespb.Value{
+			sdk.ConsensusResponseMapKeyMetadata: {Value: &valuespb.Value_StringValue{StringValue: "test_metadata"}},
+		},
+	}
 	switch o := input.Observation.(type) {
 	case *pb.SimpleConsensusInputs_Value:
-		return o.Value, nil
+		mapProto.Fields[sdk.ConsensusResponseMapKeyPayload] = o.Value
+		rawMap, err := proto.Marshal(mapProto)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal value: %w", err)
+		}
+		return &pb.ConsensusOutputs{
+			RawReport: rawMap,
+		}, nil
 	case *pb.SimpleConsensusInputs_Error:
 		if input.Default == nil || input.Default.Value == nil {
 			return nil, errors.New(o.Error)
 		}
 
-		return input.Default, nil
+		mapProto.Fields[sdk.ConsensusResponseMapKeyPayload] = input.Default
+		rawMap, err := proto.Marshal(mapProto)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal value: %w", err)
+		}
+		return &pb.ConsensusOutputs{
+			RawReport: rawMap,
+		}, nil
 	default:
 		return nil, fmt.Errorf("unknown observation type %T", o)
 	}

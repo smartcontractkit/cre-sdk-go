@@ -7,7 +7,6 @@
 package consensus
 
 import (
-	pb1 "github.com/smartcontractkit/chainlink-common/pkg/values/pb"
 	pb "github.com/smartcontractkit/cre-sdk-go/sdk/pb"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
@@ -26,17 +25,17 @@ var File_capabilities_internal_consensus_v1alpha_consensus_proto protoreflect.Fi
 
 const file_capabilities_internal_consensus_v1alpha_consensus_proto_rawDesc = "" +
 	"\n" +
-	"7capabilities/internal/consensus/v1alpha/consensus.proto\x12'capabilities.internal.consensus.v1alpha\x1a\x15sdk/v1alpha/sdk.proto\x1a*tools/generator/v1alpha/cre_metadata.proto\x1a\x16values/v1/values.proto2j\n" +
-	"\tConsensus\x12>\n" +
-	"\x06Simple\x12\".sdk.v1alpha.SimpleConsensusInputs\x1a\x10.values.v1.Value\x1a\x1d\x82\xb5\x18\x19\b\x01\x12\x15consensus@1.0.0-alphab\x06proto3"
+	"7capabilities/internal/consensus/v1alpha/consensus.proto\x12'capabilities.internal.consensus.v1alpha\x1a\x15sdk/v1alpha/sdk.proto\x1a*tools/generator/v1alpha/cre_metadata.proto2w\n" +
+	"\tConsensus\x12K\n" +
+	"\x06Simple\x12\".sdk.v1alpha.SimpleConsensusInputs\x1a\x1d.sdk.v1alpha.ConsensusOutputs\x1a\x1d\x82\xb5\x18\x19\b\x01\x12\x15consensus@1.0.0-alphab\x06proto3"
 
 var file_capabilities_internal_consensus_v1alpha_consensus_proto_goTypes = []any{
 	(*pb.SimpleConsensusInputs)(nil), // 0: sdk.v1alpha.SimpleConsensusInputs
-	(*pb1.Value)(nil),                // 1: values.v1.Value
+	(*pb.ConsensusOutputs)(nil),      // 1: sdk.v1alpha.ConsensusOutputs
 }
 var file_capabilities_internal_consensus_v1alpha_consensus_proto_depIdxs = []int32{
 	0, // 0: capabilities.internal.consensus.v1alpha.Consensus.Simple:input_type -> sdk.v1alpha.SimpleConsensusInputs
-	1, // 1: capabilities.internal.consensus.v1alpha.Consensus.Simple:output_type -> values.v1.Value
+	1, // 1: capabilities.internal.consensus.v1alpha.Consensus.Simple:output_type -> sdk.v1alpha.ConsensusOutputs
 	1, // [1:2] is the sub-list for method output_type
 	0, // [0:1] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
