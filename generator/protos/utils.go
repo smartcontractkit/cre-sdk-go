@@ -2,10 +2,19 @@ package protos
 
 import "github.com/smartcontractkit/chainlink-common/pkg/values/installer/pkg"
 
-func NewGeneratorAndInstallTools() (*pkg.ProtocGen, error) {
-	plugin := "github.com/smartcontractkit/cre-sdk-go/generator/protoc-gen-cre"
+const plugin = "github.com/smartcontractkit/cre-sdk-go/generator/protoc-gen-cre"
+const sdk = "github.com/smartcontractkit/cre-sdk-go"
 
-	if err := pkg.InstallProtocGenFromThisMod(plugin); err != nil {
+func NewGeneratorAndInstallToolsForCapability() (*pkg.ProtocGen, error) {
+	return newGeneratorAndInstallTools(func() error { return pkg.InstallProtocGenToDir(plugin, sdk) })
+}
+
+func NewGeneratorAndInstallToolsForSdk() (*pkg.ProtocGen, error) {
+	return newGeneratorAndInstallTools(func() error { return pkg.InstallProtocGenFromThisMod(plugin) })
+}
+
+func newGeneratorAndInstallTools(install func() error) (*pkg.ProtocGen, error) {
+	if err := install(); err != nil {
 		return nil, err
 	}
 

@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	gen, err := protos.NewGeneratorAndInstallTools()
+	gen, err := protos.NewGeneratorAndInstallToolsForSdk()
 	if err != nil {
 		panic(err)
 	}
