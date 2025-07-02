@@ -9,7 +9,7 @@ require (
 
 require (
 	github.com/shopspring/decimal v1.4.0 // indirect
-	github.com/smartcontractkit/chainlink-common/pkg/values v0.0.0-20250701003318-bc92b81720cc // indirect
+	github.com/smartcontractkit/chainlink-common/pkg/values v0.0.0-20250702155159-5a4d0bc77713 // indirect
 	golang.org/x/mod v0.24.0 // indirect
 	golang.org/x/sync v0.15.0 // indirect
 	golang.org/x/tools v0.26.0 // indirect
