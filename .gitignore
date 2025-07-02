@@ -1,0 +1,33 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+.DS_Store
+**/.tools/*
+
+# Test binary, built with `go test -c`
+*.test
+
+# Test & linter reports
+*report.xml
+*report.json
+*.out
+/golangci-lint/
+
+# Fuzz test artifacts
+**/testdata/fuzz/*
+
+# Dependency directories (remove the comment below to include it)
+vendor/
+proto_vendor/
+
+# IntelliJ IDE
+.idea
+
+# Visual Studio Code
+.vscode
+
+# Generated files
+*.wasm
