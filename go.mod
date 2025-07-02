@@ -5,7 +5,7 @@ go 1.24.4
 require (
 	github.com/google/uuid v1.6.0
 	github.com/shopspring/decimal v1.4.0
-	github.com/smartcontractkit/chainlink-common/pkg/values v0.0.0-20250702135507-d610f10ebfb1
+	github.com/smartcontractkit/chainlink-common/pkg/values v0.0.0-20250702143018-e3eaef9389d5
 	github.com/stretchr/testify v1.10.0
 	google.golang.org/protobuf v1.36.6
 )

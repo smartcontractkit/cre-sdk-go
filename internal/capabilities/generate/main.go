@@ -10,7 +10,10 @@ import (
 )
 
 func main() {
-	gen := protos.NewGenerator()
+	gen, err := protos.NewGeneratorAndInstallTools()
+	if err != nil {
+		panic(err)
+	}
 	internalProtos := []*pkg.CapabilityConfig{
 		{
 			Category:      "internal",
