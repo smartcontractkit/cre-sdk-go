@@ -6,7 +6,10 @@ import (
 )
 
 func main() {
-    gen := protos.NewGenerator()
+    gen, err := protos.NewGeneratorAndInstallToolsForCapability()
+    if err != nil {
+        panic(err)
+    }
 	if err := gen.Generate(&pkg.CapabilityConfig{
 		Category:     "{{.Category}}",
 		Pkg:          "{{.Pkg}}",
