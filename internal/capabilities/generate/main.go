@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	gen := &protos.ProtocGen{}
+	gen := &pkg.ProtocGen{ProtocHelper: protos.ProtocHelper{}}
 	internalProtos := []*pkg.CapabilityConfig{
 		{
 			Category:      "internal",

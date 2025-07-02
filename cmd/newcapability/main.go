@@ -62,14 +62,10 @@ func main() {
 
 	modPath := fmt.Sprintf("github.com/smartcontractkit/cre-sdk-go/capabilities/%s/%s", cfg.Category, cfg.Pkg)
 	execCmd(capDir, "go", "mod", "init", modPath)
-
-	execCmd(capDir, "go", "get", fmt.Sprintf("github.com/smartcontractkit/cre-sdk-go/generator/protos@%s", cfg.Commit))
-
+	execCmd(capDir, "go", "get", fmt.Sprintf("github.com/smartcontractkit/cre-sdk-go@%s", cfg.Commit))
 	execCmd(capDir, "go", "mod", "tidy")
 	execCmd(capDir, "go", "generate", "./...")
 
-	execCmd(capDir, "go", "get", fmt.Sprintf("github.com/smartcontractkit/cre-sdk-go/generator/protoc-gen-cre@%s", cfg.Commit))
-	execCmd(capDir, "go", "get", fmt.Sprintf("github.com/smartcontractkit/cre-sdk-go@%s", cfg.Commit))
 	execCmd(capDir, "go", "get", "google.golang.org/protobuf@v1.36.6")
 	execCmd(capDir, "go", "mod", "tidy")
 }
