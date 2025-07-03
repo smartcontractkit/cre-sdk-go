@@ -3,7 +3,7 @@ package pkg
 import (
 	_ "embed"
 
-	"github.com/smartcontractkit/chainlink-common/pkg/capabilities/v2/protoc"
+	"github.com/smartcontractkit/chainlink-common/pkg/capabilities/v2/protoc/pkg"
 	"google.golang.org/protobuf/compiler/protogen"
 )
 
@@ -19,7 +19,7 @@ var goActionMethodTemplate string
 //go:embed templates/mock.go.tmpl
 var goMockTemplate string
 
-var clientTemplates = []protoc.TemplateGenerator{
+var clientTemplates = []pkg.TemplateGenerator{
 	{
 		Name:             "go_sdk",
 		Template:         goClientBaseTemplate,
