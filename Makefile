@@ -19,6 +19,7 @@ generate: install-protoc gomods
 clean:
 	find . | grep -F .pb.go | grep -v proto_vendor | xargs rm -f
 	find . | grep -F _gen.go | grep -v proto_vendor | xargs rm -f
+	find . | grep -F .lock | grep -v proto_vendor | xargs rm -f
 
 .PHONY: clean-generate
 clean-generate: clean generate
