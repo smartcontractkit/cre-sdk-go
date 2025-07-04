@@ -8,8 +8,6 @@ github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 h1:Jamvg5psRI
 github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/shopspring/decimal v1.4.0 h1:bxl37RwXBklmTi0C79JfXCEBD1cqqHt0bbgBAGFp81k=
 github.com/shopspring/decimal v1.4.0/go.mod h1:gawqmDU56v4yIKSwfBSFip1HdCCXN8/+DMd9qYNcwME=
-github.com/smartcontractkit/chainlink-common/pkg/values v0.0.0-20250703141104-e7b4552635a9 h1:6dpyqGov4c+w51Q4sbzXQQTztXYnOrqwTrVjyjiJjC8=
-github.com/smartcontractkit/chainlink-common/pkg/values v0.0.0-20250703141104-e7b4552635a9/go.mod h1:U1UAbPhy6D7Qz0wHKGPoQO+dpR0hsYjgUz8xwRrmKwI=
 github.com/smartcontractkit/chainlink-common/pkg/values v0.0.0-20250704130450-be1bb3326a15 h1:OOBVeExSh1C2LpA5UKeb/cJv2ypRA+VrzPJI1NVay8w=
 github.com/smartcontractkit/chainlink-common/pkg/values v0.0.0-20250704130450-be1bb3326a15/go.mod h1:U1UAbPhy6D7Qz0wHKGPoQO+dpR0hsYjgUz8xwRrmKwI=
 github.com/smartcontractkit/cre-sdk-go v0.0.0-20250703152056-92306f71577b h1:mBULwUdglHgErrH/LZQB7F0IewfcUHtP+8/AsGeib6c=
