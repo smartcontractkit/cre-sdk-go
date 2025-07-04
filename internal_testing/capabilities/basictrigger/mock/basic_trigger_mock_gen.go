@@ -9,7 +9,7 @@ import (
 
 	"google.golang.org/protobuf/types/known/anypb"
 
-	"github.com/smartcontractkit/cre-sdk-go/internal/capabilities/basictrigger"
+	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basictrigger"
 
 	sdkpb "github.com/smartcontractkit/cre-sdk-go/sdk/pb"
 	"github.com/smartcontractkit/cre-sdk-go/sdk/testutils/registry"

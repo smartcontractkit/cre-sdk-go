@@ -20,7 +20,7 @@ func (g ProtocHelper) FullGoPackageName(c *pkg.CapabilityConfig) string {
 	base := "github.com/smartcontractkit/cre-sdk-go/capabilities/" + c.Category + "/" + c.Pkg
 
 	if strings.Split(c.Category, string(filepath.Separator))[0] == "internal" {
-		base = strings.Replace(base, "capabilities/internal", "internal/capabilities", 1)
+		base = strings.Replace(base, "capabilities/internal", "internal_testing/capabilities", 1)
 	}
 
 	if c.MajorVersion == 1 {

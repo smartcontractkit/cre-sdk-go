@@ -9,8 +9,8 @@ import (
 
 	"google.golang.org/protobuf/types/known/anypb"
 
-	"github.com/smartcontractkit/cre-sdk-go/internal/capabilities/importclash/p1"
-	"github.com/smartcontractkit/cre-sdk-go/internal/capabilities/importclash/p2"
+	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/importclash/p1"
+	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/importclash/p2"
 
 	sdkpb "github.com/smartcontractkit/cre-sdk-go/sdk/pb"
 	"github.com/smartcontractkit/cre-sdk-go/sdk/testutils/registry"

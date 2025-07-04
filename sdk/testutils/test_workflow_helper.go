@@ -5,10 +5,10 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/smartcontractkit/cre-sdk-go/internal/capabilities/basicaction"
-	basicactionmock "github.com/smartcontractkit/cre-sdk-go/internal/capabilities/basicaction/mock"
-	"github.com/smartcontractkit/cre-sdk-go/internal/capabilities/basictrigger"
-	basictriggermock "github.com/smartcontractkit/cre-sdk-go/internal/capabilities/basictrigger/mock"
+	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basicaction"
+	basicactionmock "github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basicaction/mock"
+	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basictrigger"
+	basictriggermock "github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basictrigger/mock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

@@ -1,8 +1,8 @@
 package testutils
 
 import (
-	"github.com/smartcontractkit/cre-sdk-go/internal/capabilities/basicaction"
-	"github.com/smartcontractkit/cre-sdk-go/internal/capabilities/basictrigger"
+	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basicaction"
+	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basictrigger"
 	"github.com/smartcontractkit/cre-sdk-go/sdk"
 	"github.com/smartcontractkit/cre-sdk-go/sdk/pb"
 )
