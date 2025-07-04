@@ -237,9 +237,9 @@ const file_capabilities_networking_http_v1alpha_trigger_proto_rawDesc = "" +
 	"public_key\x18\x02 \x01(\tR\tpublicKey*7\n" +
 	"\aKeyType\x12\x18\n" +
 	"\x14KEY_TYPE_UNSPECIFIED\x10\x00\x12\x12\n" +
-	"\x0eKEY_TYPE_ECDSA\x10\x012\x9a\x01\n" +
-	"\x04HTTP\x12p\n" +
-	"\aTrigger\x12,.capabilities.networking.http.v1alpha.Config\x1a-.capabilities.networking.http.v1alpha.Payload\"\x06\x8a\xb5\x18\x02\b\x010\x01\x1a \x82\xb5\x18\x1c\b\x01\x12\x18http-trigger@1.0.0-alphab\x06proto3"
+	"\x0eKEY_TYPE_ECDSA\x10\x012\x92\x01\n" +
+	"\x04HTTP\x12h\n" +
+	"\aTrigger\x12,.capabilities.networking.http.v1alpha.Config\x1a-.capabilities.networking.http.v1alpha.Payload0\x01\x1a \x82\xb5\x18\x1c\b\x01\x12\x18http-trigger@1.0.0-alphab\x06proto3"
 
 var (
 	file_capabilities_networking_http_v1alpha_trigger_proto_rawDescOnce sync.Once
