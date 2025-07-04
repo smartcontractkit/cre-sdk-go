@@ -12,10 +12,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/smartcontractkit/cre-sdk-go/internal/capabilities/actionandtrigger"
-	"github.com/smartcontractkit/cre-sdk-go/internal/capabilities/actionandtrigger/mock"
-	"github.com/smartcontractkit/cre-sdk-go/internal/capabilities/basictrigger"
-	basictriggermock "github.com/smartcontractkit/cre-sdk-go/internal/capabilities/basictrigger/mock"
+	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/actionandtrigger"
+	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/actionandtrigger/mock"
+	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basictrigger"
+	basictriggermock "github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basictrigger/mock"
 	"github.com/smartcontractkit/cre-sdk-go/sdk"
 	"github.com/smartcontractkit/cre-sdk-go/sdk/pb"
 )

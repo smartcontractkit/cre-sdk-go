@@ -6,9 +6,9 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/smartcontractkit/cre-sdk-go/internal/capabilities/basicaction"
-	"github.com/smartcontractkit/cre-sdk-go/internal/capabilities/basicaction/mock"
 	"github.com/smartcontractkit/cre-sdk-go/internal/sdkimpl"
+	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basicaction"
+	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basicaction/mock"
 	"github.com/smartcontractkit/cre-sdk-go/sdk"
 	sdkpb "github.com/smartcontractkit/cre-sdk-go/sdk/pb"
 	"google.golang.org/protobuf/proto"

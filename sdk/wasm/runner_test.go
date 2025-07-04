@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/smartcontractkit/chainlink-common/pkg/values"
-	"github.com/smartcontractkit/cre-sdk-go/internal/capabilities/basictrigger"
+	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basictrigger"
 	"github.com/smartcontractkit/cre-sdk-go/sdk/pb"
 	"github.com/smartcontractkit/cre-sdk-go/sdk/testutils"
 	"google.golang.org/protobuf/proto"

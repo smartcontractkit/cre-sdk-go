@@ -6,7 +6,7 @@ import (
 
 	"github.com/smartcontractkit/chainlink-common/pkg/values"
 	valuespb "github.com/smartcontractkit/chainlink-common/pkg/values/pb"
-	"github.com/smartcontractkit/cre-sdk-go/internal/capabilities/consensus"
+	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/consensus"
 	"github.com/smartcontractkit/cre-sdk-go/sdk"
 	"github.com/smartcontractkit/cre-sdk-go/sdk/pb"
 	"google.golang.org/protobuf/proto"

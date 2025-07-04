@@ -46,7 +46,7 @@ func TestFullGoPackageName(t *testing.T) {
 
 	t.Run("internal category", func(t *testing.T) {
 		assert.Equal(t,
-			"github.com/smartcontractkit/cre-sdk-go/internal/capabilities/cron",
+			"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/cron",
 			gh.FullGoPackageName(&pkg.CapabilityConfig{
 				Category:     "internal",
 				Pkg:          "cron",
@@ -57,7 +57,7 @@ func TestFullGoPackageName(t *testing.T) {
 
 	t.Run("internal category nested", func(t *testing.T) {
 		assert.Equal(t,
-			"github.com/smartcontractkit/cre-sdk-go/internal/capabilities/something/cron",
+			"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/something/cron",
 			gh.FullGoPackageName(&pkg.CapabilityConfig{
 				Category:     "internal/something",
 				Pkg:          "cron",
