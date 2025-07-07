@@ -8,10 +8,10 @@ import (
 	"testing"
 
 	valuespb "github.com/smartcontractkit/chainlink-common/pkg/values/pb"
+	"github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
 	"github.com/smartcontractkit/cre-sdk-go/internal/sdkimpl"
 	consensusmock "github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/consensus/mock"
 	"github.com/smartcontractkit/cre-sdk-go/sdk"
-	"github.com/smartcontractkit/cre-sdk-go/sdk/pb"
 	"github.com/smartcontractkit/cre-sdk-go/sdk/testutils/registry"
 	"google.golang.org/protobuf/proto"
 )

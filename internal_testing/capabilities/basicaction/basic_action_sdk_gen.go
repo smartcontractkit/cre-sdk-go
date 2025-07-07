@@ -7,8 +7,8 @@ import (
 
 	"google.golang.org/protobuf/types/known/anypb"
 
+	sdkpb "github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
 	"github.com/smartcontractkit/cre-sdk-go/sdk"
-	sdkpb "github.com/smartcontractkit/cre-sdk-go/sdk/pb"
 )
 
 type BasicAction struct {

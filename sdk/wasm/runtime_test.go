@@ -6,11 +6,11 @@ import (
 	"math/rand"
 	"testing"
 
+	sdkpb "github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
 	"github.com/smartcontractkit/cre-sdk-go/internal/sdkimpl"
 	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basicaction"
 	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basicaction/mock"
 	"github.com/smartcontractkit/cre-sdk-go/sdk"
-	sdkpb "github.com/smartcontractkit/cre-sdk-go/sdk/pb"
 	"google.golang.org/protobuf/proto"
 
 	"github.com/stretchr/testify/assert"

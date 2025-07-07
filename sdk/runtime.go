@@ -6,7 +6,7 @@ import (
 	"reflect"
 
 	"github.com/smartcontractkit/chainlink-common/pkg/values"
-	"github.com/smartcontractkit/cre-sdk-go/sdk/pb"
+	"github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
 )
 
 // RuntimeBase is not thread safe and must not be used concurrently.
