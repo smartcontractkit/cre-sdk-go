@@ -18,6 +18,7 @@ type SecretsProvider interface {
 }
 
 type ReportGenerator interface {
+	// TODO (CAPPL-995): wrap ConsensusOutputs in signature
 	GenerateReport(
 		encodedPayload []byte,
 		encoderName, signingAlgo, hashingAlgo string,
