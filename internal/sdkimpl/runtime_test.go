@@ -344,16 +344,20 @@ func TestRuntime_GenerateReport(t *testing.T) {
 	result, ok := any(output).(*pb.ConsensusOutputs)
 	assert.True(t, ok)
 
-	mapProto := &valuespb.Map{
+	expectedMap := &valuespb.Map{
 		Fields: map[string]*valuespb.Value{
 			sdk.ConsensusResponseMapKeyMetadata: {Value: &valuespb.Value_StringValue{StringValue: "test_metadata"}},
 			sdk.ConsensusResponseMapKeyPayload:  {Value: &valuespb.Value_BytesValue{BytesValue: anyMedian}},
 		},
 	}
-	rawValue, err := proto.Marshal(mapProto)
-	require.NoError(t, err)
 
-	assert.Equal(t, rawValue, result.RawReport, "raw report mismatch")
+	var gotMap valuespb.Map
+	require.NoError(t, proto.Unmarshal(result.RawReport, &gotMap))
+	gotFields := gotMap.GetFields()
+
+	require.Equal(t, 2, len(gotFields))
+	require.True(t, proto.Equal(gotFields[sdk.ConsensusResponseMapKeyMetadata], expectedMap.GetFields()[sdk.ConsensusResponseMapKeyMetadata]), "metadata mismatch on report")
+	require.True(t, proto.Equal(gotFields[sdk.ConsensusResponseMapKeyPayload], expectedMap.GetFields()[sdk.ConsensusResponseMapKeyPayload]), "payload mismatch on report")
 }
 
 func testRuntime[T any](t *testing.T, testFn func(env *sdk.Environment[string], rt sdk.Runtime, _ *basictrigger.Outputs) (T, error)) (bool, any, error) {
