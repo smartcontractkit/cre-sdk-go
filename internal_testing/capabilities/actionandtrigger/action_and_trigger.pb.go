@@ -7,7 +7,7 @@
 package actionandtrigger
 
 import (
-	_ "github.com/smartcontractkit/cre-sdk-go/sdk/pb"
+	_ "github.com/smartcontractkit/chainlink-common/pkg/capabilities/v2/protoc/pkg/pb"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
