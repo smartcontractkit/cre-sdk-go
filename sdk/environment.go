@@ -4,7 +4,7 @@ import (
 	"io"
 	"log/slog"
 
-	sdkpb "github.com/smartcontractkit/cre-sdk-go/sdk/pb"
+	sdkpb "github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
 )
 
 type NodeEnvironment[C any] struct {

@@ -13,8 +13,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	sdkpb "github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
 	"github.com/smartcontractkit/cre-sdk-go/sdk"
-	sdkpb "github.com/smartcontractkit/cre-sdk-go/sdk/pb"
 )
 
 type runtimeInternalsTestHook struct {

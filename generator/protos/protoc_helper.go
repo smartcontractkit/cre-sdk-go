@@ -12,10 +12,6 @@ type ProtocHelper struct{}
 
 var _ pkg.ProtocHelper = ProtocHelper{}
 
-func (g ProtocHelper) SdkPgk() string {
-	return "github.com/smartcontractkit/cre-sdk-go/sdk/pb"
-}
-
 func (g ProtocHelper) FullGoPackageName(c *pkg.CapabilityConfig) string {
 	base := "github.com/smartcontractkit/cre-sdk-go/capabilities/" + c.Category + "/" + c.Pkg
 

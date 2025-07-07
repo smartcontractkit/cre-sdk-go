@@ -5,9 +5,9 @@ import (
 	"math/rand"
 	"unsafe"
 
+	"github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
+	sdkpb "github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
 	"github.com/smartcontractkit/cre-sdk-go/internal/sdkimpl"
-	"github.com/smartcontractkit/cre-sdk-go/sdk/pb"
-	sdkpb "github.com/smartcontractkit/cre-sdk-go/sdk/pb"
 	"google.golang.org/protobuf/proto"
 )
 
