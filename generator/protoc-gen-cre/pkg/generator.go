@@ -36,13 +36,13 @@ var clientTemplates = []pkg.TemplateGenerator{
 	},
 }
 
-func GenerateClient(plugin *protogen.Plugin, file *protogen.File) error {
+func GenerateClient(plugin *protogen.Plugin, file *protogen.File, toolName, localPrefix string) error {
 	if len(file.Services) == 0 {
 		return nil
 	}
 
 	for _, template := range clientTemplates {
-		if err := template.GenerateFile(file, plugin, file); err != nil {
+		if err := template.GenerateFile(file, plugin, file, toolName, localPrefix); err != nil {
 			return err
 		}
 	}

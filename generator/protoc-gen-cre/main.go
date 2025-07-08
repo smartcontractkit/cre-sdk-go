@@ -9,6 +9,11 @@ import (
 	"google.golang.org/protobuf/types/pluginpb"
 )
 
+const (
+	toolName    = "github.com/smartcontractkit/chainlink-common/pkg/capabilities/v2/protoc"
+	localPrefix = "http://github.com/smartcontractkit/cre-sdk-go"
+)
+
 func main() {
 	protogen.Options{}.Run(func(plugin *protogen.Plugin) error {
 		plugin.SupportedFeatures = uint64(pluginpb.CodeGeneratorResponse_FEATURE_PROTO3_OPTIONAL)
@@ -16,7 +21,7 @@ func main() {
 			if !file.Generate {
 				continue
 			}
-			if err := pkg.GenerateClient(plugin, file); err != nil {
+			if err := pkg.GenerateClient(plugin, file, toolName, localPrefix); err != nil {
 				log.Printf("failed to generate for %s: %v", file.Desc.Path(), err)
 				os.Exit(1)
 			}

@@ -3,22 +3,22 @@ package registry_test
 import (
 	"testing"
 
+	actionandtriggermock "github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/actionandtrigger/mock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basicaction/mock"
-	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basictrigger/mock"
 	"github.com/smartcontractkit/cre-sdk-go/sdk/testutils/registry"
 )
 
 func TestRegisterCapability(t *testing.T) {
 	r := registry.GetRegistry(t)
-	c := &basictriggermock.BasicCapability{}
+	c := &basicactionmock.BasicActionCapability{}
 
 	err := r.RegisterCapability(c)
 	assert.NoError(t, err)
 
-	c = &basictriggermock.BasicCapability{}
+	c = &basicactionmock.BasicActionCapability{}
 	err = r.RegisterCapability(c)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "capability already exists:")
@@ -26,8 +26,8 @@ func TestRegisterCapability(t *testing.T) {
 
 func TestForceRegisterCapability(t *testing.T) {
 	r := registry.GetRegistry(t)
-	c1 := &basictriggermock.BasicCapability{}
-	c2 := &basictriggermock.BasicCapability{}
+	c1 := &basicactionmock.BasicActionCapability{}
+	c2 := &basicactionmock.BasicActionCapability{}
 
 	r.ForceRegisterCapability(c1)
 	r.ForceRegisterCapability(c2)
@@ -39,7 +39,7 @@ func TestForceRegisterCapability(t *testing.T) {
 
 func TestGetCapability(t *testing.T) {
 	r := registry.GetRegistry(t)
-	c1 := &basictriggermock.BasicCapability{}
+	c1 := &actionandtriggermock.BasicCapability{}
 	c2 := &basicactionmock.BasicActionCapability{}
 
 	err := r.RegisterCapability(c1)
