@@ -32,7 +32,7 @@ var clientTemplates = []pkg.TemplateGenerator{
 	{
 		Name:             "go_mock",
 		Template:         goMockTemplate,
-		FileNameTemplate: "mock/{{.}}_mock_gen.go",
+		FileNameTemplate: "mock/{{.}}_mock_gen.go.txt",
 	},
 }
 

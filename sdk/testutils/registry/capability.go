@@ -8,7 +8,6 @@ import (
 
 type Capability interface {
 	Invoke(ctx context.Context, request *pb.CapabilityRequest) *pb.CapabilityResponse
-	InvokeTrigger(ctx context.Context, request *pb.TriggerSubscription) (*pb.Trigger, error)
 	ID() string
 }
 
