@@ -3,7 +3,6 @@ module github.com/smartcontractkit/cre-sdk-go
 go 1.24.4
 
 require (
-	github.com/google/uuid v1.6.0
 	github.com/shopspring/decimal v1.4.0
 	github.com/smartcontractkit/chainlink-common/pkg/values v0.0.0-20250707214334-e164c13b2f32
 	github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb v0.0.0-20250709113658-8690ed48d976

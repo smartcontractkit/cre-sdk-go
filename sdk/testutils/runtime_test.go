@@ -31,56 +31,31 @@ func TestRuntime_CallCapability(t *testing.T) {
 		action, err := basicactionmock.NewBasicActionCapability(t)
 		require.NoError(t, err)
 		action.PerformAction = func(_ context.Context, input *basicaction.Inputs) (*basicaction.Outputs, error) {
-			return &basicaction.Outputs{AdaptedThing: strings.Repeat("a", 1000)}, nil
+			return &basicaction.Outputs{AdaptedThing: strings.Repeat("a", sdk.DefaultMaxResponseSizeBytes+1)}, nil
 		}
 
-		runner := testutils.NewRunner(t, "unused")
-		runner.SetMaxResponseSizeBytes(1)
-		runner.Run(func(_ *sdk.Environment[string]) (sdk.Workflow[string], error) {
-			return sdk.Workflow[string]{
-				sdk.Handler(
-					basictrigger.Trigger(&basictrigger.Config{}),
-					func(_ *sdk.Environment[string], rt sdk.Runtime, _ *basictrigger.Outputs) (string, error) {
-						workflowAction1 := &basicaction.BasicAction{}
-						call := workflowAction1.PerformAction(rt, &basicaction.Inputs{InputThing: true})
-						_, err := call.Await()
-						return "", err
-					},
-				)}, nil
-		})
+		rt := testutils.NewRuntime(t, map[string]string{})
+		workflowAction1 := &basicaction.BasicAction{}
+		call := workflowAction1.PerformAction(rt, &basicaction.Inputs{InputThing: true})
+		_, err = call.Await()
 
-		_, _, err = runner.Result()
 		require.Error(t, err)
 		assert.True(t, strings.Contains(err.Error(), sdk.ResponseBufferTooSmall))
 	})
 }
 
 func TestRuntime_ReturnsErrorsFromCapabilitiesThatDoNotExist(t *testing.T) {
-	anyConfig := &basictrigger.Config{Name: "name", Number: 123}
-
 	trigger, err := basictriggermock.NewBasicCapability(t)
 	require.NoError(t, err)
 	trigger.Trigger = func(_ context.Context, config *basictrigger.Config) (*basictrigger.Outputs, error) {
 		return &basictrigger.Outputs{CoolOutput: "cool"}, nil
 	}
 
-	runner := testutils.NewRunner(t, "unused")
-	require.NoError(t, err)
+	rt := testutils.NewRuntime(t, map[string]string{})
+	workflowAction1 := &basicaction.BasicAction{}
+	call := workflowAction1.PerformAction(rt, &basicaction.Inputs{InputThing: true})
+	_, err = call.Await()
 
-	runner.Run(func(_ *sdk.Environment[string]) (sdk.Workflow[string], error) {
-		return sdk.Workflow[string]{
-			sdk.Handler(
-				basictrigger.Trigger(anyConfig),
-				func(_ *sdk.Environment[string], rt sdk.Runtime, _ *basictrigger.Outputs) (string, error) {
-					workflowAction1 := &basicaction.BasicAction{}
-					call := workflowAction1.PerformAction(rt, &basicaction.Inputs{InputThing: true})
-					_, err := call.Await()
-					return "", err
-				},
-			)}, nil
-	})
-
-	_, _, err = runner.Result()
 	require.Error(t, err)
 }
 
@@ -102,33 +77,22 @@ func TestRuntime_ConsensusReturnsTheObservation(t *testing.T) {
 		return &nodeaction.NodeOutputs{OutputThing: anyValue}, nil
 	}
 
-	runner := testutils.NewRunner(t, "unused")
+	rt := testutils.NewRuntime(t, map[string]string{})
 	require.NoError(t, err)
 
-	runner.Run(func(_ *sdk.Environment[string]) (sdk.Workflow[string], error) {
-		return sdk.Workflow[string]{
-			sdk.Handler(
-				basictrigger.Trigger(anyConfig),
-				func(env *sdk.Environment[string], rt sdk.Runtime, input *basictrigger.Outputs) (int32, error) {
-					consensus := sdk.RunInNodeMode(env, rt, func(_ *sdk.NodeEnvironment[string], nodeRuntime sdk.NodeRuntime) (int32, error) {
-						action := &nodeaction.BasicAction{}
-						resp, err := action.PerformAction(nodeRuntime, &nodeaction.NodeInputs{InputThing: true}).Await()
-						require.NoError(t, err)
-						return resp.OutputThing, nil
-					}, sdk.ConsensusMedianAggregation[int32]())
+	env := testutils.NewEnvironment("anything", rt)
 
-					consensusResult, err := consensus.Await()
-					require.NoError(t, err)
-					return consensusResult, nil
+	consensus := sdk.RunInNodeMode(env, rt, func(_ *sdk.NodeEnvironment[string], nodeRuntime sdk.NodeRuntime) (int32, error) {
+		action := &nodeaction.BasicAction{}
+		resp, err := action.PerformAction(nodeRuntime, &nodeaction.NodeInputs{InputThing: true}).Await()
+		require.NoError(t, err)
+		return resp.OutputThing, nil
+	}, sdk.ConsensusMedianAggregation[int32]())
 
-				},
-			)}, nil
-	})
+	consensusResult, err := consensus.Await()
 
-	ran, result, err := runner.Result()
 	require.NoError(t, err)
-	assert.True(t, ran)
-	assert.Equal(t, anyValue, result)
+	assert.Equal(t, anyValue, consensusResult)
 }
 
 func TestRuntime_ConsensusReturnsTheDefaultValue(t *testing.T) {
@@ -142,34 +106,21 @@ func TestRuntime_ConsensusReturnsTheDefaultValue(t *testing.T) {
 		return anyTrigger, nil
 	}
 
-	runner := testutils.NewRunner(t, "unused")
-	require.NoError(t, err)
-
 	anyValue := int32(100)
-	runner.Run(func(_ *sdk.Environment[string]) (sdk.Workflow[string], error) {
-		return sdk.Workflow[string]{
-			sdk.Handler(
-				basictrigger.Trigger(anyConfig),
-				func(env *sdk.Environment[string], rt sdk.Runtime, input *basictrigger.Outputs) (int32, error) {
-					consensus := sdk.RunInNodeMode(
-						env,
-						rt,
-						func(_ *sdk.NodeEnvironment[string], nodeRuntime sdk.NodeRuntime) (int32, error) {
-							return 0, errors.New("no consensus")
-						},
-						sdk.ConsensusMedianAggregation[int32]().WithDefault(anyValue))
 
-					consensusResult, err := consensus.Await()
-					require.NoError(t, err)
-					return consensusResult, nil
-				},
-			)}, nil
-	})
+	runtime := testutils.NewRuntime(t, map[string]string{})
+	env := testutils.NewEnvironment("anything", runtime)
+	consensus := sdk.RunInNodeMode(
+		env,
+		runtime,
+		func(_ *sdk.NodeEnvironment[string], nodeRuntime sdk.NodeRuntime) (int32, error) {
+			return 0, errors.New("no consensus")
+		},
+		sdk.ConsensusMedianAggregation[int32]().WithDefault(anyValue))
 
-	ran, result, err := runner.Result()
+	consensusResult, err := consensus.Await()
 	require.NoError(t, err)
-	assert.True(t, ran)
-	assert.Equal(t, anyValue, result)
+	assert.Equal(t, anyValue, consensusResult)
 }
 
 func TestRuntime_ConsensusReturnsErrors(t *testing.T) {
@@ -183,28 +134,16 @@ func TestRuntime_ConsensusReturnsErrors(t *testing.T) {
 		return anyTrigger, nil
 	}
 
-	runner := testutils.NewRunner(t, "unused")
-	require.NoError(t, err)
-
+	runtime := testutils.NewRuntime(t, map[string]string{})
+	env := testutils.NewEnvironment("anything", runtime)
 	anyErr := errors.New("no consensus")
-	runner.Run(func(env *sdk.Environment[string]) (sdk.Workflow[string], error) {
-		return sdk.Workflow[string]{
-			sdk.Handler(
-				basictrigger.Trigger(anyConfig),
-				func(_ *sdk.Environment[string], rt sdk.Runtime, input *basictrigger.Outputs) (int32, error) {
-					consensus := sdk.RunInNodeMode(
-						env,
-						rt,
-						func(_ *sdk.NodeEnvironment[string], nodeRuntime sdk.NodeRuntime) (int32, error) {
-							return 0, anyErr
-						},
-						sdk.ConsensusMedianAggregation[int32]())
-
-					return consensus.Await()
-				},
-			)}, nil
-	})
-
-	_, _, err = runner.Result()
-	require.Equal(t, err, anyErr)
+	consensus := sdk.RunInNodeMode(
+		env,
+		runtime,
+		func(_ *sdk.NodeEnvironment[string], nodeRuntime sdk.NodeRuntime) (int32, error) {
+			return 0, anyErr
+		},
+		sdk.ConsensusMedianAggregation[int32]())
+	_, err = consensus.Await()
+	require.ErrorContains(t, err, anyErr.Error())
 }
