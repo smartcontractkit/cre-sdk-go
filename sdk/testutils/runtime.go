@@ -33,15 +33,31 @@ func newRuntime(tb testing.TB, sourceFn func() rand.Source, secrets map[string]s
 func defaultSimpleConsensus(_ context.Context, input *pb.SimpleConsensusInputs) (*valuespb.Value, error) {
 	switch o := input.Observation.(type) {
 	case *pb.SimpleConsensusInputs_Value:
-		return o.Value, nil
+		return reportFromValue(o.Value), nil
 	case *pb.SimpleConsensusInputs_Error:
 		if input.Default == nil || input.Default.Value == nil {
 			return nil, errors.New(o.Error)
 		}
 
-		return input.Default, nil
+		return reportFromValue(input.Default), nil
 	default:
 		return nil, fmt.Errorf("unknown observation type %T", o)
+	}
+}
+
+// reportFromValue will go away once the real consensus method is implemented.
+func reportFromValue(result *valuespb.Value) *valuespb.Value {
+	return &valuespb.Value{
+		Value: &valuespb.Value_MapValue{
+			MapValue: &valuespb.Map{
+				Fields: map[string]*valuespb.Value{
+					sdk.ConsensusResponseMapKeyMetadata: {Value: &valuespb.Value_StringValue{StringValue: "test_metadata"}},
+					sdk.ConsensusResponseMapKeyPayload: {
+						Value: result.Value,
+					},
+				},
+			},
+		},
 	}
 }
 

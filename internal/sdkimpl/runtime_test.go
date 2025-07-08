@@ -462,13 +462,21 @@ func buildConsensusResponseValue[T any](t *testing.T, responseVal T) (*valuespb.
 	// Use type switch to determine the actual concrete type of T
 	switch resp := any(responseVal).(type) {
 	case int64:
-		// If T is int64, construct an Int64Value protobuf
 		return &valuespb.Value{
-			Value: &valuespb.Value_Int64Value{
-				Int64Value: resp,
+			Value: &valuespb.Value_MapValue{
+				MapValue: &valuespb.Map{
+					Fields: map[string]*valuespb.Value{
+						sdk.ConsensusResponseMapKeyMetadata: {Value: &valuespb.Value_StringValue{StringValue: "test_metadata"}},
+						sdk.ConsensusResponseMapKeyPayload: {
+							Value: &valuespb.Value_Int64Value{
+								Int64Value: resp,
+							},
+						},
+					},
+				},
 			},
 		}, nil
-	// Add other concrete types for T that can be returned as a response
+
 	default:
 		assert.Fail(t, "unexpected response generic type %T, not handled for protobuf conversion", responseVal)
 		return nil, fmt.Errorf("unsupported generic type %T for protobuf response", responseVal)

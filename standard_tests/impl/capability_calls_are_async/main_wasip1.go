@@ -1,0 +1,48 @@
+package main
+
+import (
+	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basicaction"
+	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basictrigger"
+	"github.com/smartcontractkit/cre-sdk-go/sdk"
+	"github.com/smartcontractkit/cre-sdk-go/sdk/wasm"
+)
+
+func main() {
+	runner := wasm.NewRunner(func(configBytes []byte) ([]byte, error) {
+		return configBytes, nil
+	})
+	runner.Run(initFn)
+}
+
+func initFn(_ *sdk.Environment[[]byte]) (sdk.Workflow[[]byte], error) {
+	return sdk.Workflow[[]byte]{
+		sdk.Handler(
+			basictrigger.Trigger(&basictrigger.Config{
+				Name:   "first-trigger",
+				Number: 100,
+			}),
+			asyncCalls,
+		),
+	}, nil
+}
+
+func asyncCalls(_ *sdk.Environment[[]byte], rt sdk.Runtime, _ *basictrigger.Outputs) (string, error) {
+	input1 := &basicaction.Inputs{InputThing: true}
+	input2 := &basicaction.Inputs{InputThing: false}
+	action := basicaction.BasicAction{}
+
+	r1Id := action.PerformAction(rt, input1)
+	r1I2 := action.PerformAction(rt, input2)
+
+	results2, err := r1I2.Await()
+	if err != nil {
+		return "", err
+	}
+
+	results1, err := r1Id.Await()
+	if err != nil {
+		return "", err
+	}
+
+	return results1.AdaptedThing + results2.AdaptedThing, nil
+}

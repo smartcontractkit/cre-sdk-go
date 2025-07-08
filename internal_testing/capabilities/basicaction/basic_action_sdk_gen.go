@@ -4,6 +4,7 @@ package basicaction
 
 import (
 	"errors"
+	"fmt"
 
 	"google.golang.org/protobuf/types/known/anypb"
 
@@ -31,6 +32,9 @@ func (c *BasicAction) PerformAction(runtime sdk.Runtime, input *Inputs) sdk.Prom
 		case *sdkpb.CapabilityResponse_Payload:
 			output := &Outputs{}
 			err = payload.Payload.UnmarshalTo(output)
+			if err != nil {
+				panic(fmt.Sprintf("Unmarshelled to payload...\n%+v\n%s\n%x\n", output, payload.Payload.TypeUrl, payload.Payload.Value))
+			}
 			return output, err
 		default:
 			return nil, errors.New("unexpected response type")

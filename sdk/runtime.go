@@ -168,15 +168,21 @@ func RunInNodeMode[C, T any](
 	return Then(runtime.RunInNodeMode(observationFn), func(v values.Value) (T, error) {
 		var t T
 		var err error
+
+		m, ok := v.(*values.Map)
+		if !ok {
+			return t, errors.New("expected a map value from RunInNodeMode")
+		}
+
 		typ := reflect.TypeOf(t)
 
 		// If T is a pointer type, we need to allocate the underlying type and pass its pointer to UnwrapTo
 		if typ.Kind() == reflect.Ptr {
 			elem := reflect.New(typ.Elem())
-			err = v.UnwrapTo(elem.Interface())
+			err = m.Underlying[ConsensusResponseMapKeyPayload].UnwrapTo(elem.Interface())
 			t = elem.Interface().(T)
 		} else {
-			err = v.UnwrapTo(&t)
+			err = m.Underlying[ConsensusResponseMapKeyPayload].UnwrapTo(&t)
 		}
 		return t, err
 	})
