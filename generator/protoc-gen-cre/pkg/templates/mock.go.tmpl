@@ -1,3 +1,13 @@
+{{- $anyServiceHasActions := false -}}
+{{- range .Services -}}
+    {{- range .Methods -}}
+      {{- if not (isTrigger .) -}}
+        {{- $anyServiceHasActions = true -}}
+      {{- end -}}
+    {{- end -}}
+{{- end -}}
+{{- if $anyServiceHasActions -}}
+
 package {{.GoPackageName}}mock
 
 import (
@@ -6,17 +16,17 @@ import (
     "testing"
 
     "google.golang.org/protobuf/types/known/anypb"
-
-    {{- range .Services }}
-        {{- range .Methods }}
-            {{- addImport .Input.GoIdent.GoImportPath "" }}
-            {{- addImport .Output.GoIdent.GoImportPath "" }}
-        {{- end }}
-    {{- end }}
-
-    {{- range allimports }}
+    {{ range .Services }}
+        {{ range .Methods }}
+            {{ if not (isTrigger .) }}
+                {{ addImport .Input.GoIdent.GoImportPath "" }}
+                {{ addImport .Output.GoIdent.GoImportPath "" }}
+            {{ end }}
+        {{ end }}
+    {{ end }}
+    {{ range allimports }}
     {{.}}
-    {{- end }}
+    {{ end }}
 
     sdkpb "github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
     "github.com/smartcontractkit/cre-sdk-go/sdk/testutils/registry"
@@ -24,12 +34,15 @@ import (
 
 // avoid unused imports
 var _ = registry.Registry{}
-
-{{- range .Services}}
-{{ $service := . }}
-{{ $hasTriggers := false }}
-{{ $hasActions := false }}
-
+    {{ range .Services -}}
+        {{ $service := . -}}
+        {{- $hasActions := false -}}
+        {{- range .Methods -}}
+        {{- if not (isTrigger .) -}}
+            {{- $hasActions = true -}}
+          {{- end -}}
+        {{- end -}}
+        {{- if $hasActions }}
 func New{{.GoName}}Capability(t testing.TB) (*{{.GoName}}Capability, error) {
     c := &{{.GoName}}Capability{}
     reg := registry.GetRegistry(t)
@@ -38,21 +51,16 @@ func New{{.GoName}}Capability(t testing.TB) (*{{.GoName}}Capability, error) {
 }
 
 type {{.GoName}}Capability struct {
-    {{- range .Methods}}
-      {{- if isTrigger . }}
-    {{ $hasTriggers = true }}
-    {{.GoName}} func(ctx context.Context, input *{{ImportAlias .Input.GoIdent.GoImportPath}}.{{.Input.GoIdent.GoName}}) (*{{ImportAlias .Output.GoIdent.GoImportPath}}.{{.Output.GoIdent.GoName}}, error)
-        {{- else }}
-    {{- $hasActions = true }}
+        {{- range .Methods -}}
+            {{- if not (isTrigger .) }}
     // TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
     {{.GoName}} func(ctx context.Context, input *{{ImportAlias .Input.GoIdent.GoImportPath}}.{{.Input.GoIdent.GoName}}) (*{{ImportAlias .Output.GoIdent.GoImportPath}}.{{.Output.GoIdent.GoName}}, error)
-        {{- end }}
-    {{- end }}
+            {{- end -}}
+       {{- end -}}
 }
 
 func (cap *{{.GoName}}Capability) Invoke(ctx context.Context, request *sdkpb.CapabilityRequest) *sdkpb.CapabilityResponse {
     capResp := &sdkpb.CapabilityResponse{}
-    {{- if $hasActions }}
     switch request.Method {
         {{- range .Methods }}
             {{- if not (isTrigger .) }}
@@ -83,56 +91,14 @@ func (cap *{{.GoName}}Capability) Invoke(ctx context.Context, request *sdkpb.Cap
     default:
         capResp.Response = &sdkpb.CapabilityResponse_Error{Error: fmt.Sprintf("method %s not found", request.Method)}
     }
-    {{- else }}
-    capResp.Response = &sdkpb.CapabilityResponse_Error{Error: fmt.Sprintf("method %s not found", request.Method)}
-    {{- end }}
+
     return capResp
-}
-
-func (cap *{{.GoName}}Capability) InvokeTrigger(ctx context.Context, request *sdkpb.TriggerSubscription) (*sdkpb.Trigger, error){
-    {{- if $hasTriggers }}
-    trigger := &sdkpb.Trigger{}
-    switch request.Method {
-            {{- range .Methods }}
-                {{- if isTrigger . }}
-        case "{{.GoName}}":
-            input := &{{ImportAlias .Input.GoIdent.GoImportPath}}.{{.Input.GoIdent.GoName}}{}
-            if err := request.Payload.UnmarshalTo(input); err != nil {
-                return nil, err
-            }
-
-            if cap.{{.GoName}} == nil {
-                return  nil, registry.ErrNoTriggerStub("{{.GoName}}")
-            }
-
-            resp, err := cap.{{.GoName}}(ctx, input)
-            if err != nil {
-                return nil, err
-            } else {
-                if resp == nil {
-                    return nil, nil
-                }
-
-                payload, err := anypb.New(resp)
-                if err != nil {
-                    return nil, err
-                }
-                trigger.Payload = payload
-            }
-                {{- end }}
-            {{- end }}
-        default:
-            return nil, fmt.Errorf("method %s not found", request.Method)
-        }
-        return trigger, nil
-        {{- else }}
-        return nil, fmt.Errorf("method %s not found", request.Method)
-        {{- end }}
 }
 
 func (cap *{{.GoName}}Capability) ID() string {
     return "{{CapabilityId .}}"
 }
 
-
-{{- end }}
+        {{- end -}}
+    {{- end -}}
+{{- end -}}
