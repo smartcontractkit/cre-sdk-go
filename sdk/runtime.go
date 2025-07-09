@@ -9,6 +9,10 @@ import (
 	"github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
 )
 
+type ReportGenerator interface {
+	GenerateReport(*pb.ReportRequest) Promise[*pb.ReportResponse]
+}
+
 // RuntimeBase is not thread safe and must not be used concurrently.
 type RuntimeBase interface {
 	// CallCapability is meant to be called by generated code
@@ -28,6 +32,7 @@ type Runtime interface {
 
 	// RunInNodeMode is meant to be used by the helper method RunInNodeMode
 	RunInNodeMode(fn func(nodeRuntime NodeRuntime) *pb.SimpleConsensusInputs) Promise[values.Value]
+	ReportGenerator
 }
 
 type ConsensusAggregation[T any] interface {
@@ -46,6 +51,7 @@ func (c *consensusDescriptor[T]) Descriptor() *pb.ConsensusDescriptor {
 func (c *consensusDescriptor[T]) Default() *T {
 	return nil
 }
+
 func (c *consensusDescriptor[T]) Err() error {
 	return nil
 }
@@ -120,7 +126,8 @@ func RunInNodeMode[C, T any](
 	env *Environment[C],
 	runtime Runtime,
 	fn func(env *NodeEnvironment[C], nodeRuntime NodeRuntime) (T, error),
-	cd ConsensusAggregation[T]) Promise[T] {
+	cd ConsensusAggregation[T],
+) Promise[T] {
 	observationFn := func(nodeRuntime NodeRuntime) *pb.SimpleConsensusInputs {
 		envClone := env.NodeEnvironment
 		if cd.Err() != nil {

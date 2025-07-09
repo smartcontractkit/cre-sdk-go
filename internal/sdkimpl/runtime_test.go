@@ -333,7 +333,7 @@ func TestRuntime_GenerateReport(t *testing.T) {
 	)
 
 	testFn := func(env *sdk.Environment[string], rt sdk.Runtime, _ *basictrigger.Outputs) (*pb.ReportResponse, error) {
-		return env.GenerateReport(&pb.ReportRequest{
+		return rt.GenerateReport(&pb.ReportRequest{
 			EncodedPayload: encodedPayload,
 			EncoderName:    encoderName,
 			SigningAlgo:    signingAlgo,

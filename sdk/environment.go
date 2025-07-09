@@ -17,12 +17,7 @@ type SecretsProvider interface {
 	GetSecret(*sdkpb.SecretRequest) Promise[*sdkpb.Secret]
 }
 
-type ReportGenerator interface {
-	GenerateReport(*sdkpb.ReportRequest) Promise[*sdkpb.ReportResponse]
-}
-
 type Environment[C any] struct {
 	NodeEnvironment[C]
 	SecretsProvider
-	ReportGenerator
 }

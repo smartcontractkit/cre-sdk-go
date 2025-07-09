@@ -29,7 +29,6 @@ func (r *runner[C]) Run(initFn func(env *sdk.Environment[C]) (sdk.Workflow[C], e
 			Logger:    slog.New(slog.NewTextHandler(r.writer, nil)),
 		},
 		SecretsProvider: &sdkimpl.Runtime{RuntimeBase: *r.baseRunner.base},
-		ReportGenerator: &sdkimpl.Runtime{RuntimeBase: *r.baseRunner.base},
 	}
 	wfs, err := initFn(wfc)
 	if err != nil {
@@ -175,7 +174,6 @@ func (r *baseRunner[C, T]) run(workflows []sdk.ExecutionHandler[C, T]) {
 				Logger:    slog.New(slog.NewTextHandler(r.writer, nil)),
 			},
 			SecretsProvider: &sdkimpl.Runtime{RuntimeBase: *r.base},
-			ReportGenerator: &sdkimpl.Runtime{RuntimeBase: *r.base},
 		}
 		result, err := handler.Callback()(env, r.runtime, response.Payload)
 		// If an error occurred during the callback (eg. via secrets fetching)

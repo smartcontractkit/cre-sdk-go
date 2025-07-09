@@ -125,6 +125,10 @@ func (m *mockDonRuntime) Rand() (*rand.Rand, error) {
 	panic("unused in tests")
 }
 
+func (m *mockDonRuntime) GenerateReport(_ *pb.ReportRequest) sdk.Promise[*pb.ReportResponse] {
+	panic("unused in tests")
+}
+
 func (m *mockDonRuntime) RunInNodeMode(fn func(nodeRuntime sdk.NodeRuntime) *pb.SimpleConsensusInputs) sdk.Promise[values.Value] {
 	req := fn(mockNodeRuntime{})
 
