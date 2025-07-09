@@ -100,6 +100,15 @@ func (r *RuntimeBase) Rand() (*rand.Rand, error) {
 	return rand.New(r), nil
 }
 
+func (d *Runtime) GenerateReport(request *pb.ReportRequest) sdk.Promise[*pb.ReportResponse] {
+	c := &consensus.Consensus{}
+	return sdk.Then(
+		c.Report(d, request), func(result *pb.ReportResponse) (*pb.ReportResponse, error) {
+			return result, nil
+		},
+	)
+}
+
 type Runtime struct {
 	RuntimeBase
 	nextNodeCallId int32
@@ -162,13 +171,6 @@ func (d *Runtime) RunInNodeMode(fn func(nodeRuntime sdk.NodeRuntime) *pb.SimpleC
 	c := &consensus.Consensus{}
 	return sdk.Then(c.Simple(d, observation), func(result *valuespb.Value) (values.Value, error) {
 		return values.FromProto(result)
-	})
-}
-
-func (d *Runtime) GenerateReport(req *pb.ReportRequest) sdk.Promise[*pb.ReportResponse] {
-	c := &consensus.Consensus{}
-	return sdk.Then(c.Report(d, req), func(result *pb.ReportResponse) (*pb.ReportResponse, error) {
-		return result, nil
 	})
 }
 

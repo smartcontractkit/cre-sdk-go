@@ -214,7 +214,7 @@ func TestDonRuntime_RunInNodeMode(t *testing.T) {
 			return &nodeaction.NodeOutputs{OutputThing: anyObservation}, nil
 		}
 
-		setupSimpleConsensus(t, &consensusValues[int64]{GiveObservation: int64(anyObservation), WantResponse: anyMedian})
+		mockSimpleConsensus(t, &consensusValues[int64]{GiveObservation: int64(anyObservation), WantResponse: anyMedian})
 
 		test := func(env *sdk.Environment[string], rt sdk.Runtime, _ *basictrigger.Outputs) (int64, error) {
 			result, err := sdk.RunInNodeMode(env, rt, func(_ *sdk.NodeEnvironment[string], runtime sdk.NodeRuntime) (int64, error) {
@@ -235,7 +235,7 @@ func TestDonRuntime_RunInNodeMode(t *testing.T) {
 	t.Run("Failed consensus", func(t *testing.T) {
 		anyError := errors.New("error")
 
-		setupSimpleConsensus(t, &consensusValues[int64]{GiveErr: anyError})
+		mockSimpleConsensus(t, &consensusValues[int64]{GiveErr: anyError})
 
 		test := func(env *sdk.Environment[string], rt sdk.Runtime, _ *basictrigger.Outputs) (int64, error) {
 			return sdk.RunInNodeMode(env, rt, func(_ *sdk.NodeEnvironment[string], _ sdk.NodeRuntime) (int64, error) {
@@ -326,7 +326,7 @@ func TestRuntime_GenerateReport(t *testing.T) {
 		hashingAlgo    = "some-hasher"
 	)
 
-	setupReportConsensus(t,
+	mockReportConsensus(t,
 		&consensusValues[[]byte]{
 			WantResponse: anyMedian,
 		},
@@ -390,101 +390,133 @@ type consensusValues[T any] struct {
 	WantResponse    T
 }
 
-func setupSimpleConsensus[T any](t *testing.T, values *consensusValues[T]) {
+func mockSimpleConsensus[T any](t *testing.T, values *consensusValues[T]) {
 	consensus, err := consensusmock.NewConsensusCapability(t)
 	require.NoError(t, err)
 
 	consensus.Simple = func(ctx context.Context, input *pb.SimpleConsensusInputs) (*valuespb.Value, error) {
-		assert.Nil(t, input.Default.Value)
-
-		switch d := input.Descriptors.Descriptor_.(type) {
-		case *pb.ConsensusDescriptor_Aggregation:
-			assert.Equal(t, pb.AggregationType_AGGREGATION_TYPE_MEDIAN, d.Aggregation)
-		default:
-			assert.Fail(t, "unexpected descriptor type")
-		}
-
-		switch o := input.Observation.(type) {
-		case *pb.SimpleConsensusInputs_Value:
-			assert.Nil(t, values.GiveErr)
-			var (
-				rawValue []byte
-				err      error
-			)
-			switch v := o.Value.Value.(type) {
-			case *valuespb.Value_Int64Value:
-				assert.Equal(t, values.GiveObservation, v.Int64Value)
-				switch resp := any(values.WantResponse).(type) {
-				case int64:
-					mapProto := &valuespb.Map{
-						Fields: map[string]*valuespb.Value{
-							sdk.ConsensusResponseMapKeyMetadata: {Value: &valuespb.Value_StringValue{StringValue: "test_metadata"}},
-							sdk.ConsensusResponseMapKeyPayload:  {Value: &valuespb.Value_Int64Value{Int64Value: resp}},
-						},
-					}
-					rawValue, err = proto.Marshal(mapProto)
-					require.NoError(t, err)
-				default:
-					assert.Fail(t, "unexpected response value type %T, wanted int64", resp)
-				}
-			case *valuespb.Value_BytesValue:
-				assert.Equal(t, values.GiveObservation, v.BytesValue)
-				switch resp := any(values.WantResponse).(type) {
-				case []byte:
-					mapProto := &valuespb.Map{
-						Fields: map[string]*valuespb.Value{
-							sdk.ConsensusResponseMapKeyMetadata: {Value: &valuespb.Value_StringValue{StringValue: "test_metadata"}},
-							sdk.ConsensusResponseMapKeyPayload:  {Value: &valuespb.Value_BytesValue{BytesValue: resp}},
-						},
-					}
-					rawValue, err = proto.Marshal(mapProto)
-					require.NoError(t, err)
-				default:
-					assert.Fail(t, "unexpected response value type %T, wanted []byte", resp)
-				}
-			default:
-				assert.Fail(t, "unexpected observation value type")
-			}
-			return &valuespb.Value{
-				Value: &valuespb.Value_BytesValue{
-					BytesValue: rawValue,
-				},
-			}, nil
-		case *pb.SimpleConsensusInputs_Error:
-			assert.Equal(t, values.GiveErr.Error(), o.Error)
-			return nil, values.GiveErr
-		default:
-			require.Fail(t, "unexpected observation type")
-			return nil, errors.New("should not get here")
-		}
+		return handleSimpleConsensusRequest(t, values, input)
 	}
 }
 
-// setupReportConsensus overrides the Report method on consensus.  Creates a fake
-// RawReport from the WantResponse.
-func setupReportConsensus[T any](t *testing.T, values *consensusValues[T]) {
-	consensus, err := consensusmock.NewConsensusCapability(t)
-	require.NoError(t, err)
+// handleSimpleConsensusRequest is a private helper to process the gRPC request
+// It extracts and validates inputs, and constructs the response based on generic types.
+func handleSimpleConsensusRequest[T any](
+	t *testing.T,
+	values *consensusValues[T],
+	input *pb.SimpleConsensusInputs,
+) (*valuespb.Value, error) {
+	// 1. Initial Validation: Default input value
+	assert.Nil(t, input.Default.Value, "Default input value should be nil") // Added custom message
 
+	// 2. Validate Descriptor Type
+	switch d := input.Descriptors.Descriptor_.(type) {
+	case *pb.ConsensusDescriptor_Aggregation:
+		assert.Equal(t, pb.AggregationType_AGGREGATION_TYPE_MEDIAN, d.Aggregation, "Descriptor aggregation type mismatch") // Added custom message
+	default:
+		assert.Fail(t, "unexpected descriptor type: %T", d)
+		return nil, errors.New("unsupported descriptor type") // Return early on fail
+	}
+
+	// 3. Handle Observation Type
+	switch o := input.Observation.(type) {
+	case *pb.SimpleConsensusInputs_Value:
+		// Handle value observation
+		return handleSimpleConsensusValueObservation(t, values, o.Value)
+	case *pb.SimpleConsensusInputs_Error:
+		// Handle error observation
+		assert.Equal(t, values.GiveErr.Error(), o.Error, "Error observation message mismatch")
+		return nil, values.GiveErr
+	default:
+		// Unexpected top-level observation type
+		require.Fail(t, fmt.Sprintf("unexpected observation type: %T", o))
+		return nil, errors.New("unsupported observation type")
+	}
+}
+
+// handleSimpleConsensusValueObservation processes the value observation part of the input.
+func handleSimpleConsensusValueObservation[T any](
+	t *testing.T,
+	values *consensusValues[T],
+	obsValue *valuespb.Value, // The actual *valuespb.Value from the observation
+) (*valuespb.Value, error) {
+	assert.Nil(t, values.GiveErr, "Expected no error from consensusValues, but GiveErr is not nil")
+
+	// Determine the type of the observed value
+	switch v := obsValue.Value.(type) {
+	case *valuespb.Value_Int64Value:
+		// Validate observed int64 value
+		assert.Equal(t, values.GiveObservation, v.Int64Value, "Observed Int64Value mismatch")
+
+		// Determine and return the response based on the generic T type
+		return buildConsensusResponseValue(t, values.WantResponse)
+	// Add other protobuf value types here if your T can match them (e.g., BytesValue)
+	default:
+		assert.Fail(t, "unexpected observation value type: %T", v)
+		return nil, errors.New("unsupported observation value type")
+	}
+}
+
+// buildConsensusResponseValue constructs the *valuespb.Value for the response based on the generic T.
+func buildConsensusResponseValue[T any](t *testing.T, responseVal T) (*valuespb.Value, error) {
+	// Use type switch to determine the actual concrete type of T
+	switch resp := any(responseVal).(type) {
+	case int64:
+		// If T is int64, construct an Int64Value protobuf
+		return &valuespb.Value{
+			Value: &valuespb.Value_Int64Value{
+				Int64Value: resp,
+			},
+		}, nil
+	// Add other concrete types for T that can be returned as a response
+	default:
+		assert.Fail(t, "unexpected response generic type %T, not handled for protobuf conversion", responseVal)
+		return nil, fmt.Errorf("unsupported generic type %T for protobuf response", responseVal)
+	}
+}
+
+// mockReportConsensus overrides the Report method on consensus.
+// It creates a fake RawReport from the WantResponse based on the mock's logic.
+func mockReportConsensus[T any](t *testing.T, values *consensusValues[T]) {
+	consensus, err := consensusmock.NewConsensusCapability(t)
+	require.NoError(t, err, "Failed to create consensus mock capability")
+
+	// Assign the mock implementation to the Report method
 	consensus.Report = func(ctx context.Context, input *pb.ReportRequest) (*pb.ReportResponse, error) {
-		switch resp := any(values.WantResponse).(type) {
-		case []byte:
-			assert.Nil(t, values.GiveErr)
-			mapProto := &valuespb.Map{
-				Fields: map[string]*valuespb.Value{
-					sdk.ConsensusResponseMapKeyMetadata: {Value: &valuespb.Value_StringValue{StringValue: "test_metadata"}},
-					sdk.ConsensusResponseMapKeyPayload:  {Value: &valuespb.Value_BytesValue{BytesValue: resp}},
-				},
-			}
-			rawValue, err := proto.Marshal(mapProto)
-			require.NoError(t, err)
-			return &pb.ReportResponse{
-				RawReport: rawValue,
-			}, nil
-		default:
-			assert.Fail(t, "unexpected response value type %T, wanted []byte", resp)
+		// Handle the error case first (early exit)
+		if values.GiveErr != nil {
+			return nil, values.GiveErr
 		}
-		return nil, errors.New("unsupported type for consensus report mock")
+
+		// If no error is expected, build the raw report
+		rawValue := buildRawReportFromResponse(t, values.WantResponse)
+
+		// Construct and return the successful response
+		return &pb.ReportResponse{
+			RawReport: rawValue,
+		}, nil
+	}
+}
+
+// buildRawReportFromResponse creates the serialized RawReport bytes from the generic response.
+// It uses require.Fail to stop the test immediately if the generic type is unexpected.
+func buildRawReportFromResponse[T any](t *testing.T, response T) []byte {
+	// Cast T to any to use type switch for runtime type checking
+	switch resp := any(response).(type) {
+	case []byte:
+		mapProto := &valuespb.Map{
+			Fields: map[string]*valuespb.Value{
+				sdk.ConsensusResponseMapKeyMetadata: {Value: &valuespb.Value_StringValue{StringValue: "test_metadata"}},
+				sdk.ConsensusResponseMapKeyPayload:  {Value: &valuespb.Value_BytesValue{BytesValue: resp}},
+			},
+		}
+		rawValue, err := proto.Marshal(mapProto)
+		require.NoError(t, err, "failed to marshal mapProto to RawReport bytes in mock")
+		return rawValue
+	default:
+		// If the generic type T is not []byte, this is an unexpected scenario for this mock.
+		require.Fail(t, fmt.Sprintf("unsupported generic type for RawReport: %T, expected []byte", resp))
+		return nil
 	}
 }
 
