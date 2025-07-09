@@ -9,7 +9,6 @@ import (
 	"github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
 	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/consensus"
 	"github.com/smartcontractkit/cre-sdk-go/sdk"
-	"google.golang.org/protobuf/proto"
 )
 
 type RuntimeHelpers interface {
@@ -43,9 +42,11 @@ type RuntimeBase struct {
 	nextCallId int32
 }
 
-var _ sdk.RuntimeBase = (*RuntimeBase)(nil)
-var _ rand.Source = (*RuntimeBase)(nil)
-var _ rand.Source64 = (*RuntimeBase)(nil)
+var (
+	_ sdk.RuntimeBase = (*RuntimeBase)(nil)
+	_ rand.Source     = (*RuntimeBase)(nil)
+	_ rand.Source64   = (*RuntimeBase)(nil)
+)
 
 func (r *RuntimeBase) CallCapability(request *pb.CapabilityRequest) sdk.Promise[*pb.CapabilityResponse] {
 	if r.Mode == pb.Mode_MODE_DON {
@@ -97,6 +98,15 @@ func (r *RuntimeBase) Rand() (*rand.Rand, error) {
 	}
 
 	return rand.New(r), nil
+}
+
+func (d *Runtime) GenerateReport(request *pb.ReportRequest) sdk.Promise[*pb.ReportResponse] {
+	c := &consensus.Consensus{}
+	return sdk.Then(
+		c.Report(d, request), func(result *pb.ReportResponse) (*pb.ReportResponse, error) {
+			return result, nil
+		},
+	)
 }
 
 type Runtime struct {
@@ -159,17 +169,8 @@ func (d *Runtime) RunInNodeMode(fn func(nodeRuntime sdk.NodeRuntime) *pb.SimpleC
 	d.modeErr = nil
 	d.nextNodeCallId = nrt.nextCallId
 	c := &consensus.Consensus{}
-	return sdk.Then(c.Simple(d, observation), func(result *pb.ConsensusOutputs) (values.Value, error) {
-		var mapProto valuespb.Map
-		err := proto.Unmarshal(result.RawReport, &mapProto)
-		if err != nil {
-			return nil, fmt.Errorf("failed to unmarshal raw report: %w", err)
-		}
-		payload, ok := mapProto.Fields[sdk.ConsensusResponseMapKeyPayload]
-		if !ok || payload == nil {
-			return nil, fmt.Errorf("missing payload in consensus response")
-		}
-		return values.FromProto(payload)
+	return sdk.Then(c.Simple(d, observation), func(result *valuespb.Value) (values.Value, error) {
+		return values.FromProto(result)
 	})
 }
 
