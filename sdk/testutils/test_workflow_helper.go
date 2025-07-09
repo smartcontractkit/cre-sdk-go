@@ -8,7 +8,6 @@ import (
 	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basicaction"
 	basicactionmock "github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basicaction/mock"
 	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basictrigger"
-	basictriggermock "github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basictrigger/mock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -25,12 +24,6 @@ func TestWorkflowTriggerConfig() *basictrigger.Config {
 }
 
 func SetupExpectedCalls(t *testing.T) {
-	triggerMock, err := basictriggermock.NewBasicCapability(t)
-	require.NoError(t, err)
-	triggerMock.Trigger = func(ctx context.Context, input *basictrigger.Config) (*basictrigger.Outputs, error) {
-		return TestWorkflowTrigger(), nil
-	}
-
 	basicAction, err := basicactionmock.NewBasicActionCapability(t)
 	require.NoError(t, err)
 

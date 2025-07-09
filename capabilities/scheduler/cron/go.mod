@@ -5,7 +5,7 @@ go 1.24.4
 require (
 	github.com/smartcontractkit/chainlink-common/pkg/values v0.0.0-20250707133321-27faefc9ce45
 	github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb v0.0.0-20250707133321-27faefc9ce45
-	github.com/smartcontractkit/cre-sdk-go v0.0.0-20250707151657-14a446b467a8
+	github.com/smartcontractkit/cre-sdk-go v0.0.0-20250709130550-affc7284b9aa
 	google.golang.org/protobuf v1.36.6
 )
 

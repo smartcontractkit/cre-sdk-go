@@ -28,8 +28,6 @@ func NewBasicCapability(t testing.TB) (*BasicCapability, error) {
 type BasicCapability struct {
 	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
 	Action func(ctx context.Context, input *actionandtrigger.Input) (*actionandtrigger.Output, error)
-
-	Trigger func(ctx context.Context, input *actionandtrigger.Config) (*actionandtrigger.TriggerEvent, error)
 }
 
 func (cap *BasicCapability) Invoke(ctx context.Context, request *sdkpb.CapabilityRequest) *sdkpb.CapabilityResponse {
@@ -60,40 +58,8 @@ func (cap *BasicCapability) Invoke(ctx context.Context, request *sdkpb.Capabilit
 	default:
 		capResp.Response = &sdkpb.CapabilityResponse_Error{Error: fmt.Sprintf("method %s not found", request.Method)}
 	}
+
 	return capResp
-}
-
-func (cap *BasicCapability) InvokeTrigger(ctx context.Context, request *sdkpb.TriggerSubscription) (*sdkpb.Trigger, error) {
-	trigger := &sdkpb.Trigger{}
-	switch request.Method {
-	case "Trigger":
-		input := &actionandtrigger.Config{}
-		if err := request.Payload.UnmarshalTo(input); err != nil {
-			return nil, err
-		}
-
-		if cap.Trigger == nil {
-			return nil, registry.ErrNoTriggerStub("Trigger")
-		}
-
-		resp, err := cap.Trigger(ctx, input)
-		if err != nil {
-			return nil, err
-		} else {
-			if resp == nil {
-				return nil, nil
-			}
-
-			payload, err := anypb.New(resp)
-			if err != nil {
-				return nil, err
-			}
-			trigger.Payload = payload
-		}
-	default:
-		return nil, fmt.Errorf("method %s not found", request.Method)
-	}
-	return trigger, nil
 }
 
 func (cap *BasicCapability) ID() string {

@@ -83,11 +83,8 @@ func (cap *ConsensusCapability) Invoke(ctx context.Context, request *sdkpb.Capab
 	default:
 		capResp.Response = &sdkpb.CapabilityResponse_Error{Error: fmt.Sprintf("method %s not found", request.Method)}
 	}
-	return capResp
-}
 
-func (cap *ConsensusCapability) InvokeTrigger(ctx context.Context, request *sdkpb.TriggerSubscription) (*sdkpb.Trigger, error) {
-	return nil, fmt.Errorf("method %s not found", request.Method)
+	return capResp
 }
 
 func (cap *ConsensusCapability) ID() string {

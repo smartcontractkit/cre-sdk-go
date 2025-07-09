@@ -9,8 +9,9 @@ import (
 
 	"google.golang.org/protobuf/types/known/anypb"
 
-	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/importclash/p1"
 	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/importclash/p2"
+
+	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/importclash/p1"
 
 	sdkpb "github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
 	"github.com/smartcontractkit/cre-sdk-go/sdk/testutils/registry"
@@ -59,11 +60,8 @@ func (cap *BasicActionCapability) Invoke(ctx context.Context, request *sdkpb.Cap
 	default:
 		capResp.Response = &sdkpb.CapabilityResponse_Error{Error: fmt.Sprintf("method %s not found", request.Method)}
 	}
-	return capResp
-}
 
-func (cap *BasicActionCapability) InvokeTrigger(ctx context.Context, request *sdkpb.TriggerSubscription) (*sdkpb.Trigger, error) {
-	return nil, fmt.Errorf("method %s not found", request.Method)
+	return capResp
 }
 
 func (cap *BasicActionCapability) ID() string {

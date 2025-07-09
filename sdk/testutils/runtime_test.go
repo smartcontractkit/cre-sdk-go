@@ -6,28 +6,18 @@ import (
 	"strings"
 	"testing"
 
-	basicactionmock "github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basicaction/mock"
-	"github.com/smartcontractkit/cre-sdk-go/sdk/testutils"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/proto"
-
 	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basicaction"
-	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basictrigger"
-	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basictrigger/mock"
+	basicactionmock "github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basicaction/mock"
 	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/nodeaction"
 	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/nodeaction/mock"
 	"github.com/smartcontractkit/cre-sdk-go/sdk"
+	"github.com/smartcontractkit/cre-sdk-go/sdk/testutils"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestRuntime_CallCapability(t *testing.T) {
 	t.Run("response too large", func(t *testing.T) {
-		trigger, err := basictriggermock.NewBasicCapability(t)
-		require.NoError(t, err)
-		trigger.Trigger = func(_ context.Context, config *basictrigger.Config) (*basictrigger.Outputs, error) {
-			return &basictrigger.Outputs{CoolOutput: "cool"}, nil
-		}
-
 		action, err := basicactionmock.NewBasicActionCapability(t)
 		require.NoError(t, err)
 		action.PerformAction = func(_ context.Context, input *basicaction.Inputs) (*basicaction.Outputs, error) {
@@ -45,31 +35,15 @@ func TestRuntime_CallCapability(t *testing.T) {
 }
 
 func TestRuntime_ReturnsErrorsFromCapabilitiesThatDoNotExist(t *testing.T) {
-	trigger, err := basictriggermock.NewBasicCapability(t)
-	require.NoError(t, err)
-	trigger.Trigger = func(_ context.Context, config *basictrigger.Config) (*basictrigger.Outputs, error) {
-		return &basictrigger.Outputs{CoolOutput: "cool"}, nil
-	}
-
 	rt := testutils.NewRuntime(t, map[string]string{})
 	workflowAction1 := &basicaction.BasicAction{}
 	call := workflowAction1.PerformAction(rt, &basicaction.Inputs{InputThing: true})
-	_, err = call.Await()
+	_, err := call.Await()
 
 	require.Error(t, err)
 }
 
 func TestRuntime_ConsensusReturnsTheObservation(t *testing.T) {
-	anyConfig := &basictrigger.Config{Name: "name", Number: 123}
-	anyTrigger := &basictrigger.Outputs{CoolOutput: "cool"}
-
-	trigger, err := basictriggermock.NewBasicCapability(t)
-	trigger.Trigger = func(_ context.Context, config *basictrigger.Config) (*basictrigger.Outputs, error) {
-		assert.True(t, proto.Equal(anyConfig, config))
-		return anyTrigger, nil
-	}
-	require.NoError(t, err)
-
 	anyValue := int32(100)
 	nodeCapability, err := nodeactionmock.NewBasicActionCapability(t)
 	require.NoError(t, err)
@@ -96,16 +70,6 @@ func TestRuntime_ConsensusReturnsTheObservation(t *testing.T) {
 }
 
 func TestRuntime_ConsensusReturnsTheDefaultValue(t *testing.T) {
-	anyConfig := &basictrigger.Config{Name: "name", Number: 123}
-	anyTrigger := &basictrigger.Outputs{CoolOutput: "cool"}
-
-	trigger, err := basictriggermock.NewBasicCapability(t)
-	require.NoError(t, err)
-	trigger.Trigger = func(_ context.Context, config *basictrigger.Config) (*basictrigger.Outputs, error) {
-		assert.True(t, proto.Equal(anyConfig, config))
-		return anyTrigger, nil
-	}
-
 	anyValue := int32(100)
 
 	runtime := testutils.NewRuntime(t, map[string]string{})
@@ -124,16 +88,6 @@ func TestRuntime_ConsensusReturnsTheDefaultValue(t *testing.T) {
 }
 
 func TestRuntime_ConsensusReturnsErrors(t *testing.T) {
-	anyConfig := &basictrigger.Config{Name: "name", Number: 123}
-	anyTrigger := &basictrigger.Outputs{CoolOutput: "cool"}
-
-	trigger, err := basictriggermock.NewBasicCapability(t)
-	require.NoError(t, err)
-	trigger.Trigger = func(_ context.Context, config *basictrigger.Config) (*basictrigger.Outputs, error) {
-		assert.True(t, proto.Equal(anyConfig, config))
-		return anyTrigger, nil
-	}
-
 	runtime := testutils.NewRuntime(t, map[string]string{})
 	env := testutils.NewEnvironment("anything", runtime)
 	anyErr := errors.New("no consensus")
@@ -144,6 +98,6 @@ func TestRuntime_ConsensusReturnsErrors(t *testing.T) {
 			return 0, anyErr
 		},
 		sdk.ConsensusMedianAggregation[int32]())
-	_, err = consensus.Await()
+	_, err := consensus.Await()
 	require.ErrorContains(t, err, anyErr.Error())
 }

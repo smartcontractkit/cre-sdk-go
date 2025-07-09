@@ -58,11 +58,8 @@ func (cap *ClientCapability) Invoke(ctx context.Context, request *sdkpb.Capabili
 	default:
 		capResp.Response = &sdkpb.CapabilityResponse_Error{Error: fmt.Sprintf("method %s not found", request.Method)}
 	}
-	return capResp
-}
 
-func (cap *ClientCapability) InvokeTrigger(ctx context.Context, request *sdkpb.TriggerSubscription) (*sdkpb.Trigger, error) {
-	return nil, fmt.Errorf("method %s not found", request.Method)
+	return capResp
 }
 
 func (cap *ClientCapability) ID() string {
