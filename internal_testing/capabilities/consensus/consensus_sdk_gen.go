@@ -7,6 +7,7 @@ import (
 
 	"google.golang.org/protobuf/types/known/anypb"
 
+	"github.com/smartcontractkit/chainlink-common/pkg/values/pb"
 	pb2 "github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
 	sdkpb "github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
 	"github.com/smartcontractkit/cre-sdk-go/sdk"
@@ -16,21 +17,44 @@ type Consensus struct {
 	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 allow defaults for capabilities
 }
 
-func (c *Consensus) Simple(runtime sdk.Runtime, input *pb2.SimpleConsensusInputs) sdk.Promise[*pb2.ConsensusOutputs] {
+func (c *Consensus) Simple(runtime sdk.Runtime, input *pb2.SimpleConsensusInputs) sdk.Promise[*pb.Value] {
 	wrapped, err := anypb.New(input)
 	if err != nil {
-		return sdk.PromiseFromResult[*pb2.ConsensusOutputs](nil, err)
+		return sdk.PromiseFromResult[*pb.Value](nil, err)
 	}
 	return sdk.Then(runtime.CallCapability(&sdkpb.CapabilityRequest{
 		Id:      "consensus@1.0.0-alpha",
 		Payload: wrapped,
 		Method:  "Simple",
-	}), func(i *sdkpb.CapabilityResponse) (*pb2.ConsensusOutputs, error) {
+	}), func(i *sdkpb.CapabilityResponse) (*pb.Value, error) {
 		switch payload := i.Response.(type) {
 		case *sdkpb.CapabilityResponse_Error:
 			return nil, errors.New(payload.Error)
 		case *sdkpb.CapabilityResponse_Payload:
-			output := &pb2.ConsensusOutputs{}
+			output := &pb.Value{}
+			err = payload.Payload.UnmarshalTo(output)
+			return output, err
+		default:
+			return nil, errors.New("unexpected response type")
+		}
+	})
+}
+
+func (c *Consensus) Report(runtime sdk.Runtime, input *pb2.ReportRequest) sdk.Promise[*pb2.ReportResponse] {
+	wrapped, err := anypb.New(input)
+	if err != nil {
+		return sdk.PromiseFromResult[*pb2.ReportResponse](nil, err)
+	}
+	return sdk.Then(runtime.CallCapability(&sdkpb.CapabilityRequest{
+		Id:      "consensus@1.0.0-alpha",
+		Payload: wrapped,
+		Method:  "Report",
+	}), func(i *sdkpb.CapabilityResponse) (*pb2.ReportResponse, error) {
+		switch payload := i.Response.(type) {
+		case *sdkpb.CapabilityResponse_Error:
+			return nil, errors.New(payload.Error)
+		case *sdkpb.CapabilityResponse_Payload:
+			output := &pb2.ReportResponse{}
 			err = payload.Payload.UnmarshalTo(output)
 			return output, err
 		default:
