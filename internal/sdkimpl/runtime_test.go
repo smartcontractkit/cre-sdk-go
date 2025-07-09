@@ -214,7 +214,7 @@ func TestDonRuntime_RunInNodeMode(t *testing.T) {
 			return &nodeaction.NodeOutputs{OutputThing: anyObservation}, nil
 		}
 
-		setupSimpleConsensus(t, &consensusValues[int64]{Observation: int64(anyObservation), Resp: anyMedian})
+		setupSimpleConsensus(t, &consensusValues[int64]{GiveObservation: int64(anyObservation), WantResponse: anyMedian})
 
 		test := func(env *sdk.Environment[string], rt sdk.Runtime, _ *basictrigger.Outputs) (int64, error) {
 			result, err := sdk.RunInNodeMode(env, rt, func(_ *sdk.NodeEnvironment[string], runtime sdk.NodeRuntime) (int64, error) {
@@ -235,7 +235,7 @@ func TestDonRuntime_RunInNodeMode(t *testing.T) {
 	t.Run("Failed consensus", func(t *testing.T) {
 		anyError := errors.New("error")
 
-		setupSimpleConsensus(t, &consensusValues[int64]{Err: anyError})
+		setupSimpleConsensus(t, &consensusValues[int64]{GiveErr: anyError})
 
 		test := func(env *sdk.Environment[string], rt sdk.Runtime, _ *basictrigger.Outputs) (int64, error) {
 			return sdk.RunInNodeMode(env, rt, func(_ *sdk.NodeEnvironment[string], _ sdk.NodeRuntime) (int64, error) {
@@ -326,22 +326,26 @@ func TestRuntime_GenerateReport(t *testing.T) {
 		hashingAlgo    = "some-hasher"
 	)
 
-	setupSimpleConsensus(t,
+	setupReportConsensus(t,
 		&consensusValues[[]byte]{
-			Observation: encodedPayload,
-			Resp:        anyMedian,
+			WantResponse: anyMedian,
 		},
 	)
 
-	testFn := func(env *sdk.Environment[string], rt sdk.Runtime, _ *basictrigger.Outputs) (*pb.ConsensusOutputs, error) {
-		return env.GenerateReport(encodedPayload, encoderName, signingAlgo, hashingAlgo).Await()
+	testFn := func(env *sdk.Environment[string], rt sdk.Runtime, _ *basictrigger.Outputs) (*pb.ReportResponse, error) {
+		return env.GenerateReport(&pb.ReportRequest{
+			EncodedPayload: encodedPayload,
+			EncoderName:    encoderName,
+			SigningAlgo:    signingAlgo,
+			HashingAlgo:    hashingAlgo,
+		}).Await()
 	}
 
 	ran, output, err := testRuntime(t, testFn)
 	assert.True(t, ran)
 	require.NoError(t, err)
 
-	result, ok := any(output).(*pb.ConsensusOutputs)
+	result, ok := any(output).(*pb.ReportResponse)
 	assert.True(t, ok)
 
 	expectedMap := &valuespb.Map{
@@ -380,35 +384,37 @@ func testRuntime[T any](t *testing.T, testFn func(env *sdk.Environment[string], 
 	return runner.Result()
 }
 
+type consensusValues[T any] struct {
+	GiveObservation T
+	GiveErr         error
+	WantResponse    T
+}
+
 func setupSimpleConsensus[T any](t *testing.T, values *consensusValues[T]) {
 	consensus, err := consensusmock.NewConsensusCapability(t)
 	require.NoError(t, err)
 
-	consensus.Simple = func(ctx context.Context, input *pb.SimpleConsensusInputs) (*pb.ConsensusOutputs, error) {
-		if input.Default != nil {
-			assert.Nil(t, input.Default.Value)
-		}
+	consensus.Simple = func(ctx context.Context, input *pb.SimpleConsensusInputs) (*valuespb.Value, error) {
+		assert.Nil(t, input.Default.Value)
 
-		if input.Descriptors.Descriptor_ != nil {
-			switch d := input.Descriptors.Descriptor_.(type) {
-			case *pb.ConsensusDescriptor_Aggregation:
-				assert.Equal(t, pb.AggregationType_AGGREGATION_TYPE_MEDIAN, d.Aggregation)
-			default:
-				assert.Fail(t, "unexpected descriptor type")
-			}
+		switch d := input.Descriptors.Descriptor_.(type) {
+		case *pb.ConsensusDescriptor_Aggregation:
+			assert.Equal(t, pb.AggregationType_AGGREGATION_TYPE_MEDIAN, d.Aggregation)
+		default:
+			assert.Fail(t, "unexpected descriptor type")
 		}
 
 		switch o := input.Observation.(type) {
 		case *pb.SimpleConsensusInputs_Value:
-			assert.Nil(t, values.Err)
+			assert.Nil(t, values.GiveErr)
 			var (
 				rawValue []byte
 				err      error
 			)
 			switch v := o.Value.Value.(type) {
 			case *valuespb.Value_Int64Value:
-				assert.Equal(t, values.Observation, v.Int64Value)
-				switch resp := any(values.Resp).(type) {
+				assert.Equal(t, values.GiveObservation, v.Int64Value)
+				switch resp := any(values.WantResponse).(type) {
 				case int64:
 					mapProto := &valuespb.Map{
 						Fields: map[string]*valuespb.Value{
@@ -422,8 +428,8 @@ func setupSimpleConsensus[T any](t *testing.T, values *consensusValues[T]) {
 					assert.Fail(t, "unexpected response value type %T, wanted int64", resp)
 				}
 			case *valuespb.Value_BytesValue:
-				assert.Equal(t, values.Observation, v.BytesValue)
-				switch resp := any(values.Resp).(type) {
+				assert.Equal(t, values.GiveObservation, v.BytesValue)
+				switch resp := any(values.WantResponse).(type) {
 				case []byte:
 					mapProto := &valuespb.Map{
 						Fields: map[string]*valuespb.Value{
@@ -439,12 +445,14 @@ func setupSimpleConsensus[T any](t *testing.T, values *consensusValues[T]) {
 			default:
 				assert.Fail(t, "unexpected observation value type")
 			}
-			return &pb.ConsensusOutputs{
-				RawReport: rawValue,
+			return &valuespb.Value{
+				Value: &valuespb.Value_BytesValue{
+					BytesValue: rawValue,
+				},
 			}, nil
 		case *pb.SimpleConsensusInputs_Error:
-			assert.Equal(t, values.Err.Error(), o.Error)
-			return nil, values.Err
+			assert.Equal(t, values.GiveErr.Error(), o.Error)
+			return nil, values.GiveErr
 		default:
 			require.Fail(t, "unexpected observation type")
 			return nil, errors.New("should not get here")
@@ -452,10 +460,32 @@ func setupSimpleConsensus[T any](t *testing.T, values *consensusValues[T]) {
 	}
 }
 
-type consensusValues[T any] struct {
-	Observation T
-	Err         error
-	Resp        T
+// setupReportConsensus overrides the Report method on consensus.  Creates a fake
+// RawReport from the WantResponse.
+func setupReportConsensus[T any](t *testing.T, values *consensusValues[T]) {
+	consensus, err := consensusmock.NewConsensusCapability(t)
+	require.NoError(t, err)
+
+	consensus.Report = func(ctx context.Context, input *pb.ReportRequest) (*pb.ReportResponse, error) {
+		switch resp := any(values.WantResponse).(type) {
+		case []byte:
+			assert.Nil(t, values.GiveErr)
+			mapProto := &valuespb.Map{
+				Fields: map[string]*valuespb.Value{
+					sdk.ConsensusResponseMapKeyMetadata: {Value: &valuespb.Value_StringValue{StringValue: "test_metadata"}},
+					sdk.ConsensusResponseMapKeyPayload:  {Value: &valuespb.Value_BytesValue{BytesValue: resp}},
+				},
+			}
+			rawValue, err := proto.Marshal(mapProto)
+			require.NoError(t, err)
+			return &pb.ReportResponse{
+				RawReport: rawValue,
+			}, nil
+		default:
+			assert.Fail(t, "unexpected response value type %T, wanted []byte", resp)
+		}
+		return nil, errors.New("unsupported type for consensus report mock")
+	}
 }
 
 type awaitOverride struct {

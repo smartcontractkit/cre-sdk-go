@@ -18,11 +18,7 @@ type SecretsProvider interface {
 }
 
 type ReportGenerator interface {
-	// TODO (CAPPL-995): wrap ConsensusOutputs in signature
-	GenerateReport(
-		encodedPayload []byte,
-		encoderName, signingAlgo, hashingAlgo string,
-	) Promise[*sdkpb.ConsensusOutputs]
+	GenerateReport(*sdkpb.ReportRequest) Promise[*sdkpb.ReportResponse]
 }
 
 type Environment[C any] struct {

@@ -30,7 +30,7 @@ func newRuntime(tb testing.TB, sourceFn func() rand.Source, secrets map[string]s
 	}
 }
 
-func defaultSimpleConsensus(_ context.Context, input *pb.SimpleConsensusInputs) (*pb.ConsensusOutputs, error) {
+func defaultSimpleConsensus(_ context.Context, input *pb.SimpleConsensusInputs) (*valuespb.Value, error) {
 	mapProto := &valuespb.Map{
 		Fields: map[string]*valuespb.Value{
 			sdk.ConsensusResponseMapKeyMetadata: {Value: &valuespb.Value_StringValue{StringValue: "test_metadata"}},
@@ -43,8 +43,10 @@ func defaultSimpleConsensus(_ context.Context, input *pb.SimpleConsensusInputs) 
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal value: %w", err)
 		}
-		return &pb.ConsensusOutputs{
-			RawReport: rawMap,
+		return &valuespb.Value{
+			Value: &valuespb.Value_BytesValue{
+				BytesValue: rawMap,
+			},
 		}, nil
 	case *pb.SimpleConsensusInputs_Error:
 		if input.Default == nil || input.Default.Value == nil {
@@ -56,8 +58,10 @@ func defaultSimpleConsensus(_ context.Context, input *pb.SimpleConsensusInputs) 
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal value: %w", err)
 		}
-		return &pb.ConsensusOutputs{
-			RawReport: rawMap,
+		return &valuespb.Value{
+			Value: &valuespb.Value_BytesValue{
+				BytesValue: rawMap,
+			},
 		}, nil
 	default:
 		return nil, fmt.Errorf("unknown observation type %T", o)
@@ -165,7 +169,6 @@ func (rh *runtimeHelpers) AwaitSecrets(req *pb.AwaitSecretsRequest, _ uint64) (*
 	}
 
 	return response, nil
-
 }
 
 func (rh *runtimeHelpers) SwitchModes(_ pb.Mode) {}
