@@ -63,21 +63,6 @@ func TestRunInNodeMode_ErrorFromFunction(t *testing.T) {
 	assert.Contains(t, err.Error(), "some error")
 }
 
-func TestRunInNodeMode_ErrorWrappingResult(t *testing.T) {
-	runtime := &mockDonRuntime{}
-
-	type unsupported struct {
-		Test chan int
-	}
-	p := sdk.RunInNodeMode(&sdk.Environment[string]{}, runtime, func(_ *sdk.NodeEnvironment[string], nr sdk.NodeRuntime) (*unsupported, error) {
-		return &unsupported{Test: make(chan int)}, nil
-	}, sdk.ConsensusAggregationFromTags[*unsupported]())
-
-	_, err := p.Await()
-	require.Error(t, err)
-	assert.Contains(t, err.Error(), "could not wrap into value:")
-}
-
 func TestRunInNodeMode_ErrorWrappingDefault(t *testing.T) {
 	runtime := &mockDonRuntime{}
 

@@ -334,9 +334,8 @@ func TestConsensusAggregationFromTags(t *testing.T) {
 
 	t.Run("ignore fields", func(t *testing.T) {
 		type S struct {
-			Val                  string `consensus_aggregation:"identical"`
-			IgnoredField         string `consensus_aggregation:"ignore"`
-			IgnoredImplicitField string
+			Val          string `consensus_aggregation:"identical"`
+			IgnoredField string `consensus_aggregation:"ignore"`
 		}
 		desc := sdk.ConsensusAggregationFromTags[S]()
 		require.NoError(t, desc.Err())
@@ -354,6 +353,18 @@ func TestConsensusAggregationFromTags(t *testing.T) {
 			},
 		}
 		require.True(t, proto.Equal(desc.Descriptor(), expected))
+	})
+
+	t.Run("invalid missing field tag specifies full path", func(t *testing.T) {
+		type Nested struct {
+			Foo string
+		}
+		type S struct {
+			Val    string `consensus_aggregation:"identical"`
+			Nested Nested `consensus_aggregation:"nested"`
+		}
+		desc := sdk.ConsensusAggregationFromTags[S]()
+		require.ErrorContains(t, desc.Err(), "missing consensus tag on type Nested accessed via Nested.Foo")
 	})
 
 	t.Run("invalid identical", func(t *testing.T) {

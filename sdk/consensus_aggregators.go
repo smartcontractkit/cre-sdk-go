@@ -57,7 +57,7 @@ func ConsensusCommonSuffixAggregation[T any]() func() (ConsensusAggregation[[]T]
 func ConsensusAggregationFromTags[T any]() ConsensusAggregation[T] {
 	var zero T
 	t := reflect.TypeOf(zero)
-	descriptor, err := parseConsensusTag(t)
+	descriptor, err := parseConsensusTag(t, "")
 	if err != nil {
 		return &consensusDescriptorError[T]{Error: err}
 	}
@@ -68,7 +68,7 @@ var bigIntType = reflect.TypeOf((*big.Int)(nil))
 var timeType = reflect.TypeOf(time.Time{})
 var decimalType = reflect.TypeOf(decimal.Decimal{})
 
-func parseConsensusTag(t reflect.Type) (*pb.ConsensusDescriptor, error) {
+func parseConsensusTag(t reflect.Type, path string) (*pb.ConsensusDescriptor, error) {
 	if t.Kind() == reflect.Pointer {
 		t = t.Elem()
 	}
@@ -81,7 +81,10 @@ func parseConsensusTag(t reflect.Type) (*pb.ConsensusDescriptor, error) {
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
 		tag := field.Tag.Get("consensus_aggregation")
-		if tag == "ignore" || tag == "" {
+		if tag == "" {
+			return nil, fmt.Errorf("missing consensus tag on type %s accessed via %s", t.Name(), path+field.Name)
+		}
+		if tag == "ignore" {
 			continue
 		}
 
@@ -92,7 +95,7 @@ func parseConsensusTag(t reflect.Type) (*pb.ConsensusDescriptor, error) {
 		}
 
 		if len(mapstructureTagParts) > 1 && mapstructureTagParts[1] == "squash" {
-			inner, err := parseConsensusTag(field.Type)
+			inner, err := parseConsensusTag(field.Type, path+field.Name+".")
 			if err != nil {
 				return nil, fmt.Errorf("nested field %s: %w", field.Name, err)
 			}
@@ -131,7 +134,7 @@ func parseConsensusTag(t reflect.Type) (*pb.ConsensusDescriptor, error) {
 			}
 			descriptors[serializedName] = &pb.ConsensusDescriptor{Descriptor_: &pb.ConsensusDescriptor_Aggregation{Aggregation: pb.AggregationType_AGGREGATION_TYPE_COMMON_SUFFIX}}
 		case "nested":
-			descriptors[serializedName], err = parseConsensusTag(field.Type)
+			descriptors[serializedName], err = parseConsensusTag(field.Type, path+field.Name+".")
 			if err != nil {
 				return nil, fmt.Errorf("nested field %s: %w", field.Name, err)
 			}
