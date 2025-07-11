@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"errors"
+	"fmt"
 	"math/rand"
 	"reflect"
 
@@ -171,7 +172,7 @@ func RunInNodeMode[C, T any](
 
 		m, ok := v.(*values.Map)
 		if !ok {
-			return t, errors.New("expected a map value from RunInNodeMode")
+			return t, fmt.Errorf("expected a map value from RunInNodeMode but got: %T", v)
 		}
 
 		typ := reflect.TypeOf(t)
