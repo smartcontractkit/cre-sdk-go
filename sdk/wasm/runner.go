@@ -26,6 +26,7 @@ type runnerInternals interface {
 
 func newRunner[C Config](parse func(configBytes []byte) (C, error), runnerInternals runnerInternals, runtimeInternals runtimeInternals) sdk.Runner[C] {
 	runnerInternals.versionV2()
+	runnerInternals.switchModes(int32(pb.Mode_MODE_DON))
 	drt := &sdkimpl.Runtime{RuntimeBase: newRuntime(runtimeInternals, pb.Mode_MODE_DON)}
 	return runnerWrapper[C]{baseRunner: getRunner(
 		parse,

@@ -1,4 +1,4 @@
-package sdk_test
+package sdk
 
 import (
 	"errors"
@@ -8,9 +8,8 @@ import (
 	"testing"
 
 	"github.com/smartcontractkit/chainlink-common/pkg/values"
+	valuespb "github.com/smartcontractkit/chainlink-common/pkg/values/pb"
 	"github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
-	"github.com/smartcontractkit/cre-sdk-go/sdk"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -18,9 +17,9 @@ import (
 func TestRunInNodeMode_SimpleConsensusType(t *testing.T) {
 	runtime := &mockDonRuntime{}
 
-	p := sdk.RunInNodeMode(&sdk.Environment[string]{}, runtime, func(_ *sdk.NodeEnvironment[string], nr sdk.NodeRuntime) (int, error) {
+	p := RunInNodeMode(&Environment[string]{}, runtime, func(_ *NodeEnvironment[string], nr NodeRuntime) (int, error) {
 		return 42, nil
-	}, sdk.ConsensusMedianAggregation[int]())
+	}, ConsensusMedianAggregation[int]())
 
 	val, err := p.Await()
 	require.NoError(t, err)
@@ -30,9 +29,9 @@ func TestRunInNodeMode_SimpleConsensusType(t *testing.T) {
 func TestRunInNodeMode_PrimitiveConsensusWithUnusedDefault(t *testing.T) {
 	runtime := &mockDonRuntime{}
 
-	p := sdk.RunInNodeMode(&sdk.Environment[string]{}, runtime, func(_ *sdk.NodeEnvironment[string], nr sdk.NodeRuntime) (int, error) {
+	p := RunInNodeMode(&Environment[string]{}, runtime, func(_ *NodeEnvironment[string], nr NodeRuntime) (int, error) {
 		return 99, nil
-	}, sdk.ConsensusMedianAggregation[int]().WithDefault(100))
+	}, ConsensusMedianAggregation[int]().WithDefault(100))
 
 	val, err := p.Await()
 	require.NoError(t, err)
@@ -42,9 +41,9 @@ func TestRunInNodeMode_PrimitiveConsensusWithUnusedDefault(t *testing.T) {
 func TestRunInNodeMode_PrimitiveConsensusWithUsedDefault(t *testing.T) {
 	runtime := &mockDonRuntime{}
 
-	p := sdk.RunInNodeMode(&sdk.Environment[string]{}, runtime, func(_ *sdk.NodeEnvironment[string], nr sdk.NodeRuntime) (int, error) {
+	p := RunInNodeMode(&Environment[string]{}, runtime, func(_ *NodeEnvironment[string], nr NodeRuntime) (int, error) {
 		return 0, errors.New("error")
-	}, sdk.ConsensusMedianAggregation[int]().WithDefault(100))
+	}, ConsensusMedianAggregation[int]().WithDefault(100))
 
 	val, err := p.Await()
 	require.NoError(t, err)
@@ -54,9 +53,9 @@ func TestRunInNodeMode_PrimitiveConsensusWithUsedDefault(t *testing.T) {
 func TestRunInNodeMode_ErrorFromFunction(t *testing.T) {
 	runtime := &mockDonRuntime{}
 
-	p := sdk.RunInNodeMode(&sdk.Environment[string]{}, runtime, func(_ *sdk.NodeEnvironment[string], nr sdk.NodeRuntime) (int, error) {
+	p := RunInNodeMode(&Environment[string]{}, runtime, func(_ *NodeEnvironment[string], nr NodeRuntime) (int, error) {
 		return 0, errors.New("some error")
-	}, sdk.ConsensusMedianAggregation[int]())
+	}, ConsensusMedianAggregation[int]())
 
 	_, err := p.Await()
 	require.Error(t, err)
@@ -70,7 +69,7 @@ func TestRunInNodeMode_ErrorWrappingDefault(t *testing.T) {
 		Test chan int
 	}
 
-	p := sdk.RunInNodeMode(&sdk.Environment[string]{}, runtime, func(_ *sdk.NodeEnvironment[string], nr sdk.NodeRuntime) (*unsupported, error) {
+	p := RunInNodeMode(&Environment[string]{}, runtime, func(_ *NodeEnvironment[string], nr NodeRuntime) (*unsupported, error) {
 		return nil, errors.New("some error")
 	}, &medianTestFieldDescription[*unsupported]{T: &unsupported{Test: make(chan int)}})
 
@@ -86,7 +85,7 @@ func (m mockNodeRuntime) Rand() (*rand.Rand, error) {
 	panic("unused in tests")
 }
 
-func (m mockNodeRuntime) CallCapability(_ *pb.CapabilityRequest) sdk.Promise[*pb.CapabilityResponse] {
+func (m mockNodeRuntime) CallCapability(_ *pb.CapabilityRequest) Promise[*pb.CapabilityResponse] {
 	panic("unused in tests")
 }
 
@@ -110,25 +109,25 @@ func (m *mockDonRuntime) Rand() (*rand.Rand, error) {
 	panic("unused in tests")
 }
 
-func (m *mockDonRuntime) GenerateReport(_ *pb.ReportRequest) sdk.Promise[*pb.ReportResponse] {
+func (m *mockDonRuntime) GenerateReport(_ *pb.ReportRequest) Promise[*pb.ReportResponse] {
 	panic("unused in tests")
 }
 
-func (m *mockDonRuntime) RunInNodeMode(fn func(nodeRuntime sdk.NodeRuntime) *pb.SimpleConsensusInputs) sdk.Promise[values.Value] {
+func (m *mockDonRuntime) RunInNodeMode(fn func(nodeRuntime NodeRuntime) *pb.SimpleConsensusInputs) Promise[values.Value] {
 	req := fn(mockNodeRuntime{})
 
 	if errObs, ok := req.Observation.(*pb.SimpleConsensusInputs_Error); ok {
 		if req.Default != nil && req.Default.Value != nil {
-			return sdk.PromiseFromResult[values.Value](values.FromProto(req.Default))
+			return PromiseFromResult[values.Value](values.FromProto(reportFromValue(req.Default)))
 		}
 
-		return sdk.PromiseFromResult[values.Value](nil, errors.New(errObs.Error))
+		return PromiseFromResult[values.Value](nil, errors.New(errObs.Error))
 	}
-	val, _ := values.FromProto(req.Observation.(*pb.SimpleConsensusInputs_Value).Value)
-	return sdk.PromiseFromResult(val, nil)
+	val, _ := values.FromProto(reportFromValue(req.Observation.(*pb.SimpleConsensusInputs_Value).Value))
+	return PromiseFromResult(val, nil)
 }
 
-func (m *mockDonRuntime) CallCapability(*pb.CapabilityRequest) sdk.Promise[*pb.CapabilityResponse] {
+func (m *mockDonRuntime) CallCapability(*pb.CapabilityRequest) Promise[*pb.CapabilityResponse] {
 	panic("not used in test")
 }
 func (m *mockDonRuntime) Config() []byte       { return nil }
@@ -159,6 +158,21 @@ func (h *medianTestFieldDescription[T]) Err() error {
 	return nil
 }
 
-func (h *medianTestFieldDescription[T]) WithDefault(t T) sdk.ConsensusAggregation[T] {
+func (h *medianTestFieldDescription[T]) WithDefault(t T) ConsensusAggregation[T] {
 	return &medianTestFieldDescription[T]{T: t}
+}
+
+func reportFromValue(result *valuespb.Value) *valuespb.Value {
+	return &valuespb.Value{
+		Value: &valuespb.Value_MapValue{
+			MapValue: &valuespb.Map{
+				Fields: map[string]*valuespb.Value{
+					ConsensusResponseMapKeyMetadata: {Value: &valuespb.Value_StringValue{StringValue: "test_metadata"}},
+					ConsensusResponseMapKeyPayload: {
+						Value: result.Value,
+					},
+				},
+			},
+		},
+	}
 }
