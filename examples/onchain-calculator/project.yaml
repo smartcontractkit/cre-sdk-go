@@ -1,0 +1,76 @@
+# ==========================================================================
+# CRE PROJECT SETTINGS FILE
+# ==========================================================================
+# This file defines environment-specific targets used by the CRE CLI.
+# Each top-level key is a target (e.g., `production`, `production-testnet`, etc.).
+#
+# You can define your own custom target names, such as `my-target`, and point
+# the CLI to it via an environment variable.
+#
+# Below is an example `my-target`:
+#
+# my-target:
+#   dev-platform:
+#     # Required: Workflow DON ID used for registering and operating workflows.
+#     don-id: 4
+#   logging:
+#     # Optional: Path to the seth configuration file (TOML). Used for logging configuration.
+#     seth-config-path: "/path/to/seth-config.toml"
+#   contracts:
+#     registries:
+#       - name: WorkflowRegistry
+#         # Required: Contract address of the Workflow Registry.(override to switch between testnet/mainnet addresss)
+#         address: "0x1234567890abcdef1234567890abcdef12345678"
+#         # Required: Chain selector (see: https://github.com/smartcontractkit/chain-selectors/blob/main/selectors.yml)
+#         chain-selector: 16015286601757825753
+#       - name: CapabilitiesRegistry
+#         # Required: Contract address of Capabilities Registry (override to switch between testnet/mainnet addresss)
+#         address: "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd"
+#         # Required: Chain selector (see: https://github.com/smartcontractkit/chain-selectors/blob/main/selectors.yml)
+#         chain-selector: 16015286601757825753
+#   rpcs:
+#     # Required: Map each used chain selector to a corresponding RPC URL (HTTPS)
+#     - chain-selector: 16015286601757825753
+#       url: "https://sepolia.infura.io/v3/YOUR_API_KEY"
+
+# ==========================================================================
+local-simulation:
+  rpcs:
+    - chain-selector: 16015286601757825753
+      url: URL
+
+# ==========================================================================
+production-testnet:
+  dev-platform:
+    don-id: 4
+  logging:
+    seth-config-path: ""
+  contracts:
+    registries:
+      - name: WorkflowRegistry
+        address: "0xF3f93fc4dc177748E7557568b5354cB009e3818a"
+        chain-selector: 16015286601757825753  #ethereum-sepolia
+      - name: CapabilitiesRegistry
+        address: "0x02471a03A86ac92DE793af303E9f756f0aE60677"
+        chain-selector: 16015286601757825753
+  rpcs:
+    - chain-selector: 16015286601757825753
+      url: https://sepolia.infura.io/v3/YOUR_API_KEY
+
+# ==========================================================================
+production:
+  dev-platform:
+    don-id: 4
+  logging:
+    seth-config-path: ""
+  contracts:
+    registries:
+      - name: WorkflowRegistry
+        address: "0x0c4043F06D06458a236e2E72A18148349E987baF"
+        chain-selector: 5009297550715157269  #ethereum-mainnet
+      - name: CapabilitiesRegistry
+        address: "0x8e64CFbAfe8488E5FeB96f8578E6B653B958fb8f"
+        chain-selector: 5009297550715157269
+  rpcs:
+    - chain-selector: 5009297550715157269
+      url: "<YOUR_SEPOLIA_RPC_URL>"

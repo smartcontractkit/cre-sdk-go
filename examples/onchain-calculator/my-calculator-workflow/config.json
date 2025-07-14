@@ -1,0 +1,5 @@
+{
+  "schedule": "0 */1 * * * *",
+  "apiUrl": "https://api.mathjs.org/v4/?expr=2*10",
+  "contractAddress": "0xa17CF997C28FF154eDBae1422e6a50BeF23927F4"
+}
