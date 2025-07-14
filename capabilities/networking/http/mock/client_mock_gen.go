@@ -25,8 +25,7 @@ func NewClientCapability(t testing.TB) (*ClientCapability, error) {
 	return c, err
 }
 
-type ClientCapability struct {
-	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
+type ClientCapability struct { // TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
 	SendRequest func(ctx context.Context, input *http.Request) (*http.Response, error)
 }
 
@@ -58,11 +57,8 @@ func (cap *ClientCapability) Invoke(ctx context.Context, request *sdkpb.Capabili
 	default:
 		capResp.Response = &sdkpb.CapabilityResponse_Error{Error: fmt.Sprintf("method %s not found", request.Method)}
 	}
-	return capResp
-}
 
-func (cap *ClientCapability) InvokeTrigger(ctx context.Context, request *sdkpb.TriggerSubscription) (*sdkpb.Trigger, error) {
-	return nil, fmt.Errorf("method %s not found", request.Method)
+	return capResp
 }
 
 func (cap *ClientCapability) ID() string {

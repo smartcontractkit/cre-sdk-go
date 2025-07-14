@@ -8,9 +8,10 @@ import (
 	"testing"
 
 	"google.golang.org/protobuf/types/known/anypb"
-	"google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/smartcontractkit/cre-sdk-go/capabilities/blockchain/evm"
+
+	"google.golang.org/protobuf/types/known/emptypb"
 
 	sdkpb "github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
 	"github.com/smartcontractkit/cre-sdk-go/sdk/testutils/registry"
@@ -26,29 +27,17 @@ func NewClientCapability(t testing.TB) (*ClientCapability, error) {
 	return c, err
 }
 
-type ClientCapability struct {
-	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
-	CallContract func(ctx context.Context, input *evm.CallContractRequest) (*evm.CallContractReply, error)
-	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
-	FilterLogs func(ctx context.Context, input *evm.FilterLogsRequest) (*evm.FilterLogsReply, error)
-	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
-	BalanceAt func(ctx context.Context, input *evm.BalanceAtRequest) (*evm.BalanceAtReply, error)
-	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
-	EstimateGas func(ctx context.Context, input *evm.EstimateGasRequest) (*evm.EstimateGasReply, error)
-	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
-	GetTransactionByHash func(ctx context.Context, input *evm.GetTransactionByHashRequest) (*evm.GetTransactionByHashReply, error)
-	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
-	GetTransactionReceipt func(ctx context.Context, input *evm.GetTransactionReceiptRequest) (*evm.GetTransactionReceiptReply, error)
-	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
-	LatestAndFinalizedHead func(ctx context.Context, input *emptypb.Empty) (*evm.LatestAndFinalizedHeadReply, error)
-	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
-	RegisterLogTracking func(ctx context.Context, input *evm.RegisterLogTrackingRequest) (*emptypb.Empty, error)
-	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
-	UnregisterLogTracking func(ctx context.Context, input *evm.UnregisterLogTrackingRequest) (*emptypb.Empty, error)
-
-	LogTrigger func(ctx context.Context, input *evm.FilterLogTriggerRequest) (*evm.Log, error)
-	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
-	WriteReport func(ctx context.Context, input *evm.WriteReportRequest) (*evm.WriteReportReply, error)
+type ClientCapability struct { // TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
+	CallContract           func(ctx context.Context, input *evm.CallContractRequest) (*evm.CallContractReply, error)                   // TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
+	FilterLogs             func(ctx context.Context, input *evm.FilterLogsRequest) (*evm.FilterLogsReply, error)                       // TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
+	BalanceAt              func(ctx context.Context, input *evm.BalanceAtRequest) (*evm.BalanceAtReply, error)                         // TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
+	EstimateGas            func(ctx context.Context, input *evm.EstimateGasRequest) (*evm.EstimateGasReply, error)                     // TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
+	GetTransactionByHash   func(ctx context.Context, input *evm.GetTransactionByHashRequest) (*evm.GetTransactionByHashReply, error)   // TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
+	GetTransactionReceipt  func(ctx context.Context, input *evm.GetTransactionReceiptRequest) (*evm.GetTransactionReceiptReply, error) // TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
+	LatestAndFinalizedHead func(ctx context.Context, input *emptypb.Empty) (*evm.LatestAndFinalizedHeadReply, error)                   // TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
+	RegisterLogTracking    func(ctx context.Context, input *evm.RegisterLogTrackingRequest) (*emptypb.Empty, error)                    // TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
+	UnregisterLogTracking  func(ctx context.Context, input *evm.UnregisterLogTrackingRequest) (*emptypb.Empty, error)                  // TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
+	WriteReport            func(ctx context.Context, input *evm.WriteReportRequest) (*evm.WriteReportReply, error)
 }
 
 func (cap *ClientCapability) Invoke(ctx context.Context, request *sdkpb.CapabilityRequest) *sdkpb.CapabilityResponse {
@@ -277,40 +266,8 @@ func (cap *ClientCapability) Invoke(ctx context.Context, request *sdkpb.Capabili
 	default:
 		capResp.Response = &sdkpb.CapabilityResponse_Error{Error: fmt.Sprintf("method %s not found", request.Method)}
 	}
+
 	return capResp
-}
-
-func (cap *ClientCapability) InvokeTrigger(ctx context.Context, request *sdkpb.TriggerSubscription) (*sdkpb.Trigger, error) {
-	trigger := &sdkpb.Trigger{}
-	switch request.Method {
-	case "LogTrigger":
-		input := &evm.FilterLogTriggerRequest{}
-		if err := request.Payload.UnmarshalTo(input); err != nil {
-			return nil, err
-		}
-
-		if cap.LogTrigger == nil {
-			return nil, registry.ErrNoTriggerStub("LogTrigger")
-		}
-
-		resp, err := cap.LogTrigger(ctx, input)
-		if err != nil {
-			return nil, err
-		} else {
-			if resp == nil {
-				return nil, nil
-			}
-
-			payload, err := anypb.New(resp)
-			if err != nil {
-				return nil, err
-			}
-			trigger.Payload = payload
-		}
-	default:
-		return nil, fmt.Errorf("method %s not found", request.Method)
-	}
-	return trigger, nil
 }
 
 func (cap *ClientCapability) ID() string {
