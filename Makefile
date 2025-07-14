@@ -12,8 +12,14 @@ install-protoc:
 	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.5.1
 
 .PHONY: generate
-generate: install-protoc gomods
+generate: install-protoc gomods modgraph
 	export PATH="$(HOME)/.local/bin:$(PATH)"; gomods -go generate -x ./...
+
+.PHONY: modgraph
+modgraph: gomods
+	go install github.com/jmank88/modgraph@v0.1.0
+	./modgraph > go.md
+
 
 .PHONY: clean
 clean:
