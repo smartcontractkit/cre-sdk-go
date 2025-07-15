@@ -26,6 +26,7 @@ func NewBasicCapability(t testing.TB) (*BasicCapability, error) {
 }
 
 type BasicCapability struct { // TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
+
 	Action func(ctx context.Context, input *actionandtrigger.Input) (*actionandtrigger.Output, error)
 }
 

@@ -11,10 +11,12 @@ import (
 	"github.com/smartcontractkit/cre-sdk-go/sdk"
 )
 
+// BasicActionCapability This action server for testing purposes only.
 type BasicAction struct {
 	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 allow defaults for capabilities
 }
 
+// <no value>Capability This comment tests the generator's ability to handle leading comments on methods.
 func (c *BasicAction) PerformAction(runtime sdk.Runtime, input *Inputs) sdk.Promise[*Outputs] {
 	wrapped, err := anypb.New(input)
 	if err != nil {

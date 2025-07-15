@@ -1,5 +1,6 @@
 {{define "trigger_method"}}
-func {{.Method.GoName}}(config *{{name .InputType .GoPackageName}}) sdk.{{.Mode}}Trigger[*{{name .OutputType .GoPackageName}}, *{{name .OutputType .GoPackageName}}] {
+    {{ if .Method.Comments.Leading.String }}//{{.GoName}}Capability {{CleanComments .Method.Comments.Leading.String}} {{ end }}
+func {{.Method.GoName}}(config *{{name .InputType .GoPackageName}}) sdk.{{.Mode}}Trigger[*{{name .OutputType .GoPackageName}}, *{{name .OutputType .GoPackageName}}] { {{- if .Comments.Trailing.String }}//{{.GoName}}Capability {{CleanComments .Comments.Trailing.String}} {{ end }}
     configAny, _ := anypb.New(config)
     return &{{.Service.GoName | LowerFirst}}{{.Method.GoName}} {
         config: configAny,

@@ -1,5 +1,6 @@
 {{define "action_method"}}
-func (c *{{.Service.GoName}}) {{.Method.GoName}}(runtime sdk.{{.Mode}}Runtime, input *{{name .InputType .GoPackageName}}) sdk.Promise[*{{name .OutputType .GoPackageName}}] {
+{{ if .Method.Comments.Leading.String }}//{{.GoName}}Capability {{CleanComments .Method.Comments.Leading.String}} {{ end }}
+func (c *{{.Service.GoName}}) {{.Method.GoName}}(runtime sdk.{{.Mode}}Runtime, input *{{name .InputType .GoPackageName}}) sdk.Promise[*{{name .OutputType .GoPackageName}}] { {{- if .Comments.Trailing.String }}//{{.GoName}}Capability {{CleanComments .Comments.Trailing.String}} {{ end }}
     wrapped, err := anypb.New(input)
     if err != nil {
         return sdk.PromiseFromResult[*{{name .OutputType .GoPackageName}}](nil, err)

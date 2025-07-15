@@ -21,6 +21,7 @@ import (
 
 {{- range .Services}}
 {{ $service := . }}
+{{ if .Comments.Leading.String }}//{{.GoName}}Capability {{CleanComments .Comments.Leading.String}} {{ end }}
 type {{.GoName}} struct {
     // TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 allow defaults for capabilities
 }
