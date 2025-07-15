@@ -7,10 +7,9 @@ import (
 
 	"google.golang.org/protobuf/types/known/anypb"
 
-	"google.golang.org/protobuf/types/known/emptypb"
-
 	sdkpb "github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
 	"github.com/smartcontractkit/cre-sdk-go/sdk"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type Client struct {
