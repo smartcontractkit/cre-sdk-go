@@ -8,5 +8,5 @@ echo "## SDK modules and smartcontractkit org dependencies
 \`\`\`mermaid
 flowchart LR
 "
-gomods graph | modgraph -prefix github.com/smartcontractkit/
+gomods -s proto_vendor graph | modgraph -prefix github.com/smartcontractkit/
 echo "\`\`\`"
