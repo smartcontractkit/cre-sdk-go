@@ -1,9 +1,9 @@
 gomods: ## Install gomods
-	go install github.com/jmank88/gomods@v0.1.5
+	go install github.com/jmank88/gomods@v0.1.6
 
 .PHONY: gomodtidy
 gomodtidy: gomods
-	gomods tidy
+	gomods -s proto_vendor tidy
 
 .PHONY: install-protoc
 install-protoc:
@@ -13,7 +13,7 @@ install-protoc:
 
 .PHONY: generate
 generate: install-protoc gomods modgraph
-	export PATH="$(HOME)/.local/bin:$(PATH)"; gomods -go generate -x ./...
+	export PATH="$(HOME)/.local/bin:$(PATH)"; gomods -s proto_vendor -go generate -x ./...
 
 .PHONY: modgraph
 modgraph: gomods

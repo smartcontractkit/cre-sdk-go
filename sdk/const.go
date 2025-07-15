@@ -6,4 +6,5 @@ const (
 	// proto encoder outputs a map with these keys so that user payload can be easily extracted
 	ConsensusResponseMapKeyMetadata = "metadata"
 	ConsensusResponseMapKeyPayload  = "payload"
+	ReportMetadataHeaderLength      = 109
 )

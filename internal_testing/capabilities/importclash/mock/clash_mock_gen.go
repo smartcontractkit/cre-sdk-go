@@ -10,6 +10,7 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 
 	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/importclash/p1"
+
 	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/importclash/p2"
 
 	sdkpb "github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
@@ -26,8 +27,7 @@ func NewBasicActionCapability(t testing.TB) (*BasicActionCapability, error) {
 	return c, err
 }
 
-type BasicActionCapability struct {
-	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
+type BasicActionCapability struct { // TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
 	PerformAction func(ctx context.Context, input *p1.Item) (*p2.Item, error)
 }
 
@@ -59,11 +59,8 @@ func (cap *BasicActionCapability) Invoke(ctx context.Context, request *sdkpb.Cap
 	default:
 		capResp.Response = &sdkpb.CapabilityResponse_Error{Error: fmt.Sprintf("method %s not found", request.Method)}
 	}
-	return capResp
-}
 
-func (cap *BasicActionCapability) InvokeTrigger(ctx context.Context, request *sdkpb.TriggerSubscription) (*sdkpb.Trigger, error) {
-	return nil, fmt.Errorf("method %s not found", request.Method)
+	return capResp
 }
 
 func (cap *BasicActionCapability) ID() string {

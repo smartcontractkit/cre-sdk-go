@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"math/rand"
 	"testing"
 
@@ -16,7 +17,13 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-func newRuntime(tb testing.TB, sourceFn func() rand.Source, secrets map[string]string) sdkimpl.RuntimeBase {
+func NewRuntimeAndEnv[C any](tb testing.TB, config C, secrets map[string]string) (*TestRuntime, *sdk.Environment[C]) {
+	rt := newRuntime(tb, secrets)
+	env := newEnvironment(config, rt)
+	return rt, env
+}
+
+func newRuntime(tb testing.TB, secrets map[string]string) *TestRuntime {
 	defaultConsensus, err := consensusmock.NewConsensusCapability(tb)
 
 	// Do not override if the user provided their own consensus method
@@ -24,10 +31,53 @@ func newRuntime(tb testing.TB, sourceFn func() rand.Source, secrets map[string]s
 		defaultConsensus.Simple = defaultSimpleConsensus
 	}
 
-	return sdkimpl.RuntimeBase{
-		MaxResponseSize: sdk.DefaultMaxResponseSizeBytes,
-		RuntimeHelpers:  &runtimeHelpers{tb: tb, calls: map[int32]chan *pb.CapabilityResponse{}, sourceFn: sourceFn, secretsCalls: map[int32][]*pb.SecretResponse{}, secrets: secrets},
+	if secrets == nil {
+		secrets = map[string]string{}
 	}
+
+	return &TestRuntime{
+		testWriter: &testWriter{},
+		Runtime: sdkimpl.Runtime{
+			RuntimeBase: sdkimpl.RuntimeBase{
+				Mode:            pb.Mode_MODE_DON,
+				MaxResponseSize: sdk.DefaultMaxResponseSizeBytes,
+				RuntimeHelpers:  &runtimeHelpers{tb: tb, calls: map[int32]chan *pb.CapabilityResponse{}, secretsCalls: map[int32][]*pb.SecretResponse{}, secrets: secrets},
+			},
+		},
+	}
+}
+
+type TestRuntime struct {
+	sdkimpl.Runtime
+	*testWriter
+}
+
+func newEnvironment[C any](config C, runtime *TestRuntime) *sdk.Environment[C] {
+	return &sdk.Environment[C]{
+		NodeEnvironment: sdk.NodeEnvironment[C]{
+			Config:    config,
+			LogWriter: runtime.testWriter,
+			Logger:    slog.New(slog.NewTextHandler(runtime.testWriter, nil)),
+		},
+		SecretsProvider: runtime,
+	}
+}
+
+func (t *TestRuntime) GetLogs() [][]byte {
+	logs := make([][]byte, len(t.testWriter.logs))
+	for i, log := range t.testWriter.logs {
+		logs[i] = make([]byte, len(log))
+		copy(logs[i], log)
+	}
+	return logs
+}
+
+func (t *TestRuntime) SetRandomSource(source rand.Source) {
+	t.RuntimeHelpers.(*runtimeHelpers).donSrc = source
+}
+
+func (t *TestRuntime) SetNodeRandomSource(source rand.Source) {
+	t.RuntimeHelpers.(*runtimeHelpers).nodeSrc = source
 }
 
 func defaultSimpleConsensus(_ context.Context, input *pb.SimpleConsensusInputs) (*valuespb.Value, error) {
@@ -62,16 +112,27 @@ func reportFromValue(result *valuespb.Value) *valuespb.Value {
 }
 
 type runtimeHelpers struct {
-	tb       testing.TB
-	calls    map[int32]chan *pb.CapabilityResponse
-	sourceFn func() rand.Source
+	tb      testing.TB
+	calls   map[int32]chan *pb.CapabilityResponse
+	donSrc  rand.Source
+	nodeSrc rand.Source
 
 	secretsCalls map[int32][]*pb.SecretResponse
 	secrets      map[string]string
 }
 
-func (rh *runtimeHelpers) GetSource(_ pb.Mode) rand.Source {
-	return rh.sourceFn()
+func (rh *runtimeHelpers) GetSource(mode pb.Mode) rand.Source {
+	if mode == pb.Mode_MODE_DON {
+		if rh.donSrc == nil {
+			rh.donSrc = rand.NewSource(123)
+		}
+		return rh.donSrc
+	}
+
+	if rh.nodeSrc == nil {
+		rh.nodeSrc = rand.NewSource(456)
+	}
+	return rh.nodeSrc
 }
 
 func (rh *runtimeHelpers) Call(request *pb.CapabilityRequest) error {

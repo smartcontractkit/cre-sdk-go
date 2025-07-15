@@ -2,7 +2,10 @@
 ```mermaid
 flowchart LR
 
-	chainlink-common --> chainlink-common/pkg/values
+	chain-selectors
+	click chain-selectors href "https://github.com/smartcontractkit/chain-selectors"
+	chainlink-common --> chain-selectors
+	chainlink-common --> chainlink-common/pkg/workflows/sdk/v2/pb
 	chainlink-common --> chainlink-protos/billing/go
 	chainlink-common --> chainlink-protos/workflows/go
 	chainlink-common --> freeport
