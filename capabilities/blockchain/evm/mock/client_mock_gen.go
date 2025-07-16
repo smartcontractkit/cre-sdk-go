@@ -9,9 +9,9 @@ import (
 
 	"google.golang.org/protobuf/types/known/anypb"
 
-	"google.golang.org/protobuf/types/known/emptypb"
-
 	"github.com/smartcontractkit/cre-sdk-go/capabilities/blockchain/evm"
+
+	"google.golang.org/protobuf/types/known/emptypb"
 
 	sdkpb "github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
 	"github.com/smartcontractkit/cre-sdk-go/sdk/testutils/registry"
