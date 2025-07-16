@@ -2,7 +2,6 @@ package sdk
 
 import (
 	"errors"
-	"fmt"
 	"math/rand"
 	"reflect"
 
@@ -170,20 +169,14 @@ func RunInNodeMode[C, T any](
 		var t T
 		var err error
 
-		m, ok := v.(*values.Map)
-		if !ok {
-			return t, fmt.Errorf("expected a map value from RunInNodeMode but got: %T", v)
-		}
-
 		typ := reflect.TypeOf(t)
-
 		// If T is a pointer type, we need to allocate the underlying type and pass its pointer to UnwrapTo
 		if typ.Kind() == reflect.Ptr {
 			elem := reflect.New(typ.Elem())
-			err = m.Underlying[ConsensusResponseMapKeyPayload].UnwrapTo(elem.Interface())
+			err = v.UnwrapTo(elem.Interface())
 			t = elem.Interface().(T)
 		} else {
-			err = m.Underlying[ConsensusResponseMapKeyPayload].UnwrapTo(&t)
+			err = v.UnwrapTo(&t)
 		}
 		return t, err
 	})
