@@ -8,12 +8,14 @@ import (
 	"math/rand"
 	"testing"
 
+	"github.com/smartcontractkit/chainlink-common/pkg/values"
 	valuespb "github.com/smartcontractkit/chainlink-common/pkg/values/pb"
 	"github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
 	"github.com/smartcontractkit/cre-sdk-go/internal/sdkimpl"
 	consensusmock "github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/consensus/mock"
 	"github.com/smartcontractkit/cre-sdk-go/sdk"
 	"github.com/smartcontractkit/cre-sdk-go/sdk/testutils/registry"
+
 	"google.golang.org/protobuf/proto"
 )
 
@@ -29,6 +31,7 @@ func newRuntime(tb testing.TB, secrets map[string]string) *TestRuntime {
 	// Do not override if the user provided their own consensus method
 	if err == nil {
 		defaultConsensus.Simple = defaultSimpleConsensus
+		defaultConsensus.Report = defaultReport
 	}
 
 	if secrets == nil {
@@ -93,6 +96,18 @@ func defaultSimpleConsensus(_ context.Context, input *pb.SimpleConsensusInputs) 
 	default:
 		return nil, fmt.Errorf("unknown observation type %T", o)
 	}
+}
+
+func defaultReport(_ context.Context, input *pb.ReportRequest) (*pb.ReportResponse, error) {
+	report := reportFromValue(values.Proto(values.NewBytes(input.EncodedPayload)))
+	rawReportBytes, err := proto.Marshal(report)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal default report: %w", err)
+	}
+
+	return &pb.ReportResponse{
+		RawReport: rawReportBytes,
+	}, nil
 }
 
 // reportFromValue will go away once the real consensus method is implemented.
