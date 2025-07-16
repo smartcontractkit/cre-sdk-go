@@ -6,12 +6,14 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
 	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basicaction"
 	basicactionmock "github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basicaction/mock"
 	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/nodeaction"
-	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/nodeaction/mock"
+	nodeactionmock "github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/nodeaction/mock"
 	"github.com/smartcontractkit/cre-sdk-go/sdk"
 	"github.com/smartcontractkit/cre-sdk-go/sdk/testutils"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -96,4 +98,32 @@ func TestRuntime_ConsensusReturnsErrors(t *testing.T) {
 		sdk.ConsensusMedianAggregation[int32]())
 	_, err := consensus.Await()
 	require.ErrorContains(t, err, anyErr.Error())
+}
+
+func TestRuntime_CallsReportMethod(t *testing.T) {
+	expectedInputPayload := []byte("some_encoded_report_data")
+	expectedMetadata := make([]byte, sdk.ReportMetadataHeaderLength)
+	for i := range sdk.ReportMetadataHeaderLength {
+		expectedMetadata[i] = byte(i % 256)
+	}
+	expectedRawReport := append(expectedMetadata, expectedInputPayload...)
+
+	runtime, _ := testutils.NewRuntimeAndEnv(t, "test_config", nil)
+	reportRequest := &pb.ReportRequest{
+		EncodedPayload: expectedInputPayload,
+		EncoderName:    "my-encoder",
+		SigningAlgo:    "my-signer",
+		HashingAlgo:    "my-hasher",
+	}
+
+	resp, err := runtime.GenerateReport(reportRequest).Await()
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+
+	// Assert the RawReport matches the expected concatenated bytes
+	assert.Equal(t, expectedRawReport, resp.RawReport)
+	assert.Equal(t, len(expectedRawReport), len(resp.RawReport))
+
+	assert.Equal(t, []byte("default_signature_1"), resp.Sigs[0].Signature)
+	assert.Equal(t, []byte("default_signature_2"), resp.Sigs[1].Signature)
 }

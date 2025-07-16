@@ -14,6 +14,7 @@ import (
 	consensusmock "github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/consensus/mock"
 	"github.com/smartcontractkit/cre-sdk-go/sdk"
 	"github.com/smartcontractkit/cre-sdk-go/sdk/testutils/registry"
+
 	"google.golang.org/protobuf/proto"
 )
 
@@ -29,6 +30,7 @@ func newRuntime(tb testing.TB, secrets map[string]string) *TestRuntime {
 	// Do not override if the user provided their own consensus method
 	if err == nil {
 		defaultConsensus.Simple = defaultSimpleConsensus
+		defaultConsensus.Report = defaultReport
 	}
 
 	if secrets == nil {
@@ -93,6 +95,38 @@ func defaultSimpleConsensus(_ context.Context, input *pb.SimpleConsensusInputs) 
 	default:
 		return nil, fmt.Errorf("unknown observation type %T", o)
 	}
+}
+
+func defaultReport(_ context.Context, input *pb.ReportRequest) (*pb.ReportResponse, error) {
+	metadata := createTestReportMetadata()
+	rawReportBytes := append(metadata, input.EncodedPayload...)
+	defaultSigs := [][]byte{
+		[]byte("default_signature_1"),
+		[]byte("default_signature_2"),
+	}
+	return &pb.ReportResponse{
+		RawReport: rawReportBytes,
+		Sigs: []*pb.AttributedSignature{
+			{
+				Signature: defaultSigs[0],
+				SignerId:  0,
+			},
+			{
+				Signature: defaultSigs[1],
+				SignerId:  1,
+			},
+		},
+	}, nil
+}
+
+// createTestReportMetadata generates a byte slice for metadata
+// that is sdk.ReportMetadataHeaderLength long and has an assertable pattern.
+func createTestReportMetadata() []byte {
+	metadata := make([]byte, sdk.ReportMetadataHeaderLength)
+	for i := range sdk.ReportMetadataHeaderLength {
+		metadata[i] = byte(i % 256)
+	}
+	return metadata
 }
 
 // reportFromValue will go away once the real consensus method is implemented.
