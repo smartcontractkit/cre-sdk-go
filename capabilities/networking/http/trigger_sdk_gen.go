@@ -15,6 +15,7 @@ type HTTP struct {
 func Trigger(config *Config) sdk.Trigger[*Payload, *Payload] {
 	configAny, _ := anypb.New(config)
 	return &hTTPTrigger{
+
 		config: configAny,
 	}
 }
@@ -29,7 +30,7 @@ func (*hTTPTrigger) NewT() *Payload {
 	return &Payload{}
 }
 
-func (*hTTPTrigger) CapabilityID() string {
+func (c *hTTPTrigger) CapabilityID() string {
 	return "http-trigger@1.0.0-alpha"
 }
 
