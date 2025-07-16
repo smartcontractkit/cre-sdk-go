@@ -123,4 +123,7 @@ func TestRuntime_CallsReportMethod(t *testing.T) {
 	// Assert the RawReport matches the expected concatenated bytes
 	assert.Equal(t, expectedRawReport, resp.RawReport)
 	assert.Equal(t, len(expectedRawReport), len(resp.RawReport))
+
+	assert.Equal(t, []byte("default_signature_1"), resp.Sigs[0].Signature)
+	assert.Equal(t, []byte("default_signature_2"), resp.Sigs[1].Signature)
 }

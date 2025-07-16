@@ -100,8 +100,22 @@ func defaultSimpleConsensus(_ context.Context, input *pb.SimpleConsensusInputs) 
 func defaultReport(_ context.Context, input *pb.ReportRequest) (*pb.ReportResponse, error) {
 	metadata := createTestReportMetadata()
 	rawReportBytes := append(metadata, input.EncodedPayload...)
+	defaultSigs := [][]byte{
+		[]byte("default_signature_1"),
+		[]byte("default_signature_2"),
+	}
 	return &pb.ReportResponse{
 		RawReport: rawReportBytes,
+		Sigs: []*pb.AttributedSignature{
+			{
+				Signature: defaultSigs[0],
+				SignerId:  0,
+			},
+			{
+				Signature: defaultSigs[1],
+				SignerId:  1,
+			},
+		},
 	}, nil
 }
 
