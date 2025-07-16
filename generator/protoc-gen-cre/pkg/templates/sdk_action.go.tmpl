@@ -6,7 +6,7 @@ func (c *{{.Service.GoName}}) {{.Method.GoName}}(runtime sdk.{{.Mode}}Runtime, i
         return sdk.PromiseFromResult[*{{name .OutputType .GoPackageName}}](nil, err)
     }
     return sdk.Then(runtime.CallCapability(&sdkpb.CapabilityRequest{
-        Id:      "{{.CapabilityId}}",
+        Id:      {{FullCapabilityId .Service}},
         Payload: wrapped,
         Method:  "{{.Method.GoName}}",
     }), func(i *sdkpb.CapabilityResponse) (*{{name .OutputType .GoPackageName}}, error) {

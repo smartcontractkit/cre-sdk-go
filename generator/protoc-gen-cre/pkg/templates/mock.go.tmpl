@@ -44,15 +44,22 @@ var _ = registry.Registry{}
         {{- end -}}
         {{- if $hasActions }}
 {{ if .Comments.Leading.String }}//{{.GoName}}Capability {{CleanComments .Comments.Leading.String}} {{ end }}
-func New{{.GoName}}Capability(t testing.TB) (*{{.GoName}}Capability, error) { {{- if .Comments.Trailing.String }}//{{.GoName}}Capability {{CleanComments .Comments.Trailing.String}} {{ end }}
-    c := &{{.GoName}}Capability{}
+func New{{.GoName}}Capability({{ range Labels . -}}{{.Name}} {{.Type}},{{- end -}}t testing.TB) (*{{.GoName}}Capability, error) { {{- if .Comments.Trailing.String }}//{{.GoName}}Capability {{CleanComments .Comments.Trailing.String}} {{ end }}
+    c := &{{.GoName}}Capability{
+        {{ range Labels . -}}
+        {{.Name }}: {{.Name }},
+        {{ end }}
+    }
     reg := registry.GetRegistry(t)
     err := reg.RegisterCapability(c)
     return c, err
 }
 
-{{ if .Comments.Leading.String }}//New{{.GoName}}Capability {{CleanComments .Comments.Leading.String}} {{ end }}
+{{ if .Comments.Leading.String }}//{{.GoName}}Capability {{CleanComments .Comments.Leading.String}} {{ end }}
 type {{.GoName}}Capability struct { {{- if .Comments.Trailing.String }}//{{.GoName}}Capability {{CleanComments .Comments.Trailing.String}} {{ end }}
+        {{ range Labels . -}}
+            {{.Name }} {{.Type}}
+        {{ end -}}
         {{- range .Methods -}}
             {{- if not (isTrigger .) -}}
     // TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
@@ -62,7 +69,7 @@ type {{.GoName}}Capability struct { {{- if .Comments.Trailing.String }}//{{.GoNa
        {{ end -}}
 }
 
-func (cap *{{.GoName}}Capability) Invoke(ctx context.Context, request *sdkpb.CapabilityRequest) *sdkpb.CapabilityResponse {
+func (c *{{.GoName}}Capability) Invoke(ctx context.Context, request *sdkpb.CapabilityRequest) *sdkpb.CapabilityResponse {
     capResp := &sdkpb.CapabilityResponse{}
     switch request.Method {
         {{- range .Methods }}
@@ -74,11 +81,11 @@ func (cap *{{.GoName}}Capability) Invoke(ctx context.Context, request *sdkpb.Cap
             break
         }
 
-        if cap.{{.GoName}} == nil {
+        if c.{{.GoName}} == nil {
             capResp.Response = &sdkpb.CapabilityResponse_Error{Error: "no stub provided for {{.GoName}}"}
             break
         }
-        resp, err := cap.{{.GoName}}(ctx, input)
+        resp, err := c.{{.GoName}}(ctx, input)
         if err != nil {
             capResp.Response = &sdkpb.CapabilityResponse_Error{Error: err.Error()}
         } else {
@@ -98,8 +105,8 @@ func (cap *{{.GoName}}Capability) Invoke(ctx context.Context, request *sdkpb.Cap
     return capResp
 }
 
-func (cap *{{.GoName}}Capability) ID() string {
-    return "{{CapabilityId .}}"
+func (c *{{.GoName}}Capability) ID() string {
+    return {{FullCapabilityId .}}
 }
 
         {{- end -}}
