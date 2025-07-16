@@ -41,6 +41,7 @@ func (c *Basic) Action(runtime sdk.Runtime, input *Input) sdk.Promise[*Output] {
 func Trigger(config *Config) sdk.Trigger[*TriggerEvent, *TriggerEvent] {
 	configAny, _ := anypb.New(config)
 	return &basicTrigger{
+
 		config: configAny,
 	}
 }
@@ -55,7 +56,7 @@ func (*basicTrigger) NewT() *TriggerEvent {
 	return &TriggerEvent{}
 }
 
-func (*basicTrigger) CapabilityID() string {
+func (c *basicTrigger) CapabilityID() string {
 	return "basic-test-action-trigger@1.0.0"
 }
 

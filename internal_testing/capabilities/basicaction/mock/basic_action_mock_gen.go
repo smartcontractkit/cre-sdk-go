@@ -26,13 +26,14 @@ func NewBasicActionCapability(t testing.TB) (*BasicActionCapability, error) { //
 	return c, err
 }
 
-// NewBasicActionCapability This action server for testing purposes only.
-type BasicActionCapability struct { //BasicActionCapability This comment tests the generator's ability to handle comments. // TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
+// BasicActionCapability This action server for testing purposes only.
+type BasicActionCapability struct { //BasicActionCapability This comment tests the generator's ability to handle comments.
+	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
 	//PerformActionCapability This comment tests the generator's ability to handle leading comments on methods.
 	PerformAction func(ctx context.Context, input *basicaction.Inputs) (*basicaction.Outputs, error) //PerformActionCapability This comment tests the generator's ability to handle trailing comments on methods.
 }
 
-func (cap *BasicActionCapability) Invoke(ctx context.Context, request *sdkpb.CapabilityRequest) *sdkpb.CapabilityResponse {
+func (c *BasicActionCapability) Invoke(ctx context.Context, request *sdkpb.CapabilityRequest) *sdkpb.CapabilityResponse {
 	capResp := &sdkpb.CapabilityResponse{}
 	switch request.Method {
 	case "PerformAction":
@@ -42,11 +43,11 @@ func (cap *BasicActionCapability) Invoke(ctx context.Context, request *sdkpb.Cap
 			break
 		}
 
-		if cap.PerformAction == nil {
+		if c.PerformAction == nil {
 			capResp.Response = &sdkpb.CapabilityResponse_Error{Error: "no stub provided for PerformAction"}
 			break
 		}
-		resp, err := cap.PerformAction(ctx, input)
+		resp, err := c.PerformAction(ctx, input)
 		if err != nil {
 			capResp.Response = &sdkpb.CapabilityResponse_Error{Error: err.Error()}
 		} else {
@@ -64,6 +65,6 @@ func (cap *BasicActionCapability) Invoke(ctx context.Context, request *sdkpb.Cap
 	return capResp
 }
 
-func (cap *BasicActionCapability) ID() string {
+func (c *BasicActionCapability) ID() string {
 	return "basic-test-action@1.0.0"
 }

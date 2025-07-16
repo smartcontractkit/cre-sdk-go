@@ -27,7 +27,8 @@ func NewConsensusCapability(t testing.TB) (*ConsensusCapability, error) {
 	return c, err
 }
 
-type ConsensusCapability struct { // TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
+type ConsensusCapability struct {
+	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
 
 	Simple func(ctx context.Context, input *pb2.SimpleConsensusInputs) (*pb.Value, error)
 	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
@@ -35,7 +36,7 @@ type ConsensusCapability struct { // TODO: https://smartcontract-it.atlassian.ne
 	Report func(ctx context.Context, input *pb2.ReportRequest) (*pb2.ReportResponse, error)
 }
 
-func (cap *ConsensusCapability) Invoke(ctx context.Context, request *sdkpb.CapabilityRequest) *sdkpb.CapabilityResponse {
+func (c *ConsensusCapability) Invoke(ctx context.Context, request *sdkpb.CapabilityRequest) *sdkpb.CapabilityResponse {
 	capResp := &sdkpb.CapabilityResponse{}
 	switch request.Method {
 	case "Simple":
@@ -45,11 +46,11 @@ func (cap *ConsensusCapability) Invoke(ctx context.Context, request *sdkpb.Capab
 			break
 		}
 
-		if cap.Simple == nil {
+		if c.Simple == nil {
 			capResp.Response = &sdkpb.CapabilityResponse_Error{Error: "no stub provided for Simple"}
 			break
 		}
-		resp, err := cap.Simple(ctx, input)
+		resp, err := c.Simple(ctx, input)
 		if err != nil {
 			capResp.Response = &sdkpb.CapabilityResponse_Error{Error: err.Error()}
 		} else {
@@ -67,11 +68,11 @@ func (cap *ConsensusCapability) Invoke(ctx context.Context, request *sdkpb.Capab
 			break
 		}
 
-		if cap.Report == nil {
+		if c.Report == nil {
 			capResp.Response = &sdkpb.CapabilityResponse_Error{Error: "no stub provided for Report"}
 			break
 		}
-		resp, err := cap.Report(ctx, input)
+		resp, err := c.Report(ctx, input)
 		if err != nil {
 			capResp.Response = &sdkpb.CapabilityResponse_Error{Error: err.Error()}
 		} else {
@@ -89,6 +90,6 @@ func (cap *ConsensusCapability) Invoke(ctx context.Context, request *sdkpb.Capab
 	return capResp
 }
 
-func (cap *ConsensusCapability) ID() string {
+func (c *ConsensusCapability) ID() string {
 	return "consensus@1.0.0-alpha"
 }

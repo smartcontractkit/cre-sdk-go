@@ -1,14 +1,20 @@
 {{define "trigger_method"}}
     {{ if .Method.Comments.Leading.String }}//{{.GoName}}Capability {{CleanComments .Method.Comments.Leading.String}} {{ end }}
-func {{.Method.GoName}}(config *{{name .InputType .GoPackageName}}) sdk.{{.Mode}}Trigger[*{{name .OutputType .GoPackageName}}, *{{name .OutputType .GoPackageName}}] { {{- if .Comments.Trailing.String }}//{{.GoName}}Capability {{CleanComments .Comments.Trailing.String}} {{ end }}
+func {{.Method.GoName}}({{ range Labels .Service -}}{{LowerFirst .Name}} {{.Type}},{{- end -}}config *{{name .InputType .GoPackageName}}) sdk.{{.Mode}}Trigger[*{{name .OutputType .GoPackageName}}, *{{name .OutputType .GoPackageName}}] { {{- if .Comments.Trailing.String }}//{{.GoName}}Capability {{CleanComments .Comments.Trailing.String}} {{ end }}
     configAny, _ := anypb.New(config)
     return &{{.Service.GoName | LowerFirst}}{{.Method.GoName}} {
+        {{ range Labels .Service -}}
+            {{.Name }}: {{LowerFirst .Name }},
+        {{ end }}
         config: configAny,
     }
 }
 
 type {{.Service.GoName | LowerFirst}}{{.Method.GoName}} struct {
     config *anypb.Any
+    {{ range Labels .Service -}}
+        {{.Name }} {{.Type}}
+    {{ end -}}
 }
 
 func (*{{.Service.GoName | LowerFirst}}{{.Method.GoName}}) Is{{.Mode}}Trigger() {}
@@ -17,8 +23,8 @@ func (*{{.Service.GoName | LowerFirst}}{{.Method.GoName}}) NewT() *{{name .Outpu
     return &{{name .OutputType .GoPackageName}}{}
 }
 
-func (*{{.Service.GoName | LowerFirst}}{{.Method.GoName}}) CapabilityID() string {
-    return "{{.CapabilityId}}"
+func (c *{{.Service.GoName | LowerFirst}}{{.Method.GoName}}) CapabilityID() string {
+    return {{FullCapabilityId .Service}}
 }
 
 func (*{{.Service.GoName | LowerFirst}}{{.Method.GoName}}) Method() string {

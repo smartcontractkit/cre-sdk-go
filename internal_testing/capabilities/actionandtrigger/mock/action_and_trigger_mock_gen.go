@@ -25,12 +25,13 @@ func NewBasicCapability(t testing.TB) (*BasicCapability, error) {
 	return c, err
 }
 
-type BasicCapability struct { // TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
+type BasicCapability struct {
+	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
 
 	Action func(ctx context.Context, input *actionandtrigger.Input) (*actionandtrigger.Output, error)
 }
 
-func (cap *BasicCapability) Invoke(ctx context.Context, request *sdkpb.CapabilityRequest) *sdkpb.CapabilityResponse {
+func (c *BasicCapability) Invoke(ctx context.Context, request *sdkpb.CapabilityRequest) *sdkpb.CapabilityResponse {
 	capResp := &sdkpb.CapabilityResponse{}
 	switch request.Method {
 	case "Action":
@@ -40,11 +41,11 @@ func (cap *BasicCapability) Invoke(ctx context.Context, request *sdkpb.Capabilit
 			break
 		}
 
-		if cap.Action == nil {
+		if c.Action == nil {
 			capResp.Response = &sdkpb.CapabilityResponse_Error{Error: "no stub provided for Action"}
 			break
 		}
-		resp, err := cap.Action(ctx, input)
+		resp, err := c.Action(ctx, input)
 		if err != nil {
 			capResp.Response = &sdkpb.CapabilityResponse_Error{Error: err.Error()}
 		} else {
@@ -62,6 +63,6 @@ func (cap *BasicCapability) Invoke(ctx context.Context, request *sdkpb.Capabilit
 	return capResp
 }
 
-func (cap *BasicCapability) ID() string {
+func (c *BasicCapability) ID() string {
 	return "basic-test-action-trigger@1.0.0"
 }

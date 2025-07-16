@@ -23,6 +23,9 @@ import (
 {{ $service := . }}
 {{ if .Comments.Leading.String }}//{{.GoName}}Capability {{CleanComments .Comments.Leading.String}} {{ end }}
 type {{.GoName}} struct {
+    {{- range Labels . }}
+    {{.Name}} {{.Type}}
+    {{- end }}
     // TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 allow defaults for capabilities
 }
 
@@ -42,4 +45,12 @@ type {{.GoName}} struct {
             {{template "action_method" $args}}
         {{- end }}
     {{- end }}
-{{- end }} {{- end }}
+{{- end }}
+
+{{- range Labels . }}
+    {{- range $name, $value:= .DefaultValues }}
+        const {{ SafeGoName $name }} = {{ $value }}
+    {{ end -}}
+{{- end }}
+
+{{- end }}
