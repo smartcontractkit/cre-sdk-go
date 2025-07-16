@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"testing"
 
+	vals "github.com/smartcontractkit/chainlink-common/pkg/values"
 	valuespb "github.com/smartcontractkit/chainlink-common/pkg/values/pb"
 	"github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
 	"github.com/smartcontractkit/cre-sdk-go/internal/sdkimpl"
@@ -28,7 +29,6 @@ import (
 
 var (
 	anyTrigger = &basictrigger.Outputs{CoolOutput: "cool"}
-	anyConfig  = &basictrigger.Config{Name: "name", Number: 123}
 )
 
 const anyEnvConfig = "env_config"
@@ -289,52 +289,6 @@ func TestNewEnvironment_ReturnsConfig(t *testing.T) {
 	assert.Equal(t, anyEnvConfig, env.Config)
 }
 
-func TestRuntime_GenerateReport(t *testing.T) {
-	var (
-		encodedPayload = []byte(`{"price": 42}`)
-		anyMedian      = []byte(`{"price": 43}`)
-		encoderName    = "some-encoder"
-		signingAlgo    = "some-signer"
-		hashingAlgo    = "some-hasher"
-	)
-
-	mockReportConsensus(t,
-		&consensusValues[[]byte]{
-			WantResponse: anyMedian,
-		},
-	)
-
-	testFn := func(env *sdk.Environment[string], rt sdk.Runtime, _ *basictrigger.Outputs) (*pb.ReportResponse, error) {
-		return rt.GenerateReport(&pb.ReportRequest{
-			EncodedPayload: encodedPayload,
-			EncoderName:    encoderName,
-			SigningAlgo:    signingAlgo,
-			HashingAlgo:    hashingAlgo,
-		}).Await()
-	}
-
-	output, err := testRuntime(t, testFn)
-	require.NoError(t, err)
-
-	result, ok := output.(*pb.ReportResponse)
-	assert.True(t, ok)
-
-	expectedMap := &valuespb.Map{
-		Fields: map[string]*valuespb.Value{
-			sdk.ConsensusResponseMapKeyMetadata: {Value: &valuespb.Value_StringValue{StringValue: "test_metadata"}},
-			sdk.ConsensusResponseMapKeyPayload:  {Value: &valuespb.Value_BytesValue{BytesValue: anyMedian}},
-		},
-	}
-
-	var gotMap valuespb.Map
-	require.NoError(t, proto.Unmarshal(result.RawReport, &gotMap))
-	gotFields := gotMap.GetFields()
-
-	require.Equal(t, 2, len(gotFields))
-	require.True(t, proto.Equal(gotFields[sdk.ConsensusResponseMapKeyMetadata], expectedMap.GetFields()[sdk.ConsensusResponseMapKeyMetadata]), "metadata mismatch on report")
-	require.True(t, proto.Equal(gotFields[sdk.ConsensusResponseMapKeyPayload], expectedMap.GetFields()[sdk.ConsensusResponseMapKeyPayload]), "payload mismatch on report")
-}
-
 func testRuntime[T any](t *testing.T, testFn func(env *sdk.Environment[string], rt sdk.Runtime, _ *basictrigger.Outputs) (T, error)) (any, error) {
 	runtime, env := testutils.NewRuntimeAndEnv(t, anyEnvConfig, map[string]string{})
 	return testFn(env, runtime, anyTrigger)
@@ -397,91 +351,13 @@ func handleSimpleConsensusValueObservation[T any](
 	obsValue *valuespb.Value, // The actual *valuespb.Value from the observation
 ) (*valuespb.Value, error) {
 	assert.Nil(t, values.GiveErr, "Expected no error from consensusValues, but GiveErr is not nil")
+	wrappedExpectedObs, err := vals.Wrap(values.GiveObservation)
+	require.NoError(t, err)
 
-	// Determine the type of the observed value
-	switch v := obsValue.Value.(type) {
-	case *valuespb.Value_Int64Value:
-		// Validate observed int64 value
-		assert.Equal(t, values.GiveObservation, v.Int64Value, "Observed Int64Value mismatch")
-
-		// Determine and return the response based on the generic T type
-		return buildConsensusResponseValue(t, values.WantResponse)
-	// Add other protobuf value types here if your T can match them (e.g., BytesValue)
-	default:
-		assert.Fail(t, "unexpected observation value type: %T", v)
-		return nil, errors.New("unsupported observation value type")
-	}
-}
-
-// buildConsensusResponseValue constructs the *valuespb.Value for the response based on the generic T.
-func buildConsensusResponseValue[T any](t *testing.T, responseVal T) (*valuespb.Value, error) {
-	// Use type switch to determine the actual concrete type of T
-	switch resp := any(responseVal).(type) {
-	case int64:
-		return &valuespb.Value{
-			Value: &valuespb.Value_MapValue{
-				MapValue: &valuespb.Map{
-					Fields: map[string]*valuespb.Value{
-						sdk.ConsensusResponseMapKeyMetadata: {Value: &valuespb.Value_StringValue{StringValue: "test_metadata"}},
-						sdk.ConsensusResponseMapKeyPayload: {
-							Value: &valuespb.Value_Int64Value{
-								Int64Value: resp,
-							},
-						},
-					},
-				},
-			},
-		}, nil
-
-	default:
-		assert.Fail(t, "unexpected response generic type %T, not handled for protobuf conversion", responseVal)
-		return nil, fmt.Errorf("unsupported generic type %T for protobuf response", responseVal)
-	}
-}
-
-// mockReportConsensus overrides the Report method on consensus.
-// It creates a fake RawReport from the WantResponse based on the mock's logic.
-func mockReportConsensus[T any](t *testing.T, values *consensusValues[T]) {
-	consensus, err := consensusmock.NewConsensusCapability(t)
-	require.NoError(t, err, "Failed to create consensus mock capability")
-
-	// Assign the mock implementation to the Report method
-	consensus.Report = func(ctx context.Context, input *pb.ReportRequest) (*pb.ReportResponse, error) {
-		// Handle the error case first (early exit)
-		if values.GiveErr != nil {
-			return nil, values.GiveErr
-		}
-
-		// If no error is expected, build the raw report
-		rawValue := buildRawReportFromResponse(t, values.WantResponse)
-
-		// Construct and return the successful response
-		return &pb.ReportResponse{
-			RawReport: rawValue,
-		}, nil
-	}
-}
-
-// buildRawReportFromResponse creates the serialized RawReport bytes from the generic response.
-// It uses require.Fail to stop the test immediately if the generic type is unexpected.
-func buildRawReportFromResponse[T any](t *testing.T, response T) []byte {
-	// Cast T to any to use type switch for runtime type checking
-	switch resp := any(response).(type) {
-	case []byte:
-		mapProto := &valuespb.Map{
-			Fields: map[string]*valuespb.Value{
-				sdk.ConsensusResponseMapKeyMetadata: {Value: &valuespb.Value_StringValue{StringValue: "test_metadata"}},
-				sdk.ConsensusResponseMapKeyPayload:  {Value: &valuespb.Value_BytesValue{BytesValue: resp}},
-			},
-		}
-		rawValue, err := proto.Marshal(mapProto)
-		require.NoError(t, err, "failed to marshal mapProto to RawReport bytes in mock")
-		return rawValue
-	default:
-		// If the generic type T is not []byte, this is an unexpected scenario for this mock.
-		require.Fail(t, fmt.Sprintf("unsupported generic type for RawReport: %T, expected []byte", resp))
-		return nil
-	}
+	assert.True(t, proto.Equal(vals.Proto(wrappedExpectedObs), obsValue))
+	wrapped, err := vals.Wrap(values.WantResponse)
+	require.NoError(t, err, "Failed to wrap the observation value")
+	return vals.Proto(wrapped), nil
 }
 
 type awaitOverride struct {

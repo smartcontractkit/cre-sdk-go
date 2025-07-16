@@ -97,18 +97,7 @@ func defaultSimpleConsensus(_ context.Context, input *pb.SimpleConsensusInputs) 
 
 // reportFromValue will go away once the real consensus method is implemented.
 func reportFromValue(result *valuespb.Value) *valuespb.Value {
-	return &valuespb.Value{
-		Value: &valuespb.Value_MapValue{
-			MapValue: &valuespb.Map{
-				Fields: map[string]*valuespb.Value{
-					sdk.ConsensusResponseMapKeyMetadata: {Value: &valuespb.Value_StringValue{StringValue: "test_metadata"}},
-					sdk.ConsensusResponseMapKeyPayload: {
-						Value: result.Value,
-					},
-				},
-			},
-		},
-	}
+	return &valuespb.Value{Value: result.Value}
 }
 
 type runtimeHelpers struct {
