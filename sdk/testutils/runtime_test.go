@@ -6,7 +6,6 @@ import (
 	"strings"
 	"testing"
 
-	valuespb "github.com/smartcontractkit/chainlink-common/pkg/values/pb"
 	"github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
 	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basicaction"
 	basicactionmock "github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basicaction/mock"
@@ -17,8 +16,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"google.golang.org/protobuf/proto"
 )
 
 func TestRuntime_CallCapability(t *testing.T) {
@@ -105,6 +102,12 @@ func TestRuntime_ConsensusReturnsErrors(t *testing.T) {
 
 func TestRuntime_CallsReportMethod(t *testing.T) {
 	expectedInputPayload := []byte("some_encoded_report_data")
+	expectedMetadata := make([]byte, sdk.ReportMetadataHeaderLength)
+	for i := range sdk.ReportMetadataHeaderLength {
+		expectedMetadata[i] = byte(i % 256)
+	}
+	expectedRawReport := append(expectedMetadata, expectedInputPayload...)
+
 	runtime, _ := testutils.NewRuntimeAndEnv(t, "test_config", nil)
 	reportRequest := &pb.ReportRequest{
 		EncodedPayload: expectedInputPayload,
@@ -113,24 +116,11 @@ func TestRuntime_CallsReportMethod(t *testing.T) {
 		HashingAlgo:    "my-hasher",
 	}
 
-	reportPromise := runtime.GenerateReport(reportRequest)
-	reportResponse, err := reportPromise.Await()
+	resp, err := runtime.GenerateReport(reportRequest).Await()
 	require.NoError(t, err)
-	require.NotNil(t, reportResponse)
+	require.NotNil(t, resp)
 
-	var actualReport valuespb.Value
-	err = proto.Unmarshal(reportResponse.RawReport, &actualReport)
-	require.NoError(t, err)
-
-	actualReportMap := actualReport.GetMapValue()
-
-	actualPayloadValue, ok := actualReportMap.Fields[sdk.ConsensusResponseMapKeyPayload]
-	assert.True(t, ok)
-
-	actualMetadataValue, ok := actualReportMap.Fields[sdk.ConsensusResponseMapKeyMetadata]
-	assert.True(t, ok)
-
-	// Assert on expected data
-	assert.Equal(t, &valuespb.Value_BytesValue{BytesValue: expectedInputPayload}, actualPayloadValue.Value)
-	assert.Equal(t, &valuespb.Value_StringValue{StringValue: "test_metadata"}, actualMetadataValue.Value)
+	// Assert the RawReport matches the expected concatenated bytes
+	assert.Equal(t, expectedRawReport, resp.RawReport)
+	assert.Equal(t, len(expectedRawReport), len(resp.RawReport))
 }

@@ -8,7 +8,6 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/smartcontractkit/chainlink-common/pkg/values"
 	valuespb "github.com/smartcontractkit/chainlink-common/pkg/values/pb"
 	"github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
 	"github.com/smartcontractkit/cre-sdk-go/internal/sdkimpl"
@@ -99,15 +98,21 @@ func defaultSimpleConsensus(_ context.Context, input *pb.SimpleConsensusInputs) 
 }
 
 func defaultReport(_ context.Context, input *pb.ReportRequest) (*pb.ReportResponse, error) {
-	report := reportFromValue(values.Proto(values.NewBytes(input.EncodedPayload)))
-	rawReportBytes, err := proto.Marshal(report)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal default report: %w", err)
-	}
-
+	metadata := createTestReportMetadata()
+	rawReportBytes := append(metadata, input.EncodedPayload...)
 	return &pb.ReportResponse{
 		RawReport: rawReportBytes,
 	}, nil
+}
+
+// createTestReportMetadata generates a byte slice for metadata
+// that is sdk.ReportMetadataHeaderLength long and has an assertable pattern.
+func createTestReportMetadata() []byte {
+	metadata := make([]byte, sdk.ReportMetadataHeaderLength)
+	for i := range sdk.ReportMetadataHeaderLength {
+		metadata[i] = byte(i % 256)
+	}
+	return metadata
 }
 
 // reportFromValue will go away once the real consensus method is implemented.
