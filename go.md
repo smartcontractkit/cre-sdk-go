@@ -5,6 +5,7 @@ flowchart LR
 	chain-selectors
 	click chain-selectors href "https://github.com/smartcontractkit/chain-selectors"
 	chainlink-common --> chain-selectors
+	chainlink-common --> chainlink-common/pkg/chipingress
 	chainlink-common --> chainlink-common/pkg/workflows/sdk/v2/pb
 	chainlink-common --> chainlink-protos/billing/go
 	chainlink-common --> chainlink-protos/workflows/go
@@ -12,6 +13,8 @@ flowchart LR
 	chainlink-common --> grpc-proxy
 	chainlink-common --> libocr
 	click chainlink-common href "https://github.com/smartcontractkit/chainlink-common"
+	chainlink-common/pkg/chipingress
+	click chainlink-common/pkg/chipingress href "https://github.com/smartcontractkit/chainlink-common"
 	chainlink-common/pkg/values
 	click chainlink-common/pkg/values href "https://github.com/smartcontractkit/chainlink-common"
 	chainlink-common/pkg/workflows/sdk/v2/pb --> chainlink-common/pkg/values
@@ -39,6 +42,7 @@ flowchart LR
 
 	subgraph chainlink-common-repo[chainlink-common]
 		 chainlink-common
+		 chainlink-common/pkg/chipingress
 		 chainlink-common/pkg/values
 		 chainlink-common/pkg/workflows/sdk/v2/pb
 	end

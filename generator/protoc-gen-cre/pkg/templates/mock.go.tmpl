@@ -43,20 +43,23 @@ var _ = registry.Registry{}
           {{- end -}}
         {{- end -}}
         {{- if $hasActions }}
-func New{{.GoName}}Capability(t testing.TB) (*{{.GoName}}Capability, error) {
+{{ if .Comments.Leading.String }}//{{.GoName}}Capability {{CleanComments .Comments.Leading.String}} {{ end }}
+func New{{.GoName}}Capability(t testing.TB) (*{{.GoName}}Capability, error) { {{- if .Comments.Trailing.String }}//{{.GoName}}Capability {{CleanComments .Comments.Trailing.String}} {{ end }}
     c := &{{.GoName}}Capability{}
     reg := registry.GetRegistry(t)
     err := reg.RegisterCapability(c)
     return c, err
 }
 
-type {{.GoName}}Capability struct {
+{{ if .Comments.Leading.String }}//New{{.GoName}}Capability {{CleanComments .Comments.Leading.String}} {{ end }}
+type {{.GoName}}Capability struct { {{- if .Comments.Trailing.String }}//{{.GoName}}Capability {{CleanComments .Comments.Trailing.String}} {{ end }}
         {{- range .Methods -}}
             {{- if not (isTrigger .) -}}
     // TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
-    {{.GoName}} func(ctx context.Context, input *{{ImportAlias .Input.GoIdent.GoImportPath}}.{{.Input.GoIdent.GoName}}) (*{{ImportAlias .Output.GoIdent.GoImportPath}}.{{.Output.GoIdent.GoName}}, error)
-            {{- end -}}
-       {{- end -}}
+    {{ if .Comments.Leading.String }}//{{.GoName}}Capability {{CleanComments .Comments.Leading.String}} {{ end }}
+    {{.GoName}} func(ctx context.Context, input *{{ImportAlias .Input.GoIdent.GoImportPath}}.{{.Input.GoIdent.GoName}}) (*{{ImportAlias .Output.GoIdent.GoImportPath}}.{{.Output.GoIdent.GoName}}, error) {{- if .Comments.Trailing.String }}//{{.GoName}}Capability {{CleanComments .Comments.Trailing.String}} {{ end }}
+            {{ end -}}
+       {{ end -}}
 }
 
 func (cap *{{.GoName}}Capability) Invoke(ctx context.Context, request *sdkpb.CapabilityRequest) *sdkpb.CapabilityResponse {

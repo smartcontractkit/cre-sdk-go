@@ -18,15 +18,18 @@ import (
 // avoid unused imports
 var _ = registry.Registry{}
 
-func NewBasicActionCapability(t testing.TB) (*BasicActionCapability, error) {
+// BasicActionCapability This action server for testing purposes only.
+func NewBasicActionCapability(t testing.TB) (*BasicActionCapability, error) { //BasicActionCapability This comment tests the generator's ability to handle comments.
 	c := &BasicActionCapability{}
 	reg := registry.GetRegistry(t)
 	err := reg.RegisterCapability(c)
 	return c, err
 }
 
-type BasicActionCapability struct { // TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
-	PerformAction func(ctx context.Context, input *basicaction.Inputs) (*basicaction.Outputs, error)
+// NewBasicActionCapability This action server for testing purposes only.
+type BasicActionCapability struct { //BasicActionCapability This comment tests the generator's ability to handle comments. // TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
+	//PerformActionCapability This comment tests the generator's ability to handle leading comments on methods.
+	PerformAction func(ctx context.Context, input *basicaction.Inputs) (*basicaction.Outputs, error) //PerformActionCapability This comment tests the generator's ability to handle trailing comments on methods.
 }
 
 func (cap *BasicActionCapability) Invoke(ctx context.Context, request *sdkpb.CapabilityRequest) *sdkpb.CapabilityResponse {
