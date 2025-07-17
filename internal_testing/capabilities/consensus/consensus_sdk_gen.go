@@ -5,6 +5,7 @@ package consensus
 import (
 	"errors"
 
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
 	"github.com/smartcontractkit/chainlink-common/pkg/values/pb"
@@ -18,7 +19,8 @@ type Consensus struct {
 }
 
 func (c *Consensus) Simple(runtime sdk.Runtime, input *pb2.SimpleConsensusInputs) sdk.Promise[*pb.Value] {
-	wrapped, err := anypb.New(input)
+	wrapped := &anypb.Any{}
+	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
 		return sdk.PromiseFromResult[*pb.Value](nil, err)
 	}
@@ -41,7 +43,8 @@ func (c *Consensus) Simple(runtime sdk.Runtime, input *pb2.SimpleConsensusInputs
 }
 
 func (c *Consensus) Report(runtime sdk.Runtime, input *pb2.ReportRequest) sdk.Promise[*pb2.ReportResponse] {
-	wrapped, err := anypb.New(input)
+	wrapped := &anypb.Any{}
+	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
 		return sdk.PromiseFromResult[*pb2.ReportResponse](nil, err)
 	}
