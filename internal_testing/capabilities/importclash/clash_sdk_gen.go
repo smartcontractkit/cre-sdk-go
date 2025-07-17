@@ -5,6 +5,7 @@ package importclash
 import (
 	"errors"
 
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
 	sdkpb "github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
@@ -18,7 +19,8 @@ type BasicAction struct {
 }
 
 func (c *BasicAction) PerformAction(runtime sdk.Runtime, input *p1.Item) sdk.Promise[*p2.Item] {
-	wrapped, err := anypb.New(input)
+	wrapped := &anypb.Any{}
+	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
 		return sdk.PromiseFromResult[*p2.Item](nil, err)
 	}

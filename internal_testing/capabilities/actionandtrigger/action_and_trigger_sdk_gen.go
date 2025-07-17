@@ -5,6 +5,7 @@ package actionandtrigger
 import (
 	"errors"
 
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
 	sdkpb "github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
@@ -16,7 +17,8 @@ type Basic struct {
 }
 
 func (c *Basic) Action(runtime sdk.Runtime, input *Input) sdk.Promise[*Output] {
-	wrapped, err := anypb.New(input)
+	wrapped := &anypb.Any{}
+	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
 		return sdk.PromiseFromResult[*Output](nil, err)
 	}
@@ -39,7 +41,8 @@ func (c *Basic) Action(runtime sdk.Runtime, input *Input) sdk.Promise[*Output] {
 }
 
 func Trigger(config *Config) sdk.Trigger[*TriggerEvent, *TriggerEvent] {
-	configAny, _ := anypb.New(config)
+	configAny := &anypb.Any{}
+	_ = anypb.MarshalFrom(configAny, config, proto.MarshalOptions{Deterministic: true})
 	return &basicTrigger{
 
 		config: configAny,

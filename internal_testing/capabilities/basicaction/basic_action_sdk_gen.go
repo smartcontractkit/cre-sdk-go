@@ -5,6 +5,7 @@ package basicaction
 import (
 	"errors"
 
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
 	sdkpb "github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
@@ -18,7 +19,8 @@ type BasicAction struct {
 
 // <no value>Capability This comment tests the generator's ability to handle leading comments on methods.
 func (c *BasicAction) PerformAction(runtime sdk.Runtime, input *Inputs) sdk.Promise[*Outputs] {
-	wrapped, err := anypb.New(input)
+	wrapped := &anypb.Any{}
+	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
 		return sdk.PromiseFromResult[*Outputs](nil, err)
 	}
