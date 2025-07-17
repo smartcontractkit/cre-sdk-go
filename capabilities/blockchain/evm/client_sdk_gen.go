@@ -6,6 +6,7 @@ import (
 	"errors"
 	"strconv"
 
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
 	sdkpb "github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
@@ -19,7 +20,8 @@ type Client struct {
 }
 
 func (c *Client) CallContract(runtime sdk.Runtime, input *CallContractRequest) sdk.Promise[*CallContractReply] {
-	wrapped, err := anypb.New(input)
+	wrapped := &anypb.Any{}
+	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
 		return sdk.PromiseFromResult[*CallContractReply](nil, err)
 	}
@@ -42,7 +44,8 @@ func (c *Client) CallContract(runtime sdk.Runtime, input *CallContractRequest) s
 }
 
 func (c *Client) FilterLogs(runtime sdk.Runtime, input *FilterLogsRequest) sdk.Promise[*FilterLogsReply] {
-	wrapped, err := anypb.New(input)
+	wrapped := &anypb.Any{}
+	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
 		return sdk.PromiseFromResult[*FilterLogsReply](nil, err)
 	}
@@ -65,7 +68,8 @@ func (c *Client) FilterLogs(runtime sdk.Runtime, input *FilterLogsRequest) sdk.P
 }
 
 func (c *Client) BalanceAt(runtime sdk.Runtime, input *BalanceAtRequest) sdk.Promise[*BalanceAtReply] {
-	wrapped, err := anypb.New(input)
+	wrapped := &anypb.Any{}
+	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
 		return sdk.PromiseFromResult[*BalanceAtReply](nil, err)
 	}
@@ -88,7 +92,8 @@ func (c *Client) BalanceAt(runtime sdk.Runtime, input *BalanceAtRequest) sdk.Pro
 }
 
 func (c *Client) EstimateGas(runtime sdk.Runtime, input *EstimateGasRequest) sdk.Promise[*EstimateGasReply] {
-	wrapped, err := anypb.New(input)
+	wrapped := &anypb.Any{}
+	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
 		return sdk.PromiseFromResult[*EstimateGasReply](nil, err)
 	}
@@ -111,7 +116,8 @@ func (c *Client) EstimateGas(runtime sdk.Runtime, input *EstimateGasRequest) sdk
 }
 
 func (c *Client) GetTransactionByHash(runtime sdk.Runtime, input *GetTransactionByHashRequest) sdk.Promise[*GetTransactionByHashReply] {
-	wrapped, err := anypb.New(input)
+	wrapped := &anypb.Any{}
+	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
 		return sdk.PromiseFromResult[*GetTransactionByHashReply](nil, err)
 	}
@@ -134,7 +140,8 @@ func (c *Client) GetTransactionByHash(runtime sdk.Runtime, input *GetTransaction
 }
 
 func (c *Client) GetTransactionReceipt(runtime sdk.Runtime, input *GetTransactionReceiptRequest) sdk.Promise[*GetTransactionReceiptReply] {
-	wrapped, err := anypb.New(input)
+	wrapped := &anypb.Any{}
+	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
 		return sdk.PromiseFromResult[*GetTransactionReceiptReply](nil, err)
 	}
@@ -157,7 +164,8 @@ func (c *Client) GetTransactionReceipt(runtime sdk.Runtime, input *GetTransactio
 }
 
 func (c *Client) LatestAndFinalizedHead(runtime sdk.Runtime, input *emptypb.Empty) sdk.Promise[*LatestAndFinalizedHeadReply] {
-	wrapped, err := anypb.New(input)
+	wrapped := &anypb.Any{}
+	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
 		return sdk.PromiseFromResult[*LatestAndFinalizedHeadReply](nil, err)
 	}
@@ -180,7 +188,8 @@ func (c *Client) LatestAndFinalizedHead(runtime sdk.Runtime, input *emptypb.Empt
 }
 
 func (c *Client) RegisterLogTracking(runtime sdk.Runtime, input *RegisterLogTrackingRequest) sdk.Promise[*emptypb.Empty] {
-	wrapped, err := anypb.New(input)
+	wrapped := &anypb.Any{}
+	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
 		return sdk.PromiseFromResult[*emptypb.Empty](nil, err)
 	}
@@ -203,7 +212,8 @@ func (c *Client) RegisterLogTracking(runtime sdk.Runtime, input *RegisterLogTrac
 }
 
 func (c *Client) UnregisterLogTracking(runtime sdk.Runtime, input *UnregisterLogTrackingRequest) sdk.Promise[*emptypb.Empty] {
-	wrapped, err := anypb.New(input)
+	wrapped := &anypb.Any{}
+	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
 		return sdk.PromiseFromResult[*emptypb.Empty](nil, err)
 	}
@@ -226,7 +236,8 @@ func (c *Client) UnregisterLogTracking(runtime sdk.Runtime, input *UnregisterLog
 }
 
 func LogTrigger(chainSelector uint64, config *FilterLogTriggerRequest) sdk.Trigger[*Log, *Log] {
-	configAny, _ := anypb.New(config)
+	configAny := &anypb.Any{}
+	_ = anypb.MarshalFrom(configAny, config, proto.MarshalOptions{Deterministic: true})
 	return &clientLogTrigger{
 		ChainSelector: chainSelector,
 
@@ -262,7 +273,8 @@ func (t *clientLogTrigger) Adapt(trigger *Log) (*Log, error) {
 }
 
 func (c *Client) WriteReport(runtime sdk.Runtime, input *WriteReportRequest) sdk.Promise[*WriteReportReply] {
-	wrapped, err := anypb.New(input)
+	wrapped := &anypb.Any{}
+	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
 		return sdk.PromiseFromResult[*WriteReportReply](nil, err)
 	}

@@ -16,8 +16,8 @@ github.com/smartcontractkit/chainlink-common/pkg/values v0.0.0-20250710185807-2e
 github.com/smartcontractkit/chainlink-common/pkg/values v0.0.0-20250710185807-2e08944e72d2/go.mod h1:U1UAbPhy6D7Qz0wHKGPoQO+dpR0hsYjgUz8xwRrmKwI=
 github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb v0.0.0-20250715185010-b468c9063939 h1:NlwckBb/oA2HEhUracU86HzTxJlns4OZtmhx503ifAE=
 github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb v0.0.0-20250715185010-b468c9063939/go.mod h1:ay4g8WruGFr512i+0IWDPmc1ZGpsw2ivfqfk0ED9vqY=
-github.com/smartcontractkit/cre-sdk-go v0.1.1-0.20250716184140-57e59b3cfac1 h1:chQNEAKC7eySx0/Lcxl51degfLedhjwvUOUDsacBQBY=
-github.com/smartcontractkit/cre-sdk-go v0.1.1-0.20250716184140-57e59b3cfac1/go.mod h1:epwEHXi7GF2jUF9DrIfUbhjTB/6eS88C6wm9YlEE7Zw=
+github.com/smartcontractkit/cre-sdk-go v0.2.1-0.20250717142007-155eb62baf34 h1:dtGgKM3rjH2Q6Txrja+SqwVt0q4qptP4njEFodearzw=
+github.com/smartcontractkit/cre-sdk-go v0.2.1-0.20250717142007-155eb62baf34/go.mod h1:epwEHXi7GF2jUF9DrIfUbhjTB/6eS88C6wm9YlEE7Zw=
 github.com/stretchr/testify v1.10.0 h1:Xv5erBjTwe/5IxqUQTdXv5kgmIvbHo3QQyRwhJsOfJA=
 github.com/stretchr/testify v1.10.0/go.mod h1:r2ic/lqez/lEtzL7wO/rwa5dbSLXVDPFyf8C91i36aY=
 golang.org/x/crypto v0.36.0 h1:AnAEvhDddvBdpY+uR+MyHmuZzzNqXSe/GvuDeob5L34=
