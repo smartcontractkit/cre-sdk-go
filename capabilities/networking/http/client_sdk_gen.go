@@ -5,6 +5,7 @@ package http
 import (
 	"errors"
 
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
 	sdkpb "github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
@@ -16,7 +17,8 @@ type Client struct {
 }
 
 func (c *Client) SendRequest(runtime sdk.NodeRuntime, input *Request) sdk.Promise[*Response] {
-	wrapped, err := anypb.New(input)
+	wrapped := &anypb.Any{}
+	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
 		return sdk.PromiseFromResult[*Response](nil, err)
 	}

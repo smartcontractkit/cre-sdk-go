@@ -3,6 +3,7 @@
 package cron
 
 import (
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
 	"github.com/smartcontractkit/cre-sdk-go/sdk"
@@ -13,7 +14,8 @@ type Cron struct {
 }
 
 func Trigger(config *Config) sdk.Trigger[*Payload, *Payload] {
-	configAny, _ := anypb.New(config)
+	configAny := &anypb.Any{}
+	_ = anypb.MarshalFrom(configAny, config, proto.MarshalOptions{Deterministic: true})
 	return &cronTrigger{
 
 		config: configAny,
