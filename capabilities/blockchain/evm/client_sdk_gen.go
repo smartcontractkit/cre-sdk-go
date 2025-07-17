@@ -321,3 +321,36 @@ const EthereumTestnetSepoliaOptimism1 = 5224473277236331295
 const PolygonMainnet = 4051577828743386545
 
 const PolygonTestnetAmoy = 16281711391670634445
+
+func ChainSelectorFromName(name string) (uint64, error) {
+	switch name {
+	case "avalanche-mainnet":
+		return AvalancheMainnet, nil
+	case "avalanche-testnet-fuji":
+		return AvalancheTestnetFuji, nil
+	case "binance_smart_chain-mainnet-opbnb-1":
+		return BinanceSmartChainMainnetOpbnb1, nil
+	case "binance_smart_chain-testnet-opbnb-1":
+		return BinanceSmartChainTestnetOpbnb1, nil
+	case "ethereum-mainnet":
+		return EthereumMainnet, nil
+	case "ethereum-mainnet-arbitrum-1":
+		return EthereumMainnetArbitrum1, nil
+	case "ethereum-mainnet-optimism-1":
+		return EthereumMainnetOptimism1, nil
+	case "ethereum-testnet-sepolia":
+		return EthereumTestnetSepolia, nil
+	case "ethereum-testnet-sepolia-arbitrum-1":
+		return EthereumTestnetSepoliaArbitrum1, nil
+	case "ethereum-testnet-sepolia-base-1":
+		return EthereumTestnetSepoliaBase1, nil
+	case "ethereum-testnet-sepolia-optimism-1":
+		return EthereumTestnetSepoliaOptimism1, nil
+	case "polygon-mainnet":
+		return PolygonMainnet, nil
+	case "polygon-testnet-amoy":
+		return PolygonTestnetAmoy, nil
+	default:
+		return 0, errors.New("unknown ChainSelector" + name)
+	}
+}

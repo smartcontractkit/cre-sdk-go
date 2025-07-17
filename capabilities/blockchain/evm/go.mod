@@ -6,7 +6,7 @@ require (
 	github.com/ethereum/go-ethereum v1.16.1
 	github.com/smartcontractkit/chainlink-common/pkg/values v0.0.0-20250717142627-ae07002b923d
 	github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb v0.0.0-20250717151411-d7c87d27164d
-	github.com/smartcontractkit/cre-sdk-go v0.2.1-0.20250717155052-76b6e46e2a69
+	github.com/smartcontractkit/cre-sdk-go v0.2.1-0.20250717164647-3fa34e2516a8
 	github.com/stretchr/testify v1.10.0
 	google.golang.org/protobuf v1.36.6
 )
