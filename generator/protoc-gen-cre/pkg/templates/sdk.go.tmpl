@@ -50,7 +50,19 @@ type {{.GoName}} struct {
 {{- range Labels . }}
     {{- range $name, $value:= .DefaultValues }}
         const {{ SafeGoName $name }} = {{ $value }}
-    {{ end -}}
+    {{ end }}
+    {{ if (and .DefaultValues (ne .Type "string"))}}
+       func {{.Name}}FromName(name string) ({{.Type}}, error) {
+            switch name {
+            {{- range $name, $value := .DefaultValues }}
+                case "{{ $name }}":
+                    return {{ SafeGoName $name }}, nil
+            {{- end }}
+            default:
+                return 0, errors.New("unknown {{.Name}}" + name)
+            }
+        }
+    {{- end }}
 {{- end }}
 
 {{- end }}
