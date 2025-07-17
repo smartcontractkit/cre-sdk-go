@@ -52,7 +52,7 @@ type ClientCapability struct {
 	GetTransactionReceipt func(ctx context.Context, input *evm.GetTransactionReceiptRequest) (*evm.GetTransactionReceiptReply, error)
 	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
 
-	LatestAndFinalizedHead func(ctx context.Context, input *emptypb.Empty) (*evm.LatestAndFinalizedHeadReply, error)
+	HeaderByNumber func(ctx context.Context, input *evm.HeaderByNumberRequest) (*evm.HeaderByNumberReply, error)
 	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
 
 	RegisterLogTracking func(ctx context.Context, input *evm.RegisterLogTrackingRequest) (*emptypb.Empty, error)
@@ -199,18 +199,18 @@ func (c *ClientCapability) Invoke(ctx context.Context, request *sdkpb.Capability
 				capResp.Response = &sdkpb.CapabilityResponse_Error{Error: err.Error()}
 			}
 		}
-	case "LatestAndFinalizedHead":
-		input := &emptypb.Empty{}
+	case "HeaderByNumber":
+		input := &evm.HeaderByNumberRequest{}
 		if err := request.Payload.UnmarshalTo(input); err != nil {
 			capResp.Response = &sdkpb.CapabilityResponse_Error{Error: err.Error()}
 			break
 		}
 
-		if c.LatestAndFinalizedHead == nil {
-			capResp.Response = &sdkpb.CapabilityResponse_Error{Error: "no stub provided for LatestAndFinalizedHead"}
+		if c.HeaderByNumber == nil {
+			capResp.Response = &sdkpb.CapabilityResponse_Error{Error: "no stub provided for HeaderByNumber"}
 			break
 		}
-		resp, err := c.LatestAndFinalizedHead(ctx, input)
+		resp, err := c.HeaderByNumber(ctx, input)
 		if err != nil {
 			capResp.Response = &sdkpb.CapabilityResponse_Error{Error: err.Error()}
 		} else {
