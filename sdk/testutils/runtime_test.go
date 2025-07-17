@@ -6,95 +6,46 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
+	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basicaction"
 	basicactionmock "github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basicaction/mock"
+	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/nodeaction"
+	nodeactionmock "github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/nodeaction/mock"
+	"github.com/smartcontractkit/cre-sdk-go/sdk"
 	"github.com/smartcontractkit/cre-sdk-go/sdk/testutils"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/proto"
-
-	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basicaction"
-	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basictrigger"
-	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basictrigger/mock"
-	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/nodeaction"
-	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/nodeaction/mock"
-	"github.com/smartcontractkit/cre-sdk-go/sdk"
 )
 
 func TestRuntime_CallCapability(t *testing.T) {
 	t.Run("response too large", func(t *testing.T) {
-		trigger, err := basictriggermock.NewBasicCapability(t)
-		require.NoError(t, err)
-		trigger.Trigger = func(_ context.Context, config *basictrigger.Config) (*basictrigger.Outputs, error) {
-			return &basictrigger.Outputs{CoolOutput: "cool"}, nil
-		}
-
 		action, err := basicactionmock.NewBasicActionCapability(t)
 		require.NoError(t, err)
 		action.PerformAction = func(_ context.Context, input *basicaction.Inputs) (*basicaction.Outputs, error) {
-			return &basicaction.Outputs{AdaptedThing: strings.Repeat("a", 1000)}, nil
+			return &basicaction.Outputs{AdaptedThing: strings.Repeat("a", sdk.DefaultMaxResponseSizeBytes+1)}, nil
 		}
 
-		runner := testutils.NewRunner(t, "unused")
-		runner.SetMaxResponseSizeBytes(1)
-		runner.Run(func(_ *sdk.Environment[string]) (sdk.Workflow[string], error) {
-			return sdk.Workflow[string]{
-				sdk.Handler(
-					basictrigger.Trigger(&basictrigger.Config{}),
-					func(_ *sdk.Environment[string], rt sdk.Runtime, _ *basictrigger.Outputs) (string, error) {
-						workflowAction1 := &basicaction.BasicAction{}
-						call := workflowAction1.PerformAction(rt, &basicaction.Inputs{InputThing: true})
-						_, err := call.Await()
-						return "", err
-					},
-				)}, nil
-		})
+		rt, _ := testutils.NewRuntimeAndEnv(t, "", map[string]string{})
+		workflowAction1 := &basicaction.BasicAction{}
+		call := workflowAction1.PerformAction(rt, &basicaction.Inputs{InputThing: true})
+		_, err = call.Await()
 
-		_, _, err = runner.Result()
 		require.Error(t, err)
 		assert.True(t, strings.Contains(err.Error(), sdk.ResponseBufferTooSmall))
 	})
 }
 
 func TestRuntime_ReturnsErrorsFromCapabilitiesThatDoNotExist(t *testing.T) {
-	anyConfig := &basictrigger.Config{Name: "name", Number: 123}
+	rt, _ := testutils.NewRuntimeAndEnv(t, "", map[string]string{})
+	workflowAction1 := &basicaction.BasicAction{}
+	call := workflowAction1.PerformAction(rt, &basicaction.Inputs{InputThing: true})
+	_, err := call.Await()
 
-	trigger, err := basictriggermock.NewBasicCapability(t)
-	require.NoError(t, err)
-	trigger.Trigger = func(_ context.Context, config *basictrigger.Config) (*basictrigger.Outputs, error) {
-		return &basictrigger.Outputs{CoolOutput: "cool"}, nil
-	}
-
-	runner := testutils.NewRunner(t, "unused")
-	require.NoError(t, err)
-
-	runner.Run(func(_ *sdk.Environment[string]) (sdk.Workflow[string], error) {
-		return sdk.Workflow[string]{
-			sdk.Handler(
-				basictrigger.Trigger(anyConfig),
-				func(_ *sdk.Environment[string], rt sdk.Runtime, _ *basictrigger.Outputs) (string, error) {
-					workflowAction1 := &basicaction.BasicAction{}
-					call := workflowAction1.PerformAction(rt, &basicaction.Inputs{InputThing: true})
-					_, err := call.Await()
-					return "", err
-				},
-			)}, nil
-	})
-
-	_, _, err = runner.Result()
 	require.Error(t, err)
 }
 
 func TestRuntime_ConsensusReturnsTheObservation(t *testing.T) {
-	anyConfig := &basictrigger.Config{Name: "name", Number: 123}
-	anyTrigger := &basictrigger.Outputs{CoolOutput: "cool"}
-
-	trigger, err := basictriggermock.NewBasicCapability(t)
-	trigger.Trigger = func(_ context.Context, config *basictrigger.Config) (*basictrigger.Outputs, error) {
-		assert.True(t, proto.Equal(anyConfig, config))
-		return anyTrigger, nil
-	}
-	require.NoError(t, err)
-
 	anyValue := int32(100)
 	nodeCapability, err := nodeactionmock.NewBasicActionCapability(t)
 	require.NoError(t, err)
@@ -102,109 +53,77 @@ func TestRuntime_ConsensusReturnsTheObservation(t *testing.T) {
 		return &nodeaction.NodeOutputs{OutputThing: anyValue}, nil
 	}
 
-	runner := testutils.NewRunner(t, "unused")
+	rt, env := testutils.NewRuntimeAndEnv(t, "anything", map[string]string{})
 	require.NoError(t, err)
 
-	runner.Run(func(_ *sdk.Environment[string]) (sdk.Workflow[string], error) {
-		return sdk.Workflow[string]{
-			sdk.Handler(
-				basictrigger.Trigger(anyConfig),
-				func(env *sdk.Environment[string], rt sdk.Runtime, input *basictrigger.Outputs) (int32, error) {
-					consensus := sdk.RunInNodeMode(env, rt, func(_ *sdk.NodeEnvironment[string], nodeRuntime sdk.NodeRuntime) (int32, error) {
-						action := &nodeaction.BasicAction{}
-						resp, err := action.PerformAction(nodeRuntime, &nodeaction.NodeInputs{InputThing: true}).Await()
-						require.NoError(t, err)
-						return resp.OutputThing, nil
-					}, sdk.ConsensusMedianAggregation[int32]())
+	consensus := sdk.RunInNodeMode(env, rt, func(_ *sdk.NodeEnvironment[string], nodeRuntime sdk.NodeRuntime) (int32, error) {
+		action := &nodeaction.BasicAction{}
+		resp, err := action.PerformAction(nodeRuntime, &nodeaction.NodeInputs{InputThing: true}).Await()
+		require.NoError(t, err)
+		return resp.OutputThing, nil
+	}, sdk.ConsensusMedianAggregation[int32]())
 
-					consensusResult, err := consensus.Await()
-					require.NoError(t, err)
-					return consensusResult, nil
+	consensusResult, err := consensus.Await()
 
-				},
-			)}, nil
-	})
-
-	ran, result, err := runner.Result()
 	require.NoError(t, err)
-	assert.True(t, ran)
-	assert.Equal(t, anyValue, result)
+	assert.Equal(t, anyValue, consensusResult)
 }
 
 func TestRuntime_ConsensusReturnsTheDefaultValue(t *testing.T) {
-	anyConfig := &basictrigger.Config{Name: "name", Number: 123}
-	anyTrigger := &basictrigger.Outputs{CoolOutput: "cool"}
-
-	trigger, err := basictriggermock.NewBasicCapability(t)
-	require.NoError(t, err)
-	trigger.Trigger = func(_ context.Context, config *basictrigger.Config) (*basictrigger.Outputs, error) {
-		assert.True(t, proto.Equal(anyConfig, config))
-		return anyTrigger, nil
-	}
-
-	runner := testutils.NewRunner(t, "unused")
-	require.NoError(t, err)
-
 	anyValue := int32(100)
-	runner.Run(func(_ *sdk.Environment[string]) (sdk.Workflow[string], error) {
-		return sdk.Workflow[string]{
-			sdk.Handler(
-				basictrigger.Trigger(anyConfig),
-				func(env *sdk.Environment[string], rt sdk.Runtime, input *basictrigger.Outputs) (int32, error) {
-					consensus := sdk.RunInNodeMode(
-						env,
-						rt,
-						func(_ *sdk.NodeEnvironment[string], nodeRuntime sdk.NodeRuntime) (int32, error) {
-							return 0, errors.New("no consensus")
-						},
-						sdk.ConsensusMedianAggregation[int32]().WithDefault(anyValue))
 
-					consensusResult, err := consensus.Await()
-					require.NoError(t, err)
-					return consensusResult, nil
-				},
-			)}, nil
-	})
+	runtime, env := testutils.NewRuntimeAndEnv(t, "anything", map[string]string{})
+	consensus := sdk.RunInNodeMode(
+		env,
+		runtime,
+		func(_ *sdk.NodeEnvironment[string], nodeRuntime sdk.NodeRuntime) (int32, error) {
+			return 0, errors.New("no consensus")
+		},
+		sdk.ConsensusMedianAggregation[int32]().WithDefault(anyValue))
 
-	ran, result, err := runner.Result()
+	consensusResult, err := consensus.Await()
 	require.NoError(t, err)
-	assert.True(t, ran)
-	assert.Equal(t, anyValue, result)
+	assert.Equal(t, anyValue, consensusResult)
 }
 
 func TestRuntime_ConsensusReturnsErrors(t *testing.T) {
-	anyConfig := &basictrigger.Config{Name: "name", Number: 123}
-	anyTrigger := &basictrigger.Outputs{CoolOutput: "cool"}
+	runtime, env := testutils.NewRuntimeAndEnv(t, "anything", map[string]string{})
+	anyErr := errors.New("no consensus")
+	consensus := sdk.RunInNodeMode(
+		env,
+		runtime,
+		func(_ *sdk.NodeEnvironment[string], nodeRuntime sdk.NodeRuntime) (int32, error) {
+			return 0, anyErr
+		},
+		sdk.ConsensusMedianAggregation[int32]())
+	_, err := consensus.Await()
+	require.ErrorContains(t, err, anyErr.Error())
+}
 
-	trigger, err := basictriggermock.NewBasicCapability(t)
-	require.NoError(t, err)
-	trigger.Trigger = func(_ context.Context, config *basictrigger.Config) (*basictrigger.Outputs, error) {
-		assert.True(t, proto.Equal(anyConfig, config))
-		return anyTrigger, nil
+func TestRuntime_CallsReportMethod(t *testing.T) {
+	expectedInputPayload := []byte("some_encoded_report_data")
+	expectedMetadata := make([]byte, sdk.ReportMetadataHeaderLength)
+	for i := range sdk.ReportMetadataHeaderLength {
+		expectedMetadata[i] = byte(i % 256)
+	}
+	expectedRawReport := append(expectedMetadata, expectedInputPayload...)
+
+	runtime, _ := testutils.NewRuntimeAndEnv(t, "test_config", nil)
+	reportRequest := &pb.ReportRequest{
+		EncodedPayload: expectedInputPayload,
+		EncoderName:    "my-encoder",
+		SigningAlgo:    "my-signer",
+		HashingAlgo:    "my-hasher",
 	}
 
-	runner := testutils.NewRunner(t, "unused")
+	resp, err := runtime.GenerateReport(reportRequest).Await()
 	require.NoError(t, err)
+	require.NotNil(t, resp)
 
-	anyErr := errors.New("no consensus")
-	runner.Run(func(env *sdk.Environment[string]) (sdk.Workflow[string], error) {
-		return sdk.Workflow[string]{
-			sdk.Handler(
-				basictrigger.Trigger(anyConfig),
-				func(_ *sdk.Environment[string], rt sdk.Runtime, input *basictrigger.Outputs) (int32, error) {
-					consensus := sdk.RunInNodeMode(
-						env,
-						rt,
-						func(_ *sdk.NodeEnvironment[string], nodeRuntime sdk.NodeRuntime) (int32, error) {
-							return 0, anyErr
-						},
-						sdk.ConsensusMedianAggregation[int32]())
+	// Assert the RawReport matches the expected concatenated bytes
+	assert.Equal(t, expectedRawReport, resp.RawReport)
+	assert.Equal(t, len(expectedRawReport), len(resp.RawReport))
 
-					return consensus.Await()
-				},
-			)}, nil
-	})
-
-	_, _, err = runner.Result()
-	require.Equal(t, err, anyErr)
+	assert.Equal(t, []byte("default_signature_1"), resp.Sigs[0].Signature)
+	assert.Equal(t, []byte("default_signature_2"), resp.Sigs[1].Signature)
 }

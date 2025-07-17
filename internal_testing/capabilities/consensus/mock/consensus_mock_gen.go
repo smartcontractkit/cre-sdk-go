@@ -9,8 +9,9 @@ import (
 
 	"google.golang.org/protobuf/types/known/anypb"
 
-	"github.com/smartcontractkit/chainlink-common/pkg/values/pb"
 	pb2 "github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
+
+	"github.com/smartcontractkit/chainlink-common/pkg/values/pb"
 
 	sdkpb "github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
 	"github.com/smartcontractkit/cre-sdk-go/sdk/testutils/registry"
@@ -28,12 +29,14 @@ func NewConsensusCapability(t testing.TB) (*ConsensusCapability, error) {
 
 type ConsensusCapability struct {
 	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
+
 	Simple func(ctx context.Context, input *pb2.SimpleConsensusInputs) (*pb.Value, error)
 	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
+
 	Report func(ctx context.Context, input *pb2.ReportRequest) (*pb2.ReportResponse, error)
 }
 
-func (cap *ConsensusCapability) Invoke(ctx context.Context, request *sdkpb.CapabilityRequest) *sdkpb.CapabilityResponse {
+func (c *ConsensusCapability) Invoke(ctx context.Context, request *sdkpb.CapabilityRequest) *sdkpb.CapabilityResponse {
 	capResp := &sdkpb.CapabilityResponse{}
 	switch request.Method {
 	case "Simple":
@@ -43,11 +46,11 @@ func (cap *ConsensusCapability) Invoke(ctx context.Context, request *sdkpb.Capab
 			break
 		}
 
-		if cap.Simple == nil {
+		if c.Simple == nil {
 			capResp.Response = &sdkpb.CapabilityResponse_Error{Error: "no stub provided for Simple"}
 			break
 		}
-		resp, err := cap.Simple(ctx, input)
+		resp, err := c.Simple(ctx, input)
 		if err != nil {
 			capResp.Response = &sdkpb.CapabilityResponse_Error{Error: err.Error()}
 		} else {
@@ -65,11 +68,11 @@ func (cap *ConsensusCapability) Invoke(ctx context.Context, request *sdkpb.Capab
 			break
 		}
 
-		if cap.Report == nil {
+		if c.Report == nil {
 			capResp.Response = &sdkpb.CapabilityResponse_Error{Error: "no stub provided for Report"}
 			break
 		}
-		resp, err := cap.Report(ctx, input)
+		resp, err := c.Report(ctx, input)
 		if err != nil {
 			capResp.Response = &sdkpb.CapabilityResponse_Error{Error: err.Error()}
 		} else {
@@ -83,13 +86,10 @@ func (cap *ConsensusCapability) Invoke(ctx context.Context, request *sdkpb.Capab
 	default:
 		capResp.Response = &sdkpb.CapabilityResponse_Error{Error: fmt.Sprintf("method %s not found", request.Method)}
 	}
+
 	return capResp
 }
 
-func (cap *ConsensusCapability) InvokeTrigger(ctx context.Context, request *sdkpb.TriggerSubscription) (*sdkpb.Trigger, error) {
-	return nil, fmt.Errorf("method %s not found", request.Method)
-}
-
-func (cap *ConsensusCapability) ID() string {
+func (c *ConsensusCapability) ID() string {
 	return "consensus@1.0.0-alpha"
 }

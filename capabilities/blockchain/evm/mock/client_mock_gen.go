@@ -5,12 +5,14 @@ package evmmock
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"testing"
 
 	"google.golang.org/protobuf/types/known/anypb"
-	"google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/smartcontractkit/cre-sdk-go/capabilities/blockchain/evm"
+
+	"google.golang.org/protobuf/types/known/emptypb"
 
 	sdkpb "github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
 	"github.com/smartcontractkit/cre-sdk-go/sdk/testutils/registry"
@@ -19,39 +21,50 @@ import (
 // avoid unused imports
 var _ = registry.Registry{}
 
-func NewClientCapability(t testing.TB) (*ClientCapability, error) {
-	c := &ClientCapability{}
+func NewClientCapability(ChainSelector uint64, t testing.TB) (*ClientCapability, error) {
+	c := &ClientCapability{
+		ChainSelector: ChainSelector,
+	}
 	reg := registry.GetRegistry(t)
 	err := reg.RegisterCapability(c)
 	return c, err
 }
 
 type ClientCapability struct {
+	ChainSelector uint64
 	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
+
 	CallContract func(ctx context.Context, input *evm.CallContractRequest) (*evm.CallContractReply, error)
 	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
+
 	FilterLogs func(ctx context.Context, input *evm.FilterLogsRequest) (*evm.FilterLogsReply, error)
 	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
+
 	BalanceAt func(ctx context.Context, input *evm.BalanceAtRequest) (*evm.BalanceAtReply, error)
 	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
+
 	EstimateGas func(ctx context.Context, input *evm.EstimateGasRequest) (*evm.EstimateGasReply, error)
 	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
+
 	GetTransactionByHash func(ctx context.Context, input *evm.GetTransactionByHashRequest) (*evm.GetTransactionByHashReply, error)
 	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
+
 	GetTransactionReceipt func(ctx context.Context, input *evm.GetTransactionReceiptRequest) (*evm.GetTransactionReceiptReply, error)
 	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
+
 	HeaderByNumber func(ctx context.Context, input *evm.HeaderByNumberRequest) (*evm.HeaderByNumberReply, error)
 	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
+
 	RegisterLogTracking func(ctx context.Context, input *evm.RegisterLogTrackingRequest) (*emptypb.Empty, error)
 	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
-	UnregisterLogTracking func(ctx context.Context, input *evm.UnregisterLogTrackingRequest) (*emptypb.Empty, error)
 
-	LogTrigger func(ctx context.Context, input *evm.FilterLogTriggerRequest) (*evm.Log, error)
+	UnregisterLogTracking func(ctx context.Context, input *evm.UnregisterLogTrackingRequest) (*emptypb.Empty, error)
 	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
+
 	WriteReport func(ctx context.Context, input *evm.WriteReportRequest) (*evm.WriteReportReply, error)
 }
 
-func (cap *ClientCapability) Invoke(ctx context.Context, request *sdkpb.CapabilityRequest) *sdkpb.CapabilityResponse {
+func (c *ClientCapability) Invoke(ctx context.Context, request *sdkpb.CapabilityRequest) *sdkpb.CapabilityResponse {
 	capResp := &sdkpb.CapabilityResponse{}
 	switch request.Method {
 	case "CallContract":
@@ -61,11 +74,11 @@ func (cap *ClientCapability) Invoke(ctx context.Context, request *sdkpb.Capabili
 			break
 		}
 
-		if cap.CallContract == nil {
+		if c.CallContract == nil {
 			capResp.Response = &sdkpb.CapabilityResponse_Error{Error: "no stub provided for CallContract"}
 			break
 		}
-		resp, err := cap.CallContract(ctx, input)
+		resp, err := c.CallContract(ctx, input)
 		if err != nil {
 			capResp.Response = &sdkpb.CapabilityResponse_Error{Error: err.Error()}
 		} else {
@@ -83,11 +96,11 @@ func (cap *ClientCapability) Invoke(ctx context.Context, request *sdkpb.Capabili
 			break
 		}
 
-		if cap.FilterLogs == nil {
+		if c.FilterLogs == nil {
 			capResp.Response = &sdkpb.CapabilityResponse_Error{Error: "no stub provided for FilterLogs"}
 			break
 		}
-		resp, err := cap.FilterLogs(ctx, input)
+		resp, err := c.FilterLogs(ctx, input)
 		if err != nil {
 			capResp.Response = &sdkpb.CapabilityResponse_Error{Error: err.Error()}
 		} else {
@@ -105,11 +118,11 @@ func (cap *ClientCapability) Invoke(ctx context.Context, request *sdkpb.Capabili
 			break
 		}
 
-		if cap.BalanceAt == nil {
+		if c.BalanceAt == nil {
 			capResp.Response = &sdkpb.CapabilityResponse_Error{Error: "no stub provided for BalanceAt"}
 			break
 		}
-		resp, err := cap.BalanceAt(ctx, input)
+		resp, err := c.BalanceAt(ctx, input)
 		if err != nil {
 			capResp.Response = &sdkpb.CapabilityResponse_Error{Error: err.Error()}
 		} else {
@@ -127,11 +140,11 @@ func (cap *ClientCapability) Invoke(ctx context.Context, request *sdkpb.Capabili
 			break
 		}
 
-		if cap.EstimateGas == nil {
+		if c.EstimateGas == nil {
 			capResp.Response = &sdkpb.CapabilityResponse_Error{Error: "no stub provided for EstimateGas"}
 			break
 		}
-		resp, err := cap.EstimateGas(ctx, input)
+		resp, err := c.EstimateGas(ctx, input)
 		if err != nil {
 			capResp.Response = &sdkpb.CapabilityResponse_Error{Error: err.Error()}
 		} else {
@@ -149,11 +162,11 @@ func (cap *ClientCapability) Invoke(ctx context.Context, request *sdkpb.Capabili
 			break
 		}
 
-		if cap.GetTransactionByHash == nil {
+		if c.GetTransactionByHash == nil {
 			capResp.Response = &sdkpb.CapabilityResponse_Error{Error: "no stub provided for GetTransactionByHash"}
 			break
 		}
-		resp, err := cap.GetTransactionByHash(ctx, input)
+		resp, err := c.GetTransactionByHash(ctx, input)
 		if err != nil {
 			capResp.Response = &sdkpb.CapabilityResponse_Error{Error: err.Error()}
 		} else {
@@ -171,11 +184,11 @@ func (cap *ClientCapability) Invoke(ctx context.Context, request *sdkpb.Capabili
 			break
 		}
 
-		if cap.GetTransactionReceipt == nil {
+		if c.GetTransactionReceipt == nil {
 			capResp.Response = &sdkpb.CapabilityResponse_Error{Error: "no stub provided for GetTransactionReceipt"}
 			break
 		}
-		resp, err := cap.GetTransactionReceipt(ctx, input)
+		resp, err := c.GetTransactionReceipt(ctx, input)
 		if err != nil {
 			capResp.Response = &sdkpb.CapabilityResponse_Error{Error: err.Error()}
 		} else {
@@ -193,11 +206,11 @@ func (cap *ClientCapability) Invoke(ctx context.Context, request *sdkpb.Capabili
 			break
 		}
 
-		if cap.HeaderByNumber == nil {
+		if c.HeaderByNumber == nil {
 			capResp.Response = &sdkpb.CapabilityResponse_Error{Error: "no stub provided for HeaderByNumber"}
 			break
 		}
-		resp, err := cap.HeaderByNumber(ctx, input)
+		resp, err := c.HeaderByNumber(ctx, input)
 		if err != nil {
 			capResp.Response = &sdkpb.CapabilityResponse_Error{Error: err.Error()}
 		} else {
@@ -215,11 +228,11 @@ func (cap *ClientCapability) Invoke(ctx context.Context, request *sdkpb.Capabili
 			break
 		}
 
-		if cap.RegisterLogTracking == nil {
+		if c.RegisterLogTracking == nil {
 			capResp.Response = &sdkpb.CapabilityResponse_Error{Error: "no stub provided for RegisterLogTracking"}
 			break
 		}
-		resp, err := cap.RegisterLogTracking(ctx, input)
+		resp, err := c.RegisterLogTracking(ctx, input)
 		if err != nil {
 			capResp.Response = &sdkpb.CapabilityResponse_Error{Error: err.Error()}
 		} else {
@@ -237,11 +250,11 @@ func (cap *ClientCapability) Invoke(ctx context.Context, request *sdkpb.Capabili
 			break
 		}
 
-		if cap.UnregisterLogTracking == nil {
+		if c.UnregisterLogTracking == nil {
 			capResp.Response = &sdkpb.CapabilityResponse_Error{Error: "no stub provided for UnregisterLogTracking"}
 			break
 		}
-		resp, err := cap.UnregisterLogTracking(ctx, input)
+		resp, err := c.UnregisterLogTracking(ctx, input)
 		if err != nil {
 			capResp.Response = &sdkpb.CapabilityResponse_Error{Error: err.Error()}
 		} else {
@@ -259,11 +272,11 @@ func (cap *ClientCapability) Invoke(ctx context.Context, request *sdkpb.Capabili
 			break
 		}
 
-		if cap.WriteReport == nil {
+		if c.WriteReport == nil {
 			capResp.Response = &sdkpb.CapabilityResponse_Error{Error: "no stub provided for WriteReport"}
 			break
 		}
-		resp, err := cap.WriteReport(ctx, input)
+		resp, err := c.WriteReport(ctx, input)
 		if err != nil {
 			capResp.Response = &sdkpb.CapabilityResponse_Error{Error: err.Error()}
 		} else {
@@ -277,42 +290,10 @@ func (cap *ClientCapability) Invoke(ctx context.Context, request *sdkpb.Capabili
 	default:
 		capResp.Response = &sdkpb.CapabilityResponse_Error{Error: fmt.Sprintf("method %s not found", request.Method)}
 	}
+
 	return capResp
 }
 
-func (cap *ClientCapability) InvokeTrigger(ctx context.Context, request *sdkpb.TriggerSubscription) (*sdkpb.Trigger, error) {
-	trigger := &sdkpb.Trigger{}
-	switch request.Method {
-	case "LogTrigger":
-		input := &evm.FilterLogTriggerRequest{}
-		if err := request.Payload.UnmarshalTo(input); err != nil {
-			return nil, err
-		}
-
-		if cap.LogTrigger == nil {
-			return nil, registry.ErrNoTriggerStub("LogTrigger")
-		}
-
-		resp, err := cap.LogTrigger(ctx, input)
-		if err != nil {
-			return nil, err
-		} else {
-			if resp == nil {
-				return nil, nil
-			}
-
-			payload, err := anypb.New(resp)
-			if err != nil {
-				return nil, err
-			}
-			trigger.Payload = payload
-		}
-	default:
-		return nil, fmt.Errorf("method %s not found", request.Method)
-	}
-	return trigger, nil
-}
-
-func (cap *ClientCapability) ID() string {
-	return "evm@1.0.0"
+func (c *ClientCapability) ID() string {
+	return "evm" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0"
 }

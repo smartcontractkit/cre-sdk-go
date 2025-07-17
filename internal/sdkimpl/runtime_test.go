@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"testing"
 
+	vals "github.com/smartcontractkit/chainlink-common/pkg/values"
 	valuespb "github.com/smartcontractkit/chainlink-common/pkg/values/pb"
 	"github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
 	"github.com/smartcontractkit/cre-sdk-go/internal/sdkimpl"
@@ -15,7 +16,6 @@ import (
 	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basicaction"
 	basicactionmock "github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basicaction/mock"
 	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basictrigger"
-	basictriggermock "github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basictrigger/mock"
 	consensusmock "github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/consensus/mock"
 	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/nodeaction"
 	nodeactionmock "github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/nodeaction/mock"
@@ -29,8 +29,9 @@ import (
 
 var (
 	anyTrigger = &basictrigger.Outputs{CoolOutput: "cool"}
-	anyConfig  = &basictrigger.Config{Name: "name", Number: 123}
 )
+
+const anyEnvConfig = "env_config"
 
 func TestRuntime_CallCapability(t *testing.T) {
 	t.Run("runs async", func(t *testing.T) {
@@ -63,9 +64,8 @@ func TestRuntime_CallCapability(t *testing.T) {
 			return result1.AdaptedThing + result2.Welcome, nil
 		}
 
-		ran, result, err := testRuntime(t, test)
+		result, err := testRuntime(t, test)
 		require.NoError(t, err)
-		assert.True(t, ran)
 		assert.Equal(t, anyResult1+anyResult2, result)
 	})
 
@@ -77,7 +77,7 @@ func TestRuntime_CallCapability(t *testing.T) {
 			_, err := call.Await()
 			return "", err
 		}
-		_, _, err := testRuntime(t, test)
+		_, err := testRuntime(t, test)
 		assert.Error(t, err)
 	})
 
@@ -97,7 +97,7 @@ func TestRuntime_CallCapability(t *testing.T) {
 			return "", err
 		}
 
-		_, _, err = testRuntime(t, test)
+		_, err = testRuntime(t, test)
 		assert.Equal(t, expectedErr, err)
 	})
 
@@ -113,7 +113,7 @@ func TestRuntime_CallCapability(t *testing.T) {
 		capability := &basicaction.BasicAction{}
 
 		test := func(_ *sdk.Environment[string], rt sdk.Runtime, _ *basictrigger.Outputs) (string, error) {
-			drt := rt.(*sdkimpl.Runtime)
+			drt := rt.(*testutils.TestRuntime)
 			drt.RuntimeHelpers = &awaitOverride{
 				RuntimeHelpers: drt.RuntimeHelpers,
 				await: func(request *pb.AwaitCapabilitiesRequest, maxResponseSize uint64) (*pb.AwaitCapabilitiesResponse, error) {
@@ -124,7 +124,7 @@ func TestRuntime_CallCapability(t *testing.T) {
 			return "", err
 		}
 
-		_, _, err = testRuntime(t, test)
+		_, err = testRuntime(t, test)
 		assert.Equal(t, expectedErr, err)
 	})
 
@@ -139,7 +139,7 @@ func TestRuntime_CallCapability(t *testing.T) {
 		capability := &basicaction.BasicAction{}
 
 		test := func(_ *sdk.Environment[string], rt sdk.Runtime, _ *basictrigger.Outputs) (string, error) {
-			drt := rt.(*sdkimpl.Runtime)
+			drt := rt.(*testutils.TestRuntime)
 			drt.RuntimeHelpers = &awaitOverride{
 				RuntimeHelpers: drt.RuntimeHelpers,
 				await: func(request *pb.AwaitCapabilitiesRequest, maxResponseSize uint64) (*pb.AwaitCapabilitiesResponse, error) {
@@ -150,24 +150,18 @@ func TestRuntime_CallCapability(t *testing.T) {
 			return "", err
 		}
 
-		_, _, err = testRuntime(t, test)
+		_, err = testRuntime(t, test)
 		assert.Error(t, err)
 	})
 }
 
 func TestRuntime_Rand(t *testing.T) {
 	t.Run("random delegates", func(t *testing.T) {
-		test := func(_ *sdk.Environment[string], rt sdk.Runtime, _ *basictrigger.Outputs) (uint64, error) {
-			r, err := rt.Rand()
-			if err != nil {
-				return 0, err
-			}
-			return r.Uint64(), nil
-		}
-
-		ran, result, err := testRuntime(t, test)
+		runtime, _ := testutils.NewRuntimeAndEnv(t, "", map[string]string{})
+		runtime.SetRandomSource(rand.NewSource(1))
+		r, err := runtime.Rand()
 		require.NoError(t, err)
-		assert.True(t, ran)
+		result := r.Uint64()
 		assert.Equal(t, rand.New(rand.NewSource(1)).Uint64(), result)
 	})
 
@@ -182,7 +176,7 @@ func TestRuntime_Rand(t *testing.T) {
 			}, sdk.ConsensusMedianAggregation[uint64]()).Await()
 		}
 
-		_, _, err := testRuntime(t, test)
+		_, err := testRuntime(t, test)
 		require.Error(t, err)
 	})
 
@@ -199,7 +193,7 @@ func TestRuntime_Rand(t *testing.T) {
 				}, sdk.ConsensusMedianAggregation[uint64]()).Await()
 			}
 
-			_, _, _ = testRuntime(t, test)
+			_, _ = testRuntime(t, test)
 		})
 	})
 }
@@ -226,9 +220,8 @@ func TestDonRuntime_RunInNodeMode(t *testing.T) {
 			return result, err
 		}
 
-		ran, result, err := testRuntime(t, test)
+		result, err := testRuntime(t, test)
 		require.NoError(t, err)
-		assert.True(t, ran)
 		assert.Equal(t, anyMedian, result)
 	})
 
@@ -243,7 +236,7 @@ func TestDonRuntime_RunInNodeMode(t *testing.T) {
 			}, sdk.ConsensusMedianAggregation[int64]()).Await()
 		}
 
-		_, _, err := testRuntime(t, test)
+		_, err := testRuntime(t, test)
 		require.ErrorContains(t, err, anyError.Error())
 	})
 
@@ -265,7 +258,7 @@ func TestDonRuntime_RunInNodeMode(t *testing.T) {
 			return na.PerformAction(nrt, &nodeaction.NodeInputs{InputThing: true}).Await()
 		}
 
-		_, _, err = testRuntime(t, test)
+		_, err = testRuntime(t, test)
 		assert.Equal(t, sdk.NodeModeCallInDonMode(), err)
 	})
 
@@ -286,102 +279,19 @@ func TestDonRuntime_RunInNodeMode(t *testing.T) {
 
 			return consensus.Await()
 		}
-		_, _, err = testRuntime(t, test)
+		_, err = testRuntime(t, test)
 		assert.Equal(t, sdk.DonModeCallInNodeMode(), err)
 	})
 }
 
-func TestRuntime_ReturnsConfig(t *testing.T) {
-	trigger, err := basictriggermock.NewBasicCapability(t)
-	require.NoError(t, err)
-	trigger.Trigger = func(_ context.Context, config *basictrigger.Config) (*basictrigger.Outputs, error) {
-		return &basictrigger.Outputs{CoolOutput: "cool"}, nil
-	}
-
-	anyConfig := "config"
-	runner := testutils.NewRunner(t, anyConfig)
-
-	runner.Run(func(env *sdk.Environment[string]) (sdk.Workflow[string], error) {
-		return sdk.Workflow[string]{
-			sdk.Handler(
-				basictrigger.Trigger(&basictrigger.Config{Name: "name", Number: 123}),
-				func(env *sdk.Environment[string], rt sdk.Runtime, _ *basictrigger.Outputs) (string, error) {
-					return env.Config, nil
-				}),
-		}, nil
-	})
-
-	ran, result, err := runner.Result()
-	require.NoError(t, err)
-	assert.True(t, ran)
-	assert.Equal(t, anyConfig, result)
+func TestNewEnvironment_ReturnsConfig(t *testing.T) {
+	_, env := testutils.NewRuntimeAndEnv(t, anyEnvConfig, map[string]string{})
+	assert.Equal(t, anyEnvConfig, env.Config)
 }
 
-func TestRuntime_GenerateReport(t *testing.T) {
-	var (
-		encodedPayload = []byte(`{"price": 42}`)
-		anyMedian      = []byte(`{"price": 43}`)
-		encoderName    = "some-encoder"
-		signingAlgo    = "some-signer"
-		hashingAlgo    = "some-hasher"
-	)
-
-	mockReportConsensus(t,
-		&consensusValues[[]byte]{
-			WantResponse: anyMedian,
-		},
-	)
-
-	testFn := func(env *sdk.Environment[string], rt sdk.Runtime, _ *basictrigger.Outputs) (*pb.ReportResponse, error) {
-		return rt.GenerateReport(&pb.ReportRequest{
-			EncodedPayload: encodedPayload,
-			EncoderName:    encoderName,
-			SigningAlgo:    signingAlgo,
-			HashingAlgo:    hashingAlgo,
-		}).Await()
-	}
-
-	ran, output, err := testRuntime(t, testFn)
-	assert.True(t, ran)
-	require.NoError(t, err)
-
-	result, ok := any(output).(*pb.ReportResponse)
-	assert.True(t, ok)
-
-	expectedMap := &valuespb.Map{
-		Fields: map[string]*valuespb.Value{
-			sdk.ConsensusResponseMapKeyMetadata: {Value: &valuespb.Value_StringValue{StringValue: "test_metadata"}},
-			sdk.ConsensusResponseMapKeyPayload:  {Value: &valuespb.Value_BytesValue{BytesValue: anyMedian}},
-		},
-	}
-
-	var gotMap valuespb.Map
-	require.NoError(t, proto.Unmarshal(result.RawReport, &gotMap))
-	gotFields := gotMap.GetFields()
-
-	require.Equal(t, 2, len(gotFields))
-	require.True(t, proto.Equal(gotFields[sdk.ConsensusResponseMapKeyMetadata], expectedMap.GetFields()[sdk.ConsensusResponseMapKeyMetadata]), "metadata mismatch on report")
-	require.True(t, proto.Equal(gotFields[sdk.ConsensusResponseMapKeyPayload], expectedMap.GetFields()[sdk.ConsensusResponseMapKeyPayload]), "payload mismatch on report")
-}
-
-func testRuntime[T any](t *testing.T, testFn func(env *sdk.Environment[string], rt sdk.Runtime, _ *basictrigger.Outputs) (T, error)) (bool, any, error) {
-	trigger, err := basictriggermock.NewBasicCapability(t)
-	require.NoError(t, err)
-	trigger.Trigger = func(_ context.Context, config *basictrigger.Config) (*basictrigger.Outputs, error) {
-		assert.True(t, proto.Equal(anyConfig, config))
-		return anyTrigger, nil
-	}
-
-	runner := testutils.NewRunner(t, "unused")
-	require.NoError(t, err)
-
-	runner.Run(func(workflowContext *sdk.Environment[string]) (sdk.Workflow[string], error) {
-		return sdk.Workflow[string]{sdk.Handler(
-			basictrigger.Trigger(anyConfig), testFn,
-		)}, nil
-	})
-
-	return runner.Result()
+func testRuntime[T any](t *testing.T, testFn func(env *sdk.Environment[string], rt sdk.Runtime, _ *basictrigger.Outputs) (T, error)) (any, error) {
+	runtime, env := testutils.NewRuntimeAndEnv(t, anyEnvConfig, map[string]string{})
+	return testFn(env, runtime, anyTrigger)
 }
 
 type consensusValues[T any] struct {
@@ -441,91 +351,13 @@ func handleSimpleConsensusValueObservation[T any](
 	obsValue *valuespb.Value, // The actual *valuespb.Value from the observation
 ) (*valuespb.Value, error) {
 	assert.Nil(t, values.GiveErr, "Expected no error from consensusValues, but GiveErr is not nil")
+	wrappedExpectedObs, err := vals.Wrap(values.GiveObservation)
+	require.NoError(t, err)
 
-	// Determine the type of the observed value
-	switch v := obsValue.Value.(type) {
-	case *valuespb.Value_Int64Value:
-		// Validate observed int64 value
-		assert.Equal(t, values.GiveObservation, v.Int64Value, "Observed Int64Value mismatch")
-
-		// Determine and return the response based on the generic T type
-		return buildConsensusResponseValue(t, values.WantResponse)
-	// Add other protobuf value types here if your T can match them (e.g., BytesValue)
-	default:
-		assert.Fail(t, "unexpected observation value type: %T", v)
-		return nil, errors.New("unsupported observation value type")
-	}
-}
-
-// buildConsensusResponseValue constructs the *valuespb.Value for the response based on the generic T.
-func buildConsensusResponseValue[T any](t *testing.T, responseVal T) (*valuespb.Value, error) {
-	// Use type switch to determine the actual concrete type of T
-	switch resp := any(responseVal).(type) {
-	case int64:
-		return &valuespb.Value{
-			Value: &valuespb.Value_MapValue{
-				MapValue: &valuespb.Map{
-					Fields: map[string]*valuespb.Value{
-						sdk.ConsensusResponseMapKeyMetadata: {Value: &valuespb.Value_StringValue{StringValue: "test_metadata"}},
-						sdk.ConsensusResponseMapKeyPayload: {
-							Value: &valuespb.Value_Int64Value{
-								Int64Value: resp,
-							},
-						},
-					},
-				},
-			},
-		}, nil
-
-	default:
-		assert.Fail(t, "unexpected response generic type %T, not handled for protobuf conversion", responseVal)
-		return nil, fmt.Errorf("unsupported generic type %T for protobuf response", responseVal)
-	}
-}
-
-// mockReportConsensus overrides the Report method on consensus.
-// It creates a fake RawReport from the WantResponse based on the mock's logic.
-func mockReportConsensus[T any](t *testing.T, values *consensusValues[T]) {
-	consensus, err := consensusmock.NewConsensusCapability(t)
-	require.NoError(t, err, "Failed to create consensus mock capability")
-
-	// Assign the mock implementation to the Report method
-	consensus.Report = func(ctx context.Context, input *pb.ReportRequest) (*pb.ReportResponse, error) {
-		// Handle the error case first (early exit)
-		if values.GiveErr != nil {
-			return nil, values.GiveErr
-		}
-
-		// If no error is expected, build the raw report
-		rawValue := buildRawReportFromResponse(t, values.WantResponse)
-
-		// Construct and return the successful response
-		return &pb.ReportResponse{
-			RawReport: rawValue,
-		}, nil
-	}
-}
-
-// buildRawReportFromResponse creates the serialized RawReport bytes from the generic response.
-// It uses require.Fail to stop the test immediately if the generic type is unexpected.
-func buildRawReportFromResponse[T any](t *testing.T, response T) []byte {
-	// Cast T to any to use type switch for runtime type checking
-	switch resp := any(response).(type) {
-	case []byte:
-		mapProto := &valuespb.Map{
-			Fields: map[string]*valuespb.Value{
-				sdk.ConsensusResponseMapKeyMetadata: {Value: &valuespb.Value_StringValue{StringValue: "test_metadata"}},
-				sdk.ConsensusResponseMapKeyPayload:  {Value: &valuespb.Value_BytesValue{BytesValue: resp}},
-			},
-		}
-		rawValue, err := proto.Marshal(mapProto)
-		require.NoError(t, err, "failed to marshal mapProto to RawReport bytes in mock")
-		return rawValue
-	default:
-		// If the generic type T is not []byte, this is an unexpected scenario for this mock.
-		require.Fail(t, fmt.Sprintf("unsupported generic type for RawReport: %T, expected []byte", resp))
-		return nil
-	}
+	assert.True(t, proto.Equal(vals.Proto(wrappedExpectedObs), obsValue))
+	wrapped, err := vals.Wrap(values.WantResponse)
+	require.NoError(t, err, "Failed to wrap the observation value")
+	return vals.Proto(wrapped), nil
 }
 
 type awaitOverride struct {

@@ -15,6 +15,7 @@ type Cron struct {
 func Trigger(config *Config) sdk.Trigger[*Payload, *Payload] {
 	configAny, _ := anypb.New(config)
 	return &cronTrigger{
+
 		config: configAny,
 	}
 }
@@ -29,7 +30,7 @@ func (*cronTrigger) NewT() *Payload {
 	return &Payload{}
 }
 
-func (*cronTrigger) CapabilityID() string {
+func (c *cronTrigger) CapabilityID() string {
 	return "cron-trigger@1.0.0"
 }
 

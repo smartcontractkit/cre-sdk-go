@@ -164,15 +164,6 @@ func (h *medianTestFieldDescription[T]) WithDefault(t T) ConsensusAggregation[T]
 
 func reportFromValue(result *valuespb.Value) *valuespb.Value {
 	return &valuespb.Value{
-		Value: &valuespb.Value_MapValue{
-			MapValue: &valuespb.Map{
-				Fields: map[string]*valuespb.Value{
-					ConsensusResponseMapKeyMetadata: {Value: &valuespb.Value_StringValue{StringValue: "test_metadata"}},
-					ConsensusResponseMapKeyPayload: {
-						Value: result.Value,
-					},
-				},
-			},
-		},
+		Value: result.Value,
 	}
 }

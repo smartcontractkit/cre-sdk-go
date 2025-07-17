@@ -10,6 +10,7 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 
 	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/importclash/p1"
+
 	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/importclash/p2"
 
 	sdkpb "github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
@@ -28,10 +29,11 @@ func NewBasicActionCapability(t testing.TB) (*BasicActionCapability, error) {
 
 type BasicActionCapability struct {
 	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
+
 	PerformAction func(ctx context.Context, input *p1.Item) (*p2.Item, error)
 }
 
-func (cap *BasicActionCapability) Invoke(ctx context.Context, request *sdkpb.CapabilityRequest) *sdkpb.CapabilityResponse {
+func (c *BasicActionCapability) Invoke(ctx context.Context, request *sdkpb.CapabilityRequest) *sdkpb.CapabilityResponse {
 	capResp := &sdkpb.CapabilityResponse{}
 	switch request.Method {
 	case "PerformAction":
@@ -41,11 +43,11 @@ func (cap *BasicActionCapability) Invoke(ctx context.Context, request *sdkpb.Cap
 			break
 		}
 
-		if cap.PerformAction == nil {
+		if c.PerformAction == nil {
 			capResp.Response = &sdkpb.CapabilityResponse_Error{Error: "no stub provided for PerformAction"}
 			break
 		}
-		resp, err := cap.PerformAction(ctx, input)
+		resp, err := c.PerformAction(ctx, input)
 		if err != nil {
 			capResp.Response = &sdkpb.CapabilityResponse_Error{Error: err.Error()}
 		} else {
@@ -59,13 +61,10 @@ func (cap *BasicActionCapability) Invoke(ctx context.Context, request *sdkpb.Cap
 	default:
 		capResp.Response = &sdkpb.CapabilityResponse_Error{Error: fmt.Sprintf("method %s not found", request.Method)}
 	}
+
 	return capResp
 }
 
-func (cap *BasicActionCapability) InvokeTrigger(ctx context.Context, request *sdkpb.TriggerSubscription) (*sdkpb.Trigger, error) {
-	return nil, fmt.Errorf("method %s not found", request.Method)
-}
-
-func (cap *BasicActionCapability) ID() string {
+func (c *BasicActionCapability) ID() string {
 	return "import-clash@1.0.0"
 }

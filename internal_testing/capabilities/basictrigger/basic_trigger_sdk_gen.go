@@ -15,6 +15,7 @@ type Basic struct {
 func Trigger(config *Config) sdk.Trigger[*Outputs, *Outputs] {
 	configAny, _ := anypb.New(config)
 	return &basicTrigger{
+
 		config: configAny,
 	}
 }
@@ -29,7 +30,7 @@ func (*basicTrigger) NewT() *Outputs {
 	return &Outputs{}
 }
 
-func (*basicTrigger) CapabilityID() string {
+func (c *basicTrigger) CapabilityID() string {
 	return "basic-test-trigger@1.0.0"
 }
 

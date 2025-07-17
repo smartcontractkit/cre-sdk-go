@@ -27,10 +27,11 @@ func NewClientCapability(t testing.TB) (*ClientCapability, error) {
 
 type ClientCapability struct {
 	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
+
 	SendRequest func(ctx context.Context, input *http.Request) (*http.Response, error)
 }
 
-func (cap *ClientCapability) Invoke(ctx context.Context, request *sdkpb.CapabilityRequest) *sdkpb.CapabilityResponse {
+func (c *ClientCapability) Invoke(ctx context.Context, request *sdkpb.CapabilityRequest) *sdkpb.CapabilityResponse {
 	capResp := &sdkpb.CapabilityResponse{}
 	switch request.Method {
 	case "SendRequest":
@@ -40,11 +41,11 @@ func (cap *ClientCapability) Invoke(ctx context.Context, request *sdkpb.Capabili
 			break
 		}
 
-		if cap.SendRequest == nil {
+		if c.SendRequest == nil {
 			capResp.Response = &sdkpb.CapabilityResponse_Error{Error: "no stub provided for SendRequest"}
 			break
 		}
-		resp, err := cap.SendRequest(ctx, input)
+		resp, err := c.SendRequest(ctx, input)
 		if err != nil {
 			capResp.Response = &sdkpb.CapabilityResponse_Error{Error: err.Error()}
 		} else {
@@ -58,13 +59,10 @@ func (cap *ClientCapability) Invoke(ctx context.Context, request *sdkpb.Capabili
 	default:
 		capResp.Response = &sdkpb.CapabilityResponse_Error{Error: fmt.Sprintf("method %s not found", request.Method)}
 	}
+
 	return capResp
 }
 
-func (cap *ClientCapability) InvokeTrigger(ctx context.Context, request *sdkpb.TriggerSubscription) (*sdkpb.Trigger, error) {
-	return nil, fmt.Errorf("method %s not found", request.Method)
-}
-
-func (cap *ClientCapability) ID() string {
+func (c *ClientCapability) ID() string {
 	return "http-actions@1.0.0-alpha"
 }

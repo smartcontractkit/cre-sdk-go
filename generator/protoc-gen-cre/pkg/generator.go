@@ -3,6 +3,7 @@ package pkg
 import (
 	_ "embed"
 
+	"github.com/iancoleman/strcase"
 	"github.com/smartcontractkit/chainlink-common/pkg/capabilities/v2/protoc/pkg"
 	"google.golang.org/protobuf/compiler/protogen"
 )
@@ -21,28 +22,35 @@ var goMockTemplate string
 
 var clientTemplates = []pkg.TemplateGenerator{
 	{
-		Name:             "go_sdk",
-		Template:         goClientBaseTemplate,
-		FileNameTemplate: "{{.}}_sdk_gen.go",
+		Name:               "go_sdk",
+		Template:           goClientBaseTemplate,
+		FileNameTemplate:   "{{.}}_sdk_gen.go",
+		PbLabelTLangLabels: pkg.PbLabelToGoLabels,
+		StringLblValue:     pkg.StringLblValue(false),
 		Partials: map[string]string{
 			"trigger_method": goTriggerMethodTemplate,
 			"action_method":  goActionMethodTemplate,
 		},
+		ExtraFns: map[string]any{
+			"SafeGoName": strcase.ToCamel,
+		},
 	},
 	{
-		Name:             "go_mock",
-		Template:         goMockTemplate,
-		FileNameTemplate: "mock/{{.}}_mock_gen.go",
+		Name:               "go_mock",
+		Template:           goMockTemplate,
+		FileNameTemplate:   "mock/{{.}}_mock_gen.go",
+		PbLabelTLangLabels: pkg.PbLabelToGoLabels,
+		StringLblValue:     pkg.StringLblValue(false),
 	},
 }
 
-func GenerateClient(plugin *protogen.Plugin, file *protogen.File) error {
+func GenerateClient(plugin *protogen.Plugin, file *protogen.File, toolName, localPrefix string) error {
 	if len(file.Services) == 0 {
 		return nil
 	}
 
 	for _, template := range clientTemplates {
-		if err := template.GenerateFile(file, plugin, file); err != nil {
+		if err := template.GenerateFile(file, plugin, file, toolName, localPrefix); err != nil {
 			return err
 		}
 	}

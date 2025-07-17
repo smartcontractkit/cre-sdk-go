@@ -4,16 +4,17 @@ package evm
 
 import (
 	"errors"
+	"strconv"
 
 	"google.golang.org/protobuf/types/known/anypb"
 
-	"google.golang.org/protobuf/types/known/emptypb"
-
 	sdkpb "github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
 	"github.com/smartcontractkit/cre-sdk-go/sdk"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type Client struct {
+	ChainSelector uint64
 	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 allow defaults for capabilities
 }
 
@@ -23,7 +24,7 @@ func (c *Client) CallContract(runtime sdk.Runtime, input *CallContractRequest) s
 		return sdk.PromiseFromResult[*CallContractReply](nil, err)
 	}
 	return sdk.Then(runtime.CallCapability(&sdkpb.CapabilityRequest{
-		Id:      "evm@1.0.0",
+		Id:      "evm" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
 		Payload: wrapped,
 		Method:  "CallContract",
 	}), func(i *sdkpb.CapabilityResponse) (*CallContractReply, error) {
@@ -46,7 +47,7 @@ func (c *Client) FilterLogs(runtime sdk.Runtime, input *FilterLogsRequest) sdk.P
 		return sdk.PromiseFromResult[*FilterLogsReply](nil, err)
 	}
 	return sdk.Then(runtime.CallCapability(&sdkpb.CapabilityRequest{
-		Id:      "evm@1.0.0",
+		Id:      "evm" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
 		Payload: wrapped,
 		Method:  "FilterLogs",
 	}), func(i *sdkpb.CapabilityResponse) (*FilterLogsReply, error) {
@@ -69,7 +70,7 @@ func (c *Client) BalanceAt(runtime sdk.Runtime, input *BalanceAtRequest) sdk.Pro
 		return sdk.PromiseFromResult[*BalanceAtReply](nil, err)
 	}
 	return sdk.Then(runtime.CallCapability(&sdkpb.CapabilityRequest{
-		Id:      "evm@1.0.0",
+		Id:      "evm" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
 		Payload: wrapped,
 		Method:  "BalanceAt",
 	}), func(i *sdkpb.CapabilityResponse) (*BalanceAtReply, error) {
@@ -92,7 +93,7 @@ func (c *Client) EstimateGas(runtime sdk.Runtime, input *EstimateGasRequest) sdk
 		return sdk.PromiseFromResult[*EstimateGasReply](nil, err)
 	}
 	return sdk.Then(runtime.CallCapability(&sdkpb.CapabilityRequest{
-		Id:      "evm@1.0.0",
+		Id:      "evm" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
 		Payload: wrapped,
 		Method:  "EstimateGas",
 	}), func(i *sdkpb.CapabilityResponse) (*EstimateGasReply, error) {
@@ -115,7 +116,7 @@ func (c *Client) GetTransactionByHash(runtime sdk.Runtime, input *GetTransaction
 		return sdk.PromiseFromResult[*GetTransactionByHashReply](nil, err)
 	}
 	return sdk.Then(runtime.CallCapability(&sdkpb.CapabilityRequest{
-		Id:      "evm@1.0.0",
+		Id:      "evm" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
 		Payload: wrapped,
 		Method:  "GetTransactionByHash",
 	}), func(i *sdkpb.CapabilityResponse) (*GetTransactionByHashReply, error) {
@@ -138,7 +139,7 @@ func (c *Client) GetTransactionReceipt(runtime sdk.Runtime, input *GetTransactio
 		return sdk.PromiseFromResult[*GetTransactionReceiptReply](nil, err)
 	}
 	return sdk.Then(runtime.CallCapability(&sdkpb.CapabilityRequest{
-		Id:      "evm@1.0.0",
+		Id:      "evm" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
 		Payload: wrapped,
 		Method:  "GetTransactionReceipt",
 	}), func(i *sdkpb.CapabilityResponse) (*GetTransactionReceiptReply, error) {
@@ -161,7 +162,7 @@ func (c *Client) HeaderByNumber(runtime sdk.Runtime, input *HeaderByNumberReques
 		return sdk.PromiseFromResult[*HeaderByNumberReply](nil, err)
 	}
 	return sdk.Then(runtime.CallCapability(&sdkpb.CapabilityRequest{
-		Id:      "evm@1.0.0",
+		Id:      "evm" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
 		Payload: wrapped,
 		Method:  "HeaderByNumber",
 	}), func(i *sdkpb.CapabilityResponse) (*HeaderByNumberReply, error) {
@@ -184,7 +185,7 @@ func (c *Client) RegisterLogTracking(runtime sdk.Runtime, input *RegisterLogTrac
 		return sdk.PromiseFromResult[*emptypb.Empty](nil, err)
 	}
 	return sdk.Then(runtime.CallCapability(&sdkpb.CapabilityRequest{
-		Id:      "evm@1.0.0",
+		Id:      "evm" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
 		Payload: wrapped,
 		Method:  "RegisterLogTracking",
 	}), func(i *sdkpb.CapabilityResponse) (*emptypb.Empty, error) {
@@ -207,7 +208,7 @@ func (c *Client) UnregisterLogTracking(runtime sdk.Runtime, input *UnregisterLog
 		return sdk.PromiseFromResult[*emptypb.Empty](nil, err)
 	}
 	return sdk.Then(runtime.CallCapability(&sdkpb.CapabilityRequest{
-		Id:      "evm@1.0.0",
+		Id:      "evm" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
 		Payload: wrapped,
 		Method:  "UnregisterLogTracking",
 	}), func(i *sdkpb.CapabilityResponse) (*emptypb.Empty, error) {
@@ -224,15 +225,18 @@ func (c *Client) UnregisterLogTracking(runtime sdk.Runtime, input *UnregisterLog
 	})
 }
 
-func LogTrigger(config *FilterLogTriggerRequest) sdk.Trigger[*Log, *Log] {
+func LogTrigger(chainSelector uint64, config *FilterLogTriggerRequest) sdk.Trigger[*Log, *Log] {
 	configAny, _ := anypb.New(config)
 	return &clientLogTrigger{
+		ChainSelector: chainSelector,
+
 		config: configAny,
 	}
 }
 
 type clientLogTrigger struct {
-	config *anypb.Any
+	config        *anypb.Any
+	ChainSelector uint64
 }
 
 func (*clientLogTrigger) IsTrigger() {}
@@ -241,8 +245,8 @@ func (*clientLogTrigger) NewT() *Log {
 	return &Log{}
 }
 
-func (*clientLogTrigger) CapabilityID() string {
-	return "evm@1.0.0"
+func (c *clientLogTrigger) CapabilityID() string {
+	return "evm" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0"
 }
 
 func (*clientLogTrigger) Method() string {
@@ -263,7 +267,7 @@ func (c *Client) WriteReport(runtime sdk.Runtime, input *WriteReportRequest) sdk
 		return sdk.PromiseFromResult[*WriteReportReply](nil, err)
 	}
 	return sdk.Then(runtime.CallCapability(&sdkpb.CapabilityRequest{
-		Id:      "evm@1.0.0",
+		Id:      "evm" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
 		Payload: wrapped,
 		Method:  "WriteReport",
 	}), func(i *sdkpb.CapabilityResponse) (*WriteReportReply, error) {
@@ -279,3 +283,29 @@ func (c *Client) WriteReport(runtime sdk.Runtime, input *WriteReportRequest) sdk
 		}
 	})
 }
+
+const AvalancheMainnet = 6433500567565415381
+
+const AvalancheTestnetFuji = 14767482510784806043
+
+const BinanceSmartChainMainnetOpbnb1 = 465944652040885897
+
+const BinanceSmartChainTestnetOpbnb1 = 13274425992935471758
+
+const EthereumMainnet = 5009297550715157269
+
+const EthereumMainnetArbitrum1 = 4949039107694359620
+
+const EthereumMainnetOptimism1 = 3734403246176062136
+
+const EthereumTestnetSepolia = 16015286601757825753
+
+const EthereumTestnetSepoliaArbitrum1 = 3478487238524512106
+
+const EthereumTestnetSepoliaBase1 = 10344971235874465080
+
+const EthereumTestnetSepoliaOptimism1 = 5224473277236331295
+
+const PolygonMainnet = 4051577828743386545
+
+const PolygonTestnetAmoy = 16281711391670634445

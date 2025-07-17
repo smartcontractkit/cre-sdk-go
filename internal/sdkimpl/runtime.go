@@ -101,12 +101,7 @@ func (r *RuntimeBase) Rand() (*rand.Rand, error) {
 }
 
 func (d *Runtime) GenerateReport(request *pb.ReportRequest) sdk.Promise[*pb.ReportResponse] {
-	c := &consensus.Consensus{}
-	return sdk.Then(
-		c.Report(d, request), func(result *pb.ReportResponse) (*pb.ReportResponse, error) {
-			return result, nil
-		},
-	)
+	return (&consensus.Consensus{}).Report(d, request)
 }
 
 type Runtime struct {
