@@ -1,0 +1,30 @@
+{{define "wrap_report"}}
+{{ if eq .GoPackageName .Message.GoIdent.GoImportPath.String }}
+{{ $wrappedType := WrapMessage .Message }}
+{{ if and (ne $wrappedType .Message.GoIdent) (RegisterType $wrappedType) }}
+type {{name $wrappedType .GoPackageName}} struct {
+    {{ range $field := .Message.Fields }}
+    {{ $field.GoName }}  {{ FieldGoType $field $.GoPackageName }} // {{if $field.Message}} {{$field.Message.GoIdent.GoImportPath}} {{ end }}{{$.GoPackageName}}
+    {{ end }}
+}
+
+// X_GeneratedCodeOnly_Wrap{{$wrappedType.GoName}} is only meant to be used by the generated code.
+func X_GeneratedCodeOnly_Wrap_{{$wrappedType.GoName}}(*{{name .Message.GoIdent .GoPackageName}}) *{{name $wrappedType .GoPackageName}} { //nolint
+    return &{{name $wrappedType .GoPackageName}}{
+    {{ range $field := .Message.Fields }}
+            {{ $field.GoName }}:  {{ if IsFieldReport $field}} sdk.__GeneratedCodeOnly_WrapReport(i.$field.GoName) {{ else }} i.{{ $field.GoName }} {{ end }},
+    {{- end }}
+    }
+}
+
+// X_GeneratedCodeOnly_Unwrap is only meant to be used by the generated code.
+func (i *{{name $wrappedType .GoPackageName}}) X_GeneratedCodeOnly_Unwrap() (*{{name .Message.GoIdent .GoPackageName}}, error) { //nolint
+    return &{{name .Message.GoIdent .GoPackageName}}{
+    {{ range $field := .Message.Fields }}
+            {{ $field.GoName }}:  i.{{ $field.GoName }}{{ if IsFieldReport $field}}.Unwrap(){{ end }},
+    {{- end }}
+    }, nil
+}
+{{ end }}
+{{ end }}
+{{ end }}

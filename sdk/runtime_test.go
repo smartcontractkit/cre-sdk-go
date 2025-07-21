@@ -109,7 +109,7 @@ func (m *mockDonRuntime) Rand() (*rand.Rand, error) {
 	panic("unused in tests")
 }
 
-func (m *mockDonRuntime) GenerateReport(_ *pb.ReportRequest) Promise[*pb.ReportResponse] {
+func (m *mockDonRuntime) GenerateReport(_ *pb.ReportRequest) Promise[*Report] {
 	panic("unused in tests")
 }
 

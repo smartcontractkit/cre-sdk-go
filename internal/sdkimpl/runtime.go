@@ -100,7 +100,7 @@ func (r *RuntimeBase) Rand() (*rand.Rand, error) {
 	return rand.New(r), nil
 }
 
-func (d *Runtime) GenerateReport(request *pb.ReportRequest) sdk.Promise[*pb.ReportResponse] {
+func (d *Runtime) GenerateReport(request *pb.ReportRequest) sdk.Promise[*sdk.Report] {
 	return (&consensus.Consensus{}).Report(d, request)
 }
 
