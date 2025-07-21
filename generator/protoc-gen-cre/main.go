@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	toolName    = "github.com/smartcontractkit/chainlink-common/pkg/capabilities/v2/protoc"
+	toolName    = "github.com/smartcontractkit/cre-sdk-go/generator/protoc-gen-cre"
 	localPrefix = "http://github.com/smartcontractkit/cre-sdk-go"
 )
 

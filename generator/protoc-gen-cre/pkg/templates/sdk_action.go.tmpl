@@ -1,12 +1,17 @@
 {{define "action_method"}}
-{{ if .Method.Comments.Leading.String }}//{{.GoName}}Capability {{CleanComments .Method.Comments.Leading.String}} {{ end }}
-func (c *{{.Service.GoName}}) {{.Method.GoName}}(runtime cre.{{.Mode}}Runtime, input *{{name .InputType .GoPackageName}}) cre.Promise[*{{name .OutputType .GoPackageName}}] { {{- if .Comments.Trailing.String }}//{{.GoName}}Capability {{CleanComments .Comments.Trailing.String}} {{ end }}
+{{template "wrap_report" (dict "Message" .Method.Input "GoPackageName" .GoPackageName)}}
+{{template "wrap_report" (dict "Message" .Method.Output "GoPackageName" .GoPackageName)}}
+{{ $inputIdent := WrapMessage .Method.Input }}
+{{ $outputIdent := WrapMessage .Method.Output }}
+{{ if .Method.Comments.Leading.String }}//{{.Method.GoName}} {{CleanComments .Method.Comments.Leading.String}} {{ end }}
+func (c *{{.Service.GoName}}) {{.Method.GoName}}(runtime cre.{{.Mode}}Runtime, input *{{name $inputIdent .GoPackageName}}) cre.Promise[*{{name $outputIdent .GoPackageName}}] { {{- if .Comments.Trailing.String }}// {{CleanComments .Comments.Trailing.String}} {{ end }}
     wrapped := &anypb.Any{}
-    err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
+    err := anypb.MarshalFrom(wrapped, input{{- if ne $inputIdent .InputType -}}.X_GeneratedCodeOnly_Unwrap(){{- end -}}, proto.MarshalOptions{Deterministic: true})
     if err != nil {
-        return cre.PromiseFromResult[*{{name .OutputType .GoPackageName}}](nil, err)
+        return cre.PromiseFromResult[*{{name $outputIdent .GoPackageName}}](nil, err)
     }
-    return cre.Then(runtime.CallCapability(&sdkpb.CapabilityRequest{
+
+    capCallResponse := cre.Then(runtime.CallCapability(&sdkpb.CapabilityRequest{
         Id:      {{FullCapabilityId .Service}},
         Payload: wrapped,
         Method:  "{{.Method.GoName}}",
@@ -22,5 +27,10 @@ func (c *{{.Service.GoName}}) {{.Method.GoName}}(runtime cre.{{.Mode}}Runtime, i
             return nil, errors.New("unexpected response type")
         }
     })
+    {{ if ne $outputIdent .OutputType -}}
+    return cre.Then(capCallResponse, {{ImportPath $outputIdent}}.X_GeneratedCodeOnly_Wrap{{$outputIdent.GoName}})
+    {{ else }}
+    return capCallResponse
+    {{ end }}
 }
 {{end}}

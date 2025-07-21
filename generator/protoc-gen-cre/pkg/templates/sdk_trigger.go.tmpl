@@ -1,6 +1,6 @@
 {{define "trigger_method"}}
-    {{ if .Method.Comments.Leading.String }}//{{.GoName}}Capability {{CleanComments .Method.Comments.Leading.String}} {{ end }}
-func {{.Method.GoName}}({{ range Labels .Service -}}{{LowerFirst .Name}} {{.Type}},{{- end -}}config *{{name .InputType .GoPackageName}}) cre.{{.Mode}}Trigger[*{{name .OutputType .GoPackageName}}, *{{name .OutputType .GoPackageName}}] { {{- if .Comments.Trailing.String }}//{{.GoName}}Capability {{CleanComments .Comments.Trailing.String}} {{ end }}
+{{ if .Method.Comments.Leading.String }}//{{.Method.GoName}} {{CleanComments .Method.Comments.Leading.String}} {{ end }}
+func {{.Method.GoName}}({{ range Labels .Service -}}{{LowerFirst .Name}} {{.Type}},{{- end -}}config *{{name .InputType .GoPackageName}}) cre.{{.Mode}}Trigger[*{{name .OutputType .GoPackageName}}, *{{name .OutputType .GoPackageName}}] { {{- if .Comments.Trailing.String }}//{{.Method.GoName}} {{CleanComments .Comments.Trailing.String}} {{ end }}
     configAny := &anypb.Any{}
     _ = anypb.MarshalFrom(configAny, config, proto.MarshalOptions{Deterministic: true})
     return &{{.Service.GoName | LowerFirst}}{{.Method.GoName}} {

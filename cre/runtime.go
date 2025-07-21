@@ -10,7 +10,7 @@ import (
 )
 
 type ReportGenerator interface {
-	GenerateReport(*pb.ReportRequest) Promise[*pb.ReportResponse]
+	GenerateReport(*pb.ReportRequest) Promise[*Report]
 }
 
 // RuntimeBase is not thread safe and must not be used concurrently.
