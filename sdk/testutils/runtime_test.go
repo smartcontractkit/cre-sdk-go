@@ -121,9 +121,11 @@ func TestRuntime_CallsReportMethod(t *testing.T) {
 	require.NotNil(t, resp)
 
 	// Assert the RawReport matches the expected concatenated bytes
-	assert.Equal(t, expectedRawReport, resp.RawReport)
-	assert.Equal(t, len(expectedRawReport), len(resp.RawReport))
+	// This is ok to do in our test, we're explicitly testing reports.
+	unwrapped := resp.X_GeneratedCodeOnly_Unwrap()
+	assert.Equal(t, expectedRawReport, unwrapped.RawReport)
+	assert.Equal(t, len(expectedRawReport), len(unwrapped.RawReport))
 
-	assert.Equal(t, []byte("default_signature_1"), resp.Sigs[0].Signature)
-	assert.Equal(t, []byte("default_signature_2"), resp.Sigs[1].Signature)
+	assert.Equal(t, []byte("default_signature_1"), unwrapped.Sigs[0].Signature)
+	assert.Equal(t, []byte("default_signature_2"), unwrapped.Sigs[1].Signature)
 }
