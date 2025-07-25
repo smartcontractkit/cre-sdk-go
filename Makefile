@@ -29,3 +29,7 @@ clean:
 
 .PHONY: clean-generate
 clean-generate: clean generate
+
+.PHONY: test
+test: gomods
+	gomods -s proto_vendor -go test ./...
