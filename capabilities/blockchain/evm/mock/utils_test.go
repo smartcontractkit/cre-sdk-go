@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/ethereum/go-ethereum/common"
+	sdkpb "github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
 	"github.com/smartcontractkit/cre-sdk-go/capabilities/blockchain/evm"
 	"github.com/smartcontractkit/cre-sdk-go/capabilities/blockchain/evm/mock"
 	"github.com/smartcontractkit/cre-sdk-go/sdk"
@@ -136,7 +137,7 @@ func TestWriteReport_MatchingAddress(t *testing.T) {
 
 	resp, err := clientMock.WriteReport(context.Background(), &evm.WriteReportRequest{
 		Receiver:  mockAddr.Bytes(),
-		Report:    &evm.SignedReport{RawReport: append(testReportMetadata(), payload...)},
+		Report:    &sdkpb.ReportResponse{RawReport: append(testReportMetadata(), payload...)},
 		GasConfig: gasCfg,
 	})
 	require.NoError(t, err)
@@ -159,7 +160,7 @@ func TestWriteReport_MismatchedAddress_WithFallback(t *testing.T) {
 
 	resp, err := clientMock.WriteReport(context.Background(), &evm.WriteReportRequest{
 		Receiver:  otherAddr.Bytes(),
-		Report:    &evm.SignedReport{RawReport: append(testReportMetadata(), 'x')},
+		Report:    &sdkpb.ReportResponse{RawReport: append(testReportMetadata(), 'x')},
 		GasConfig: &evm.GasConfig{},
 	})
 	require.NoError(t, err)
@@ -176,7 +177,7 @@ func TestWriteReport_MismatchedAddress_NoFallback(t *testing.T) {
 
 	_, err := clientMock.WriteReport(context.Background(), &evm.WriteReportRequest{
 		Receiver:  otherAddr.Bytes(),
-		Report:    &evm.SignedReport{RawReport: append(testReportMetadata(), 'x')},
+		Report:    &sdkpb.ReportResponse{RawReport: append(testReportMetadata(), 'x')},
 		GasConfig: &evm.GasConfig{},
 	})
 	require.EqualError(t, err, "contract 0x0000000000000000000000000000000000000aBc not found")
