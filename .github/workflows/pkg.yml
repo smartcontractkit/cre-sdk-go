@@ -18,7 +18,7 @@ jobs:
         run: make test
 
       - name: Race Tests
-        run: GORACE="log_path=$PWD/race" go test -race ./... -coverpkg=./... -coverprofile=coverage.txt
+        run: GORACE="log_path=$PWD/race" gomods -go test -race ./... -coverpkg=./... -coverprofile=coverage.txt
 
       - name: Print Races
         if: failure()
