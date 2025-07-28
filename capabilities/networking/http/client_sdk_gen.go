@@ -9,20 +9,20 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 
 	sdkpb "github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
-	"github.com/smartcontractkit/cre-sdk-go/sdk"
+	"github.com/smartcontractkit/cre-sdk-go/cre"
 )
 
 type Client struct {
 	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 allow defaults for capabilities
 }
 
-func (c *Client) SendRequest(runtime sdk.NodeRuntime, input *Request) sdk.Promise[*Response] {
+func (c *Client) SendRequest(runtime cre.NodeRuntime, input *Request) cre.Promise[*Response] {
 	wrapped := &anypb.Any{}
 	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
-		return sdk.PromiseFromResult[*Response](nil, err)
+		return cre.PromiseFromResult[*Response](nil, err)
 	}
-	return sdk.Then(runtime.CallCapability(&sdkpb.CapabilityRequest{
+	return cre.Then(runtime.CallCapability(&sdkpb.CapabilityRequest{
 		Id:      "http-actions@1.0.0-alpha",
 		Payload: wrapped,
 		Method:  "SendRequest",

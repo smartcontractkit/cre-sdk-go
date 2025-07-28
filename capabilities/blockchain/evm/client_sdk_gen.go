@@ -10,7 +10,7 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 
 	sdkpb "github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
-	"github.com/smartcontractkit/cre-sdk-go/sdk"
+	"github.com/smartcontractkit/cre-sdk-go/cre"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
@@ -19,13 +19,13 @@ type Client struct {
 	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 allow defaults for capabilities
 }
 
-func (c *Client) CallContract(runtime sdk.Runtime, input *CallContractRequest) sdk.Promise[*CallContractReply] {
+func (c *Client) CallContract(runtime cre.Runtime, input *CallContractRequest) cre.Promise[*CallContractReply] {
 	wrapped := &anypb.Any{}
 	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
-		return sdk.PromiseFromResult[*CallContractReply](nil, err)
+		return cre.PromiseFromResult[*CallContractReply](nil, err)
 	}
-	return sdk.Then(runtime.CallCapability(&sdkpb.CapabilityRequest{
+	return cre.Then(runtime.CallCapability(&sdkpb.CapabilityRequest{
 		Id:      "evm" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
 		Payload: wrapped,
 		Method:  "CallContract",
@@ -43,13 +43,13 @@ func (c *Client) CallContract(runtime sdk.Runtime, input *CallContractRequest) s
 	})
 }
 
-func (c *Client) FilterLogs(runtime sdk.Runtime, input *FilterLogsRequest) sdk.Promise[*FilterLogsReply] {
+func (c *Client) FilterLogs(runtime cre.Runtime, input *FilterLogsRequest) cre.Promise[*FilterLogsReply] {
 	wrapped := &anypb.Any{}
 	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
-		return sdk.PromiseFromResult[*FilterLogsReply](nil, err)
+		return cre.PromiseFromResult[*FilterLogsReply](nil, err)
 	}
-	return sdk.Then(runtime.CallCapability(&sdkpb.CapabilityRequest{
+	return cre.Then(runtime.CallCapability(&sdkpb.CapabilityRequest{
 		Id:      "evm" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
 		Payload: wrapped,
 		Method:  "FilterLogs",
@@ -67,13 +67,13 @@ func (c *Client) FilterLogs(runtime sdk.Runtime, input *FilterLogsRequest) sdk.P
 	})
 }
 
-func (c *Client) BalanceAt(runtime sdk.Runtime, input *BalanceAtRequest) sdk.Promise[*BalanceAtReply] {
+func (c *Client) BalanceAt(runtime cre.Runtime, input *BalanceAtRequest) cre.Promise[*BalanceAtReply] {
 	wrapped := &anypb.Any{}
 	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
-		return sdk.PromiseFromResult[*BalanceAtReply](nil, err)
+		return cre.PromiseFromResult[*BalanceAtReply](nil, err)
 	}
-	return sdk.Then(runtime.CallCapability(&sdkpb.CapabilityRequest{
+	return cre.Then(runtime.CallCapability(&sdkpb.CapabilityRequest{
 		Id:      "evm" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
 		Payload: wrapped,
 		Method:  "BalanceAt",
@@ -91,13 +91,13 @@ func (c *Client) BalanceAt(runtime sdk.Runtime, input *BalanceAtRequest) sdk.Pro
 	})
 }
 
-func (c *Client) EstimateGas(runtime sdk.Runtime, input *EstimateGasRequest) sdk.Promise[*EstimateGasReply] {
+func (c *Client) EstimateGas(runtime cre.Runtime, input *EstimateGasRequest) cre.Promise[*EstimateGasReply] {
 	wrapped := &anypb.Any{}
 	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
-		return sdk.PromiseFromResult[*EstimateGasReply](nil, err)
+		return cre.PromiseFromResult[*EstimateGasReply](nil, err)
 	}
-	return sdk.Then(runtime.CallCapability(&sdkpb.CapabilityRequest{
+	return cre.Then(runtime.CallCapability(&sdkpb.CapabilityRequest{
 		Id:      "evm" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
 		Payload: wrapped,
 		Method:  "EstimateGas",
@@ -115,13 +115,13 @@ func (c *Client) EstimateGas(runtime sdk.Runtime, input *EstimateGasRequest) sdk
 	})
 }
 
-func (c *Client) GetTransactionByHash(runtime sdk.Runtime, input *GetTransactionByHashRequest) sdk.Promise[*GetTransactionByHashReply] {
+func (c *Client) GetTransactionByHash(runtime cre.Runtime, input *GetTransactionByHashRequest) cre.Promise[*GetTransactionByHashReply] {
 	wrapped := &anypb.Any{}
 	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
-		return sdk.PromiseFromResult[*GetTransactionByHashReply](nil, err)
+		return cre.PromiseFromResult[*GetTransactionByHashReply](nil, err)
 	}
-	return sdk.Then(runtime.CallCapability(&sdkpb.CapabilityRequest{
+	return cre.Then(runtime.CallCapability(&sdkpb.CapabilityRequest{
 		Id:      "evm" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
 		Payload: wrapped,
 		Method:  "GetTransactionByHash",
@@ -139,13 +139,13 @@ func (c *Client) GetTransactionByHash(runtime sdk.Runtime, input *GetTransaction
 	})
 }
 
-func (c *Client) GetTransactionReceipt(runtime sdk.Runtime, input *GetTransactionReceiptRequest) sdk.Promise[*GetTransactionReceiptReply] {
+func (c *Client) GetTransactionReceipt(runtime cre.Runtime, input *GetTransactionReceiptRequest) cre.Promise[*GetTransactionReceiptReply] {
 	wrapped := &anypb.Any{}
 	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
-		return sdk.PromiseFromResult[*GetTransactionReceiptReply](nil, err)
+		return cre.PromiseFromResult[*GetTransactionReceiptReply](nil, err)
 	}
-	return sdk.Then(runtime.CallCapability(&sdkpb.CapabilityRequest{
+	return cre.Then(runtime.CallCapability(&sdkpb.CapabilityRequest{
 		Id:      "evm" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
 		Payload: wrapped,
 		Method:  "GetTransactionReceipt",
@@ -163,13 +163,13 @@ func (c *Client) GetTransactionReceipt(runtime sdk.Runtime, input *GetTransactio
 	})
 }
 
-func (c *Client) HeaderByNumber(runtime sdk.Runtime, input *HeaderByNumberRequest) sdk.Promise[*HeaderByNumberReply] {
+func (c *Client) HeaderByNumber(runtime cre.Runtime, input *HeaderByNumberRequest) cre.Promise[*HeaderByNumberReply] {
 	wrapped := &anypb.Any{}
 	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
-		return sdk.PromiseFromResult[*HeaderByNumberReply](nil, err)
+		return cre.PromiseFromResult[*HeaderByNumberReply](nil, err)
 	}
-	return sdk.Then(runtime.CallCapability(&sdkpb.CapabilityRequest{
+	return cre.Then(runtime.CallCapability(&sdkpb.CapabilityRequest{
 		Id:      "evm" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
 		Payload: wrapped,
 		Method:  "HeaderByNumber",
@@ -187,13 +187,13 @@ func (c *Client) HeaderByNumber(runtime sdk.Runtime, input *HeaderByNumberReques
 	})
 }
 
-func (c *Client) RegisterLogTracking(runtime sdk.Runtime, input *RegisterLogTrackingRequest) sdk.Promise[*emptypb.Empty] {
+func (c *Client) RegisterLogTracking(runtime cre.Runtime, input *RegisterLogTrackingRequest) cre.Promise[*emptypb.Empty] {
 	wrapped := &anypb.Any{}
 	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
-		return sdk.PromiseFromResult[*emptypb.Empty](nil, err)
+		return cre.PromiseFromResult[*emptypb.Empty](nil, err)
 	}
-	return sdk.Then(runtime.CallCapability(&sdkpb.CapabilityRequest{
+	return cre.Then(runtime.CallCapability(&sdkpb.CapabilityRequest{
 		Id:      "evm" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
 		Payload: wrapped,
 		Method:  "RegisterLogTracking",
@@ -211,13 +211,13 @@ func (c *Client) RegisterLogTracking(runtime sdk.Runtime, input *RegisterLogTrac
 	})
 }
 
-func (c *Client) UnregisterLogTracking(runtime sdk.Runtime, input *UnregisterLogTrackingRequest) sdk.Promise[*emptypb.Empty] {
+func (c *Client) UnregisterLogTracking(runtime cre.Runtime, input *UnregisterLogTrackingRequest) cre.Promise[*emptypb.Empty] {
 	wrapped := &anypb.Any{}
 	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
-		return sdk.PromiseFromResult[*emptypb.Empty](nil, err)
+		return cre.PromiseFromResult[*emptypb.Empty](nil, err)
 	}
-	return sdk.Then(runtime.CallCapability(&sdkpb.CapabilityRequest{
+	return cre.Then(runtime.CallCapability(&sdkpb.CapabilityRequest{
 		Id:      "evm" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
 		Payload: wrapped,
 		Method:  "UnregisterLogTracking",
@@ -235,7 +235,7 @@ func (c *Client) UnregisterLogTracking(runtime sdk.Runtime, input *UnregisterLog
 	})
 }
 
-func LogTrigger(chainSelector uint64, config *FilterLogTriggerRequest) sdk.Trigger[*Log, *Log] {
+func LogTrigger(chainSelector uint64, config *FilterLogTriggerRequest) cre.Trigger[*Log, *Log] {
 	configAny := &anypb.Any{}
 	_ = anypb.MarshalFrom(configAny, config, proto.MarshalOptions{Deterministic: true})
 	return &clientLogTrigger{
@@ -272,13 +272,13 @@ func (t *clientLogTrigger) Adapt(trigger *Log) (*Log, error) {
 	return trigger, nil
 }
 
-func (c *Client) WriteReport(runtime sdk.Runtime, input *WriteReportRequest) sdk.Promise[*WriteReportReply] {
+func (c *Client) WriteReport(runtime cre.Runtime, input *WriteReportRequest) cre.Promise[*WriteReportReply] {
 	wrapped := &anypb.Any{}
 	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
-		return sdk.PromiseFromResult[*WriteReportReply](nil, err)
+		return cre.PromiseFromResult[*WriteReportReply](nil, err)
 	}
-	return sdk.Then(runtime.CallCapability(&sdkpb.CapabilityRequest{
+	return cre.Then(runtime.CallCapability(&sdkpb.CapabilityRequest{
 		Id:      "evm" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
 		Payload: wrapped,
 		Method:  "WriteReport",
