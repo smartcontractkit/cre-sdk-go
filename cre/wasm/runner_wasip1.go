@@ -4,7 +4,7 @@ import (
 	"os"
 	"unsafe"
 
-	"github.com/smartcontractkit/cre-sdk-go/sdk"
+	"github.com/smartcontractkit/cre-sdk-go/cre"
 )
 
 //go:wasmimport env send_response
@@ -16,7 +16,7 @@ func versionV2()
 //go:wasmimport env switch_modes
 func switchModes(mode int32)
 
-func NewRunner[C Config](parse func(configBytes []byte) (C, error)) sdk.Runner[C] {
+func NewRunner[C Config](parse func(configBytes []byte) (C, error)) cre.Runner[C] {
 	return newRunner[C](parse, runnerInternalsImpl{}, runtimeInternalsImpl{})
 }
 

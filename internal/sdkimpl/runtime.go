@@ -7,8 +7,8 @@ import (
 	"github.com/smartcontractkit/chainlink-common/pkg/values"
 	valuespb "github.com/smartcontractkit/chainlink-common/pkg/values/pb"
 	"github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
+	"github.com/smartcontractkit/cre-sdk-go/cre"
 	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/consensus"
-	"github.com/smartcontractkit/cre-sdk-go/sdk"
 )
 
 type RuntimeHelpers interface {
@@ -43,12 +43,12 @@ type RuntimeBase struct {
 }
 
 var (
-	_ sdk.RuntimeBase = (*RuntimeBase)(nil)
+	_ cre.RuntimeBase = (*RuntimeBase)(nil)
 	_ rand.Source     = (*RuntimeBase)(nil)
 	_ rand.Source64   = (*RuntimeBase)(nil)
 )
 
-func (r *RuntimeBase) CallCapability(request *pb.CapabilityRequest) sdk.Promise[*pb.CapabilityResponse] {
+func (r *RuntimeBase) CallCapability(request *pb.CapabilityRequest) cre.Promise[*pb.CapabilityResponse] {
 	if r.Mode == pb.Mode_MODE_DON {
 		r.nextCallId++
 	} else {
@@ -58,15 +58,15 @@ func (r *RuntimeBase) CallCapability(request *pb.CapabilityRequest) sdk.Promise[
 	myId := r.nextCallId
 	request.CallbackId = myId
 	if r.modeErr != nil {
-		return sdk.PromiseFromResult[*pb.CapabilityResponse](nil, r.modeErr)
+		return cre.PromiseFromResult[*pb.CapabilityResponse](nil, r.modeErr)
 	}
 
 	err := r.RuntimeHelpers.Call(request)
 	if err != nil {
-		return sdk.PromiseFromResult[*pb.CapabilityResponse](nil, err)
+		return cre.PromiseFromResult[*pb.CapabilityResponse](nil, err)
 	}
 
-	return sdk.NewBasicPromise(func() (*pb.CapabilityResponse, error) {
+	return cre.NewBasicPromise(func() (*pb.CapabilityResponse, error) {
 		awaitRequest := &pb.AwaitCapabilitiesRequest{
 			Ids: []int32{myId},
 		}
@@ -100,7 +100,7 @@ func (r *RuntimeBase) Rand() (*rand.Rand, error) {
 	return rand.New(r), nil
 }
 
-func (d *Runtime) GenerateReport(request *pb.ReportRequest) sdk.Promise[*pb.ReportResponse] {
+func (d *Runtime) GenerateReport(request *pb.ReportRequest) cre.Promise[*pb.ReportResponse] {
 	return (&consensus.Consensus{}).Report(d, request)
 }
 
@@ -109,7 +109,7 @@ type Runtime struct {
 	nextNodeCallId int32
 }
 
-func (d *Runtime) GetSecret(req *pb.SecretRequest) sdk.Promise[*pb.Secret] {
+func (d *Runtime) GetSecret(req *pb.SecretRequest) cre.Promise[*pb.Secret] {
 	d.nextCallId++
 
 	sr := &pb.GetSecretsRequest{
@@ -119,10 +119,10 @@ func (d *Runtime) GetSecret(req *pb.SecretRequest) sdk.Promise[*pb.Secret] {
 
 	err := d.RuntimeHelpers.GetSecrets(sr, d.MaxResponseSize)
 	if err != nil {
-		return sdk.PromiseFromResult[*pb.Secret](nil, err)
+		return cre.PromiseFromResult[*pb.Secret](nil, err)
 	}
 
-	return sdk.NewBasicPromise(func() (*pb.Secret, error) {
+	return cre.NewBasicPromise(func() (*pb.Secret, error) {
 		awaitRequest := &pb.AwaitSecretsRequest{
 			Ids: []int32{d.nextCallId},
 		}
@@ -148,7 +148,7 @@ func (d *Runtime) GetSecret(req *pb.SecretRequest) sdk.Promise[*pb.Secret] {
 	})
 }
 
-func (d *Runtime) RunInNodeMode(fn func(nodeRuntime sdk.NodeRuntime) *pb.SimpleConsensusInputs) sdk.Promise[values.Value] {
+func (d *Runtime) RunInNodeMode(fn func(nodeRuntime cre.NodeRuntime) *pb.SimpleConsensusInputs) cre.Promise[values.Value] {
 	nodeBase := d.RuntimeBase
 	nodeBase.Mode = pb.Mode_MODE_NODE
 	nodeBase.source = nil
@@ -156,20 +156,20 @@ func (d *Runtime) RunInNodeMode(fn func(nodeRuntime sdk.NodeRuntime) *pb.SimpleC
 	nrt := &NodeRuntime{RuntimeBase: nodeBase}
 	nrt.nextCallId = d.nextNodeCallId
 	nrt.Mode = pb.Mode_MODE_NODE
-	d.modeErr = sdk.DonModeCallInNodeMode()
+	d.modeErr = cre.DonModeCallInNodeMode()
 	d.SwitchModes(pb.Mode_MODE_NODE)
 	observation := fn(nrt)
 	d.SwitchModes(pb.Mode_MODE_DON)
-	nrt.modeErr = sdk.NodeModeCallInDonMode()
+	nrt.modeErr = cre.NodeModeCallInDonMode()
 	d.modeErr = nil
 	d.nextNodeCallId = nrt.nextCallId
 	c := &consensus.Consensus{}
-	return sdk.Then(c.Simple(d, observation), func(result *valuespb.Value) (values.Value, error) {
+	return cre.Then(c.Simple(d, observation), func(result *valuespb.Value) (values.Value, error) {
 		return values.FromProto(result)
 	})
 }
 
-var _ sdk.Runtime = &Runtime{}
+var _ cre.Runtime = &Runtime{}
 
 func (r *RuntimeBase) Int63() int64 {
 	if r.modeErr != nil {
@@ -204,6 +204,6 @@ type NodeRuntime struct {
 	RuntimeBase
 }
 
-var _ sdk.NodeRuntime = &NodeRuntime{}
+var _ cre.NodeRuntime = &NodeRuntime{}
 
 func (n *NodeRuntime) IsNodeRuntime() {}

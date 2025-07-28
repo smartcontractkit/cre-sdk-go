@@ -6,14 +6,14 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
-	"github.com/smartcontractkit/cre-sdk-go/sdk"
+	"github.com/smartcontractkit/cre-sdk-go/cre"
 )
 
 type Basic struct {
 	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 allow defaults for capabilities
 }
 
-func Trigger(config *Config) sdk.Trigger[*Outputs, *Outputs] {
+func Trigger(config *Config) cre.Trigger[*Outputs, *Outputs] {
 	configAny := &anypb.Any{}
 	_ = anypb.MarshalFrom(configAny, config, proto.MarshalOptions{Deterministic: true})
 	return &basicTrigger{

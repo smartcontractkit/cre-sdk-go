@@ -1,4 +1,4 @@
-package sdk_test
+package cre_test
 
 import (
 	"errors"
@@ -6,11 +6,11 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/smartcontractkit/cre-sdk-go/sdk"
+	"github.com/smartcontractkit/cre-sdk-go/cre"
 )
 
 func TestPromiseFromResult(t *testing.T) {
-	p := sdk.PromiseFromResult("hello", nil)
+	p := cre.PromiseFromResult("hello", nil)
 
 	val, err := p.Await()
 	assert.NoError(t, err)
@@ -19,7 +19,7 @@ func TestPromiseFromResult(t *testing.T) {
 
 func TestPromiseFromResultError(t *testing.T) {
 	expectedErr := errors.New("failure")
-	p := sdk.PromiseFromResult[string]("", expectedErr)
+	p := cre.PromiseFromResult[string]("", expectedErr)
 
 	val, err := p.Await()
 	assert.ErrorIs(t, err, expectedErr)
@@ -28,7 +28,7 @@ func TestPromiseFromResultError(t *testing.T) {
 
 func TestBasicPromiseResolvesOnlyOnce(t *testing.T) {
 	counter := 0
-	p := sdk.NewBasicPromise(func() (int, error) {
+	p := cre.NewBasicPromise(func() (int, error) {
 		counter++
 		return 42, nil
 	})
@@ -44,7 +44,7 @@ func TestBasicPromiseResolvesOnlyOnce(t *testing.T) {
 }
 
 func TestBasicPromiseError(t *testing.T) {
-	p := sdk.NewBasicPromise(func() (int, error) {
+	p := cre.NewBasicPromise(func() (int, error) {
 		return 0, errors.New("something went wrong")
 	})
 
@@ -53,8 +53,8 @@ func TestBasicPromiseError(t *testing.T) {
 }
 
 func TestThenChainsCorrectly(t *testing.T) {
-	p := sdk.PromiseFromResult(3, nil)
-	chained := sdk.Then(p, func(i int) (string, error) {
+	p := cre.PromiseFromResult(3, nil)
+	chained := cre.Then(p, func(i int) (string, error) {
 		return string(rune('A' + i)), nil
 	})
 
@@ -65,9 +65,9 @@ func TestThenChainsCorrectly(t *testing.T) {
 
 func TestThenPropagatesError(t *testing.T) {
 	expectedErr := errors.New("boom")
-	p := sdk.PromiseFromResult[int](0, expectedErr)
+	p := cre.PromiseFromResult[int](0, expectedErr)
 
-	chained := sdk.Then(p, func(i int) (string, error) {
+	chained := cre.Then(p, func(i int) (string, error) {
 		return "should not happen", nil
 	})
 
@@ -76,9 +76,9 @@ func TestThenPropagatesError(t *testing.T) {
 }
 
 func TestThenHandlesFnError(t *testing.T) {
-	p := sdk.PromiseFromResult(123, nil)
+	p := cre.PromiseFromResult(123, nil)
 	fnErr := errors.New("failed")
-	chained := sdk.Then(p, func(i int) (string, error) {
+	chained := cre.Then(p, func(i int) (string, error) {
 		return "", fnErr
 	})
 

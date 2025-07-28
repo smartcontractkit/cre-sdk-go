@@ -6,8 +6,8 @@ import (
 
 	"github.com/smartcontractkit/chainlink-common/pkg/values"
 	"github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
+	"github.com/smartcontractkit/cre-sdk-go/cre/testutils"
 	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basictrigger"
-	"github.com/smartcontractkit/cre-sdk-go/sdk/testutils"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -15,7 +15,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/smartcontractkit/cre-sdk-go/sdk"
+	"github.com/smartcontractkit/cre-sdk-go/cre"
 )
 
 var (
@@ -51,16 +51,16 @@ func TestRunner_CreateWorkflows(t *testing.T) {
 
 func TestRunner_GetSecrets_PassesMaxResponseSize(t *testing.T) {
 	dr := getTestRunner(t, subscribeRequest)
-	dr.Run(func(env *sdk.Environment[string]) (sdk.Workflow[string], error) {
+	dr.Run(func(env *cre.Environment[string]) (cre.Workflow[string], error) {
 		_, err := env.GetSecret(&pb.SecretRequest{Namespace: "Foo", Id: "Bar"}).Await()
 		// This will fail with "buffer cannot be empty" if we fail to pass the maxResponseSize from the
 		// runner to the runtime.
 		assert.ErrorContains(t, err, "secret Foo.Bar not found")
 
-		return sdk.Workflow[string]{
-			sdk.Handler(
+		return cre.Workflow[string]{
+			cre.Handler(
 				basictrigger.Trigger(testutils.TestWorkflowTriggerConfig()),
-				func(env *sdk.Environment[string], _ sdk.Runtime, _ *basictrigger.Outputs) (int, error) {
+				func(env *cre.Environment[string], _ cre.Runtime, _ *basictrigger.Outputs) (int, error) {
 					return 0, nil
 				}),
 		}, nil
@@ -70,11 +70,11 @@ func TestRunner_GetSecrets_PassesMaxResponseSize(t *testing.T) {
 func TestRunner_Run(t *testing.T) {
 	t.Run("runner gathers subscriptions", func(t *testing.T) {
 		dr := getTestRunner(t, subscribeRequest)
-		dr.Run(func(_ *sdk.Environment[string]) (sdk.Workflow[string], error) {
-			return sdk.Workflow[string]{
-				sdk.Handler(
+		dr.Run(func(_ *cre.Environment[string]) (cre.Workflow[string], error) {
+			return cre.Workflow[string]{
+				cre.Handler(
 					basictrigger.Trigger(testutils.TestWorkflowTriggerConfig()),
-					func(_ *sdk.Environment[string], _ sdk.Runtime, _ *basictrigger.Outputs) (int, error) {
+					func(_ *cre.Environment[string], _ cre.Runtime, _ *basictrigger.Outputs) (int, error) {
 						require.Fail(t, "Must not be called during registration to tiggers")
 						return 0, nil
 					}),
@@ -82,7 +82,7 @@ func TestRunner_Run(t *testing.T) {
 		})
 
 		actual := &pb.ExecutionResult{}
-		sentResponse := dr.(runnerWrapper[string]).baseRunner.(*subscriber[string, sdk.Runtime]).runnerInternals.(*runnerInternalsTestHook).sentResponse
+		sentResponse := dr.(runnerWrapper[string]).baseRunner.(*subscriber[string, cre.Runtime]).runnerInternals.(*runnerInternalsTestHook).sentResponse
 		require.NoError(t, proto.Unmarshal(sentResponse, actual))
 
 		switch result := actual.Result.(type) {
@@ -106,7 +106,7 @@ func TestRunner_Run(t *testing.T) {
 		testutils.RunTestWorkflow(dr)
 
 		actual := &pb.ExecutionResult{}
-		sentResponse := dr.(runnerWrapper[string]).baseRunner.(*runner[string, sdk.Runtime]).runnerInternals.(*runnerInternalsTestHook).sentResponse
+		sentResponse := dr.(runnerWrapper[string]).baseRunner.(*runner[string, cre.Runtime]).runnerInternals.(*runnerInternalsTestHook).sentResponse
 		require.NoError(t, proto.Unmarshal(sentResponse, actual))
 
 		switch result := actual.Result.(type) {
@@ -137,7 +137,7 @@ func TestRunner_Run(t *testing.T) {
 		testutils.RunIdenticalTriggersWorkflow(dr)
 
 		actual := &pb.ExecutionResult{}
-		sentResponse := dr.(runnerWrapper[string]).baseRunner.(*runner[string, sdk.Runtime]).runnerInternals.(*runnerInternalsTestHook).sentResponse
+		sentResponse := dr.(runnerWrapper[string]).baseRunner.(*runner[string, cre.Runtime]).runnerInternals.(*runnerInternalsTestHook).sentResponse
 		require.NoError(t, proto.Unmarshal(sentResponse, actual))
 
 		switch result := actual.Result.(type) {
@@ -153,20 +153,20 @@ func TestRunner_Run(t *testing.T) {
 	})
 }
 
-func assertEnv(t *testing.T, r sdk.Runner[string]) {
+func assertEnv(t *testing.T, r cre.Runner[string]) {
 	ran := false
-	verifyEnv := func(env *sdk.Environment[string]) (sdk.Workflow[string], error) {
+	verifyEnv := func(env *cre.Environment[string]) (cre.Workflow[string], error) {
 		ran = true
 		assert.Equal(t, string(anyConfig), env.Config)
 		assert.IsType(t, &writer{}, env.LogWriter)
-		return sdk.Workflow[string]{}, nil
+		return cre.Workflow[string]{}, nil
 
 	}
 	r.Run(verifyEnv)
 	assert.True(t, ran, "Workflow should have been run")
 }
 
-func getTestRunner(tb testing.TB, request *pb.ExecuteRequest) sdk.Runner[string] {
+func getTestRunner(tb testing.TB, request *pb.ExecuteRequest) cre.Runner[string] {
 	return newRunner(func(b []byte) (string, error) { return string(b), nil }, testRunnerInternals(tb, request), testRuntimeInternals(tb))
 }
 
@@ -184,8 +184,8 @@ func testRunnerInternals(tb testing.TB, request *pb.ExecuteRequest) *runnerInter
 func testRuntimeInternals(tb testing.TB) *runtimeInternalsTestHook {
 	return &runtimeInternalsTestHook{
 		testTb:                  tb,
-		outstandingCalls:        map[int32]sdk.Promise[*pb.CapabilityResponse]{},
-		outstandingSecretsCalls: map[int32]sdk.Promise[[]*pb.SecretResponse]{},
+		outstandingCalls:        map[int32]cre.Promise[*pb.CapabilityResponse]{},
+		outstandingSecretsCalls: map[int32]cre.Promise[[]*pb.SecretResponse]{},
 		secrets:                 map[string]*pb.Secret{},
 	}
 }

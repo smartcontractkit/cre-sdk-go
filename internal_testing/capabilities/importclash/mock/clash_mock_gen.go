@@ -14,7 +14,7 @@ import (
 	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/importclash/p2"
 
 	sdkpb "github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
-	"github.com/smartcontractkit/cre-sdk-go/sdk/testutils/registry"
+	"github.com/smartcontractkit/cre-sdk-go/cre/testutils/registry"
 )
 
 // avoid unused imports

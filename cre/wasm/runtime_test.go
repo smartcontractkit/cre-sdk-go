@@ -7,10 +7,10 @@ import (
 	"testing"
 
 	sdkpb "github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
+	"github.com/smartcontractkit/cre-sdk-go/cre"
 	"github.com/smartcontractkit/cre-sdk-go/internal/sdkimpl"
 	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basicaction"
 	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basicaction/mock"
-	"github.com/smartcontractkit/cre-sdk-go/sdk"
 	"google.golang.org/protobuf/proto"
 
 	"github.com/stretchr/testify/assert"
@@ -107,7 +107,7 @@ func TestEnvironment_GetSecret(t *testing.T) {
 		capCallOverride := func() ([]byte, error) { return nil, errors.New("disabled") }
 
 		runtime := &sdkimpl.Runtime{RuntimeBase: newTestRuntime(t, false, capCallOverride, nil)}
-		environment := &sdk.Environment[string]{
+		environment := &cre.Environment[string]{
 			SecretsProvider: runtime,
 		}
 
@@ -122,7 +122,7 @@ func TestEnvironment_GetSecret(t *testing.T) {
 			{Id: "Foo", Value: "Bar"},
 		}
 		runtime := &sdkimpl.Runtime{RuntimeBase: newTestRuntime(t, false, capCallOverride, secrets)}
-		environment := &sdk.Environment[string]{
+		environment := &cre.Environment[string]{
 			SecretsProvider: runtime,
 		}
 
@@ -143,6 +143,6 @@ func newTestRuntime(t *testing.T, callCapabilityErr bool, awaitResponseOverride 
 	}
 
 	runtime := newRuntime(internals, sdkpb.Mode_MODE_DON)
-	runtime.MaxResponseSize = sdk.DefaultMaxResponseSizeBytes
+	runtime.MaxResponseSize = cre.DefaultMaxResponseSizeBytes
 	return runtime
 }

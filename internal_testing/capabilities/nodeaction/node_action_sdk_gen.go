@@ -9,20 +9,20 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 
 	sdkpb "github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
-	"github.com/smartcontractkit/cre-sdk-go/sdk"
+	"github.com/smartcontractkit/cre-sdk-go/cre"
 )
 
 type BasicAction struct {
 	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 allow defaults for capabilities
 }
 
-func (c *BasicAction) PerformAction(runtime sdk.NodeRuntime, input *NodeInputs) sdk.Promise[*NodeOutputs] {
+func (c *BasicAction) PerformAction(runtime cre.NodeRuntime, input *NodeInputs) cre.Promise[*NodeOutputs] {
 	wrapped := &anypb.Any{}
 	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
-		return sdk.PromiseFromResult[*NodeOutputs](nil, err)
+		return cre.PromiseFromResult[*NodeOutputs](nil, err)
 	}
-	return sdk.Then(runtime.CallCapability(&sdkpb.CapabilityRequest{
+	return cre.Then(runtime.CallCapability(&sdkpb.CapabilityRequest{
 		Id:      "basic-test-node-action@1.0.0",
 		Payload: wrapped,
 		Method:  "PerformAction",

@@ -9,7 +9,7 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 
 	sdkpb "github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
-	"github.com/smartcontractkit/cre-sdk-go/sdk"
+	"github.com/smartcontractkit/cre-sdk-go/cre"
 )
 
 // BasicActionCapability This action server for testing purposes only.
@@ -18,13 +18,13 @@ type BasicAction struct {
 }
 
 // <no value>Capability This comment tests the generator's ability to handle leading comments on methods.
-func (c *BasicAction) PerformAction(runtime sdk.Runtime, input *Inputs) sdk.Promise[*Outputs] {
+func (c *BasicAction) PerformAction(runtime cre.Runtime, input *Inputs) cre.Promise[*Outputs] {
 	wrapped := &anypb.Any{}
 	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
-		return sdk.PromiseFromResult[*Outputs](nil, err)
+		return cre.PromiseFromResult[*Outputs](nil, err)
 	}
-	return sdk.Then(runtime.CallCapability(&sdkpb.CapabilityRequest{
+	return cre.Then(runtime.CallCapability(&sdkpb.CapabilityRequest{
 		Id:      "basic-test-action@1.0.0",
 		Payload: wrapped,
 		Method:  "PerformAction",
