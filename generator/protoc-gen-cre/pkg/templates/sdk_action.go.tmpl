@@ -3,6 +3,34 @@
 {{template "wrap_report" (dict "Message" .Method.Output "GoPackageName" .GoPackageName)}}
 {{ $inputIdent := WrapMessage .Method.Input }}
 {{ $outputIdent := WrapMessage .Method.Output }}
+
+{{ if eq .Mode "Node"}}
+type {{.Method.GoName}}er struct  {
+    client *{{.Service.GoName}}
+    nodeRuntime cre.NodeRuntime
+}
+
+{{ if .Method.Comments.Leading.String }}//{{.Method.GoName}} {{CleanComments .Method.Comments.Leading.String}} {{ end }}
+func (c *{{.Method.GoName}}er) {{.Method.GoName}}(input *{{name $inputIdent .GoPackageName}}) cre.Promise[*{{name $outputIdent .GoPackageName}}]  { {{- if .Comments.Trailing.String }}// {{CleanComments .Comments.Trailing.String}} {{ end }}
+    return c.client.{{.Method.GoName}}(c.nodeRuntime, input)
+}
+
+//{{.Method.GoName}} Allows usage of `{{.Method.GoName}}er` with Byzantine fault tolerance.
+func {{.Method.GoName}}[C, T any](
+    config C,
+    runtime cre.Runtime,
+    client *{{.Service.GoName}},
+    fn func(config C, logger *slog.Logger, {{LowerFirst .Method.GoName}}er *{{.Method.GoName}}er) (T, error),
+    ca cre.ConsensusAggregation[T]) cre.Promise[T] {
+    wrapped := func(config C, nodeRuntime cre.NodeRuntime) (T, error) {
+        {{LowerFirst .Method.GoName}}er := {{.Method.GoName}}er { client: client, nodeRuntime: nodeRuntime }
+        return fn(config, runtime.Logger(), &{{LowerFirst .Method.GoName}}er)
+    }
+
+    return cre.RunInNodeMode(config, runtime, wrapped, ca)
+}
+{{ end }}
+
 {{ if .Method.Comments.Leading.String }}//{{.Method.GoName}} {{CleanComments .Method.Comments.Leading.String}} {{ end }}
 func (c *{{.Service.GoName}}) {{.Method.GoName}}(runtime cre.{{.Mode}}Runtime, input *{{name $inputIdent .GoPackageName}}) cre.Promise[*{{name $outputIdent .GoPackageName}}] { {{- if .Comments.Trailing.String }}// {{CleanComments .Comments.Trailing.String}} {{ end }}
     wrapped := &anypb.Any{}

@@ -132,17 +132,17 @@ func RunInNodeMode[C, T any](
 	config C,
 	runtime Runtime,
 	fn func(config C, nodeRuntime NodeRuntime) (T, error),
-	cd ConsensusAggregation[T],
+	ca ConsensusAggregation[T],
 ) Promise[T] {
 	observationFn := func(nodeRuntime NodeRuntime) *pb.SimpleConsensusInputs {
-		if cd.Err() != nil {
-			return &pb.SimpleConsensusInputs{Observation: &pb.SimpleConsensusInputs_Error{Error: cd.Err().Error()}}
+		if ca.Err() != nil {
+			return &pb.SimpleConsensusInputs{Observation: &pb.SimpleConsensusInputs_Error{Error: ca.Err().Error()}}
 		}
 
 		var defaultValue values.Value
-		descriptor := cd.Descriptor()
+		descriptor := ca.Descriptor()
 		var err error
-		if d := cd.Default(); d != nil {
+		if d := ca.Default(); d != nil {
 			defaultValue, err = values.Wrap(d)
 			if err != nil {
 				return &pb.SimpleConsensusInputs{Observation: &pb.SimpleConsensusInputs_Error{Error: err.Error()}}

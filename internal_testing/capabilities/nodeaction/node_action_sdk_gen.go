@@ -4,6 +4,7 @@ package nodeaction
 
 import (
 	"errors"
+	"log/slog"
 
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -14,6 +15,30 @@ import (
 
 type BasicAction struct {
 	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 allow defaults for capabilities
+}
+
+type PerformActioner struct {
+	client      *BasicAction
+	nodeRuntime cre.NodeRuntime
+}
+
+func (c *PerformActioner) PerformAction(input *NodeInputs) cre.Promise[*NodeOutputs] {
+	return c.client.PerformAction(c.nodeRuntime, input)
+}
+
+// PerformAction Allows usage of `PerformActioner` with Byzantine fault tolerance.
+func PerformAction[C, T any](
+	config C,
+	runtime cre.Runtime,
+	client *BasicAction,
+	fn func(config C, logger *slog.Logger, performActioner *PerformActioner) (T, error),
+	ca cre.ConsensusAggregation[T]) cre.Promise[T] {
+	wrapped := func(config C, nodeRuntime cre.NodeRuntime) (T, error) {
+		performActioner := PerformActioner{client: client, nodeRuntime: nodeRuntime}
+		return fn(config, runtime.Logger(), &performActioner)
+	}
+
+	return cre.RunInNodeMode(config, runtime, wrapped, ca)
 }
 
 func (c *BasicAction) PerformAction(runtime cre.NodeRuntime, input *NodeInputs) cre.Promise[*NodeOutputs] {
