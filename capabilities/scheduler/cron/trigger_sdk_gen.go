@@ -6,14 +6,14 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
-	"github.com/smartcontractkit/cre-sdk-go/sdk"
+	"github.com/smartcontractkit/cre-sdk-go/cre"
 )
 
 type Cron struct {
 	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 allow defaults for capabilities
 }
 
-func Trigger(config *Config) sdk.Trigger[*Payload, *Payload] {
+func Trigger(config *Config) cre.Trigger[*Payload, *Payload] {
 	configAny := &anypb.Any{}
 	_ = anypb.MarshalFrom(configAny, config, proto.MarshalOptions{Deterministic: true})
 	return &cronTrigger{
