@@ -7,8 +7,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/smartcontractkit/cre-sdk-go/cre/testutils/registry"
 	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basicaction/mock"
-	"github.com/smartcontractkit/cre-sdk-go/sdk/testutils/registry"
 )
 
 func TestRegisterCapability(t *testing.T) {

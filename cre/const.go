@@ -1,4 +1,4 @@
-package sdk
+package cre
 
 const (
 	DefaultMaxResponseSizeBytes = 5 * 1024 * 1024 // 5 MB

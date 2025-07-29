@@ -3,9 +3,9 @@ package main
 import (
 	"errors"
 
+	"github.com/smartcontractkit/cre-sdk-go/cre"
+	"github.com/smartcontractkit/cre-sdk-go/cre/wasm"
 	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basictrigger"
-	"github.com/smartcontractkit/cre-sdk-go/sdk"
-	"github.com/smartcontractkit/cre-sdk-go/sdk/wasm"
 )
 
 func main() {
@@ -15,15 +15,15 @@ func main() {
 	runner.Run(initFn)
 }
 
-func initFn(_ *sdk.Environment[[]byte]) (sdk.Workflow[[]byte], error) {
-	return sdk.Workflow[[]byte]{
-		sdk.Handler(
+func initFn(_ *cre.Environment[[]byte]) (cre.Workflow[[]byte], error) {
+	return cre.Workflow[[]byte]{
+		cre.Handler(
 			basictrigger.Trigger(&basictrigger.Config{}),
 			returnConfig,
 		),
 	}, nil
 }
 
-func returnConfig(_ *sdk.Environment[[]byte], _ sdk.Runtime, _ *basictrigger.Outputs) ([]byte, error) {
+func returnConfig(_ *cre.Environment[[]byte], _ cre.Runtime, _ *basictrigger.Outputs) ([]byte, error) {
 	return nil, errors.New("workflow execution failure")
 }

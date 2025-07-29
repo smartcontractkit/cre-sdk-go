@@ -7,8 +7,8 @@ import (
 	"os"
 	"unsafe"
 
+	"github.com/smartcontractkit/cre-sdk-go/cre"
 	"github.com/smartcontractkit/cre-sdk-go/internal/sdkimpl"
-	"github.com/smartcontractkit/cre-sdk-go/sdk"
 	"google.golang.org/protobuf/proto"
 
 	"github.com/smartcontractkit/chainlink-common/pkg/values"
@@ -24,20 +24,20 @@ type runnerInternals interface {
 	switchModes(mode int32)
 }
 
-func newRunner[C Config](parse func(configBytes []byte) (C, error), runnerInternals runnerInternals, runtimeInternals runtimeInternals) sdk.Runner[C] {
+func newRunner[C Config](parse func(configBytes []byte) (C, error), runnerInternals runnerInternals, runtimeInternals runtimeInternals) cre.Runner[C] {
 	runnerInternals.versionV2()
 	runnerInternals.switchModes(int32(pb.Mode_MODE_DON))
 	drt := &sdkimpl.Runtime{RuntimeBase: newRuntime(runtimeInternals, pb.Mode_MODE_DON)}
 	return runnerWrapper[C]{baseRunner: getRunner(
 		parse,
-		&subscriber[C, sdk.Runtime]{
+		&subscriber[C, cre.Runtime]{
 			sp:              drt,
 			runnerInternals: runnerInternals,
 			setRuntime: func(maxResponseSize uint64) {
 				drt.MaxResponseSize = maxResponseSize
 			},
 		},
-		&runner[C, sdk.Runtime]{
+		&runner[C, cre.Runtime]{
 			sp:              drt,
 			runtime:         drt,
 			runnerInternals: runnerInternals,
@@ -55,22 +55,22 @@ type runner[C, T any] struct {
 	runtime    T
 	setRuntime func(maxResponseSize uint64)
 	config     C
-	sp         sdk.SecretsProvider
+	sp         cre.SecretsProvider
 }
 
-var _ baseRunner[any, sdk.Runtime] = (*runner[any, sdk.Runtime])(nil)
+var _ baseRunner[any, cre.Runtime] = (*runner[any, cre.Runtime])(nil)
 
 func (r *runner[C, T]) cfg() C {
 	return r.config
 }
 
-func (r *runner[C, T]) secretsProvider() sdk.SecretsProvider {
+func (r *runner[C, T]) secretsProvider() cre.SecretsProvider {
 	return r.sp
 }
 
-func (r *runner[C, T]) run(wfs []sdk.ExecutionHandler[C, T]) {
-	env := &sdk.Environment[C]{
-		NodeEnvironment: sdk.NodeEnvironment[C]{
+func (r *runner[C, T]) run(wfs []cre.ExecutionHandler[C, T]) {
+	env := &cre.Environment[C]{
+		NodeEnvironment: cre.NodeEnvironment[C]{
 			Config:    r.config,
 			LogWriter: &writer{},
 			Logger:    slog.New(slog.NewTextHandler(&writer{}, nil)),
@@ -102,21 +102,21 @@ type subscriber[C, T any] struct {
 	runnerInternals
 	id         string
 	config     C
-	sp         sdk.SecretsProvider
+	sp         cre.SecretsProvider
 	setRuntime func(maxResponseSize uint64)
 }
 
-var _ baseRunner[any, sdk.Runtime] = &subscriber[any, sdk.Runtime]{}
+var _ baseRunner[any, cre.Runtime] = &subscriber[any, cre.Runtime]{}
 
 func (s *subscriber[C, T]) cfg() C {
 	return s.config
 }
 
-func (s *subscriber[C, T]) secretsProvider() sdk.SecretsProvider {
+func (s *subscriber[C, T]) secretsProvider() cre.SecretsProvider {
 	return s.sp
 }
 
-func (s *subscriber[C, T]) run(wfs []sdk.ExecutionHandler[C, T]) {
+func (s *subscriber[C, T]) run(wfs []cre.ExecutionHandler[C, T]) {
 	subscriptions := make([]*pb.TriggerSubscription, len(wfs))
 	for i, handler := range wfs {
 		subscriptions[i] = &pb.TriggerSubscription{
@@ -140,9 +140,9 @@ func (s *subscriber[C, T]) run(wfs []sdk.ExecutionHandler[C, T]) {
 	}
 }
 
-func getWorkflows[C any](config C, secretsProvider sdk.SecretsProvider, initFn func(env *sdk.Environment[C]) (sdk.Workflow[C], error)) sdk.Workflow[C] {
-	wfs, err := initFn(&sdk.Environment[C]{
-		NodeEnvironment: sdk.NodeEnvironment[C]{
+func getWorkflows[C any](config C, secretsProvider cre.SecretsProvider, initFn func(env *cre.Environment[C]) (cre.Workflow[C], error)) cre.Workflow[C] {
+	wfs, err := initFn(&cre.Environment[C]{
+		NodeEnvironment: cre.NodeEnvironment[C]{
 			Config:    config,
 			LogWriter: &writer{},
 			Logger:    slog.New(slog.NewTextHandler(&writer{}, nil)),
@@ -206,16 +206,16 @@ func exitErr(msg string) {
 }
 
 type baseRunner[C, T any] interface {
-	secretsProvider() sdk.SecretsProvider
+	secretsProvider() cre.SecretsProvider
 	cfg() C
-	run([]sdk.ExecutionHandler[C, T])
+	run([]cre.ExecutionHandler[C, T])
 }
 
 type runnerWrapper[C any] struct {
-	baseRunner[C, sdk.Runtime]
+	baseRunner[C, cre.Runtime]
 }
 
-func (r runnerWrapper[C]) Run(initFn func(env *sdk.Environment[C]) (sdk.Workflow[C], error)) {
+func (r runnerWrapper[C]) Run(initFn func(env *cre.Environment[C]) (cre.Workflow[C], error)) {
 	wfs := getWorkflows(r.baseRunner.cfg(), r.baseRunner.secretsProvider(), initFn)
 	r.baseRunner.run(wfs)
 }

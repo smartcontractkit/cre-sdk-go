@@ -11,20 +11,20 @@ import (
 	"github.com/smartcontractkit/chainlink-common/pkg/values/pb"
 	pb2 "github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
 	sdkpb "github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
-	"github.com/smartcontractkit/cre-sdk-go/sdk"
+	"github.com/smartcontractkit/cre-sdk-go/cre"
 )
 
 type Consensus struct {
 	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 allow defaults for capabilities
 }
 
-func (c *Consensus) Simple(runtime sdk.Runtime, input *pb2.SimpleConsensusInputs) sdk.Promise[*pb.Value] {
+func (c *Consensus) Simple(runtime cre.Runtime, input *pb2.SimpleConsensusInputs) cre.Promise[*pb.Value] {
 	wrapped := &anypb.Any{}
 	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
-		return sdk.PromiseFromResult[*pb.Value](nil, err)
+		return cre.PromiseFromResult[*pb.Value](nil, err)
 	}
-	return sdk.Then(runtime.CallCapability(&sdkpb.CapabilityRequest{
+	return cre.Then(runtime.CallCapability(&sdkpb.CapabilityRequest{
 		Id:      "consensus@1.0.0-alpha",
 		Payload: wrapped,
 		Method:  "Simple",
@@ -42,13 +42,13 @@ func (c *Consensus) Simple(runtime sdk.Runtime, input *pb2.SimpleConsensusInputs
 	})
 }
 
-func (c *Consensus) Report(runtime sdk.Runtime, input *pb2.ReportRequest) sdk.Promise[*pb2.ReportResponse] {
+func (c *Consensus) Report(runtime cre.Runtime, input *pb2.ReportRequest) cre.Promise[*pb2.ReportResponse] {
 	wrapped := &anypb.Any{}
 	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
-		return sdk.PromiseFromResult[*pb2.ReportResponse](nil, err)
+		return cre.PromiseFromResult[*pb2.ReportResponse](nil, err)
 	}
-	return sdk.Then(runtime.CallCapability(&sdkpb.CapabilityRequest{
+	return cre.Then(runtime.CallCapability(&sdkpb.CapabilityRequest{
 		Id:      "consensus@1.0.0-alpha",
 		Payload: wrapped,
 		Method:  "Report",

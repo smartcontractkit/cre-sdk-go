@@ -9,22 +9,22 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 
 	sdkpb "github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
+	"github.com/smartcontractkit/cre-sdk-go/cre"
 	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/importclash/p1"
 	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/importclash/p2"
-	"github.com/smartcontractkit/cre-sdk-go/sdk"
 )
 
 type BasicAction struct {
 	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 allow defaults for capabilities
 }
 
-func (c *BasicAction) PerformAction(runtime sdk.Runtime, input *p1.Item) sdk.Promise[*p2.Item] {
+func (c *BasicAction) PerformAction(runtime cre.Runtime, input *p1.Item) cre.Promise[*p2.Item] {
 	wrapped := &anypb.Any{}
 	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
-		return sdk.PromiseFromResult[*p2.Item](nil, err)
+		return cre.PromiseFromResult[*p2.Item](nil, err)
 	}
-	return sdk.Then(runtime.CallCapability(&sdkpb.CapabilityRequest{
+	return cre.Then(runtime.CallCapability(&sdkpb.CapabilityRequest{
 		Id:      "import-clash@1.0.0",
 		Payload: wrapped,
 		Method:  "PerformAction",

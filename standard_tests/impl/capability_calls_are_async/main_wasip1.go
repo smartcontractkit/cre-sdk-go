@@ -1,10 +1,10 @@
 package main
 
 import (
+	"github.com/smartcontractkit/cre-sdk-go/cre"
+	"github.com/smartcontractkit/cre-sdk-go/cre/wasm"
 	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basicaction"
 	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basictrigger"
-	"github.com/smartcontractkit/cre-sdk-go/sdk"
-	"github.com/smartcontractkit/cre-sdk-go/sdk/wasm"
 )
 
 func main() {
@@ -14,9 +14,9 @@ func main() {
 	runner.Run(initFn)
 }
 
-func initFn(_ *sdk.Environment[[]byte]) (sdk.Workflow[[]byte], error) {
-	return sdk.Workflow[[]byte]{
-		sdk.Handler(
+func initFn(_ *cre.Environment[[]byte]) (cre.Workflow[[]byte], error) {
+	return cre.Workflow[[]byte]{
+		cre.Handler(
 			basictrigger.Trigger(&basictrigger.Config{
 				Name:   "first-trigger",
 				Number: 100,
@@ -26,7 +26,7 @@ func initFn(_ *sdk.Environment[[]byte]) (sdk.Workflow[[]byte], error) {
 	}, nil
 }
 
-func asyncCalls(_ *sdk.Environment[[]byte], rt sdk.Runtime, _ *basictrigger.Outputs) (string, error) {
+func asyncCalls(_ *cre.Environment[[]byte], rt cre.Runtime, _ *basictrigger.Outputs) (string, error) {
 	input1 := &basicaction.Inputs{InputThing: true}
 	input2 := &basicaction.Inputs{InputThing: false}
 	action := basicaction.BasicAction{}

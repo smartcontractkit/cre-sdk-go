@@ -8,24 +8,24 @@ import (
 	"testing"
 	"unsafe"
 
-	"github.com/smartcontractkit/cre-sdk-go/sdk/testutils/registry"
+	"github.com/smartcontractkit/cre-sdk-go/cre/testutils/registry"
 	"google.golang.org/protobuf/proto"
 
 	"github.com/stretchr/testify/require"
 
 	sdkpb "github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
-	"github.com/smartcontractkit/cre-sdk-go/sdk"
+	"github.com/smartcontractkit/cre-sdk-go/cre"
 )
 
 type runtimeInternalsTestHook struct {
 	testTb                testing.TB
 	awaitResponseOverride func() ([]byte, error)
 	callCapabilityErr     bool
-	outstandingCalls      map[int32]sdk.Promise[*sdkpb.CapabilityResponse]
+	outstandingCalls      map[int32]cre.Promise[*sdkpb.CapabilityResponse]
 	nodeSeed              int64
 	donSeed               int64
 
-	outstandingSecretsCalls map[int32]sdk.Promise[[]*sdkpb.SecretResponse]
+	outstandingSecretsCalls map[int32]cre.Promise[[]*sdkpb.SecretResponse]
 	secrets                 map[string]*sdkpb.Secret
 	mu                      sync.Mutex
 }
@@ -58,7 +58,7 @@ func (r *runtimeInternalsTestHook) callCapability(req unsafe.Pointer, reqLen int
 		respCh <- capability.Invoke(r.testTb.Context(), &request)
 	}()
 
-	r.outstandingCalls[request.CallbackId] = sdk.NewBasicPromise(func() (*sdkpb.CapabilityResponse, error) {
+	r.outstandingCalls[request.CallbackId] = cre.NewBasicPromise(func() (*sdkpb.CapabilityResponse, error) {
 		select {
 		case resp := <-respCh:
 			return resp, nil
@@ -156,7 +156,7 @@ func (r *runtimeInternalsTestHook) getSecrets(req unsafe.Pointer, reqLen int32, 
 		respCh <- resps
 	}()
 
-	r.outstandingSecretsCalls[request.CallbackId] = sdk.NewBasicPromise(func() ([]*sdkpb.SecretResponse, error) {
+	r.outstandingSecretsCalls[request.CallbackId] = cre.NewBasicPromise(func() ([]*sdkpb.SecretResponse, error) {
 		select {
 		case resp := <-respCh:
 			return resp, nil

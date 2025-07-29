@@ -10,15 +10,15 @@ import (
 
 	valuespb "github.com/smartcontractkit/chainlink-common/pkg/values/pb"
 	"github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
+	"github.com/smartcontractkit/cre-sdk-go/cre"
+	"github.com/smartcontractkit/cre-sdk-go/cre/testutils/registry"
 	"github.com/smartcontractkit/cre-sdk-go/internal/sdkimpl"
 	consensusmock "github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/consensus/mock"
-	"github.com/smartcontractkit/cre-sdk-go/sdk"
-	"github.com/smartcontractkit/cre-sdk-go/sdk/testutils/registry"
 
 	"google.golang.org/protobuf/proto"
 )
 
-func NewRuntimeAndEnv[C any](tb testing.TB, config C, secrets map[string]string) (*TestRuntime, *sdk.Environment[C]) {
+func NewRuntimeAndEnv[C any](tb testing.TB, config C, secrets map[string]string) (*TestRuntime, *cre.Environment[C]) {
 	rt := newRuntime(tb, secrets)
 	env := newEnvironment(config, rt)
 	return rt, env
@@ -42,7 +42,7 @@ func newRuntime(tb testing.TB, secrets map[string]string) *TestRuntime {
 		Runtime: sdkimpl.Runtime{
 			RuntimeBase: sdkimpl.RuntimeBase{
 				Mode:            pb.Mode_MODE_DON,
-				MaxResponseSize: sdk.DefaultMaxResponseSizeBytes,
+				MaxResponseSize: cre.DefaultMaxResponseSizeBytes,
 				RuntimeHelpers:  &runtimeHelpers{tb: tb, calls: map[int32]chan *pb.CapabilityResponse{}, secretsCalls: map[int32][]*pb.SecretResponse{}, secrets: secrets},
 			},
 		},
@@ -54,9 +54,9 @@ type TestRuntime struct {
 	*testWriter
 }
 
-func newEnvironment[C any](config C, runtime *TestRuntime) *sdk.Environment[C] {
-	return &sdk.Environment[C]{
-		NodeEnvironment: sdk.NodeEnvironment[C]{
+func newEnvironment[C any](config C, runtime *TestRuntime) *cre.Environment[C] {
+	return &cre.Environment[C]{
+		NodeEnvironment: cre.NodeEnvironment[C]{
 			Config:    config,
 			LogWriter: runtime.testWriter,
 			Logger:    slog.New(slog.NewTextHandler(runtime.testWriter, nil)),
@@ -122,8 +122,8 @@ func defaultReport(_ context.Context, input *pb.ReportRequest) (*pb.ReportRespon
 // createTestReportMetadata generates a byte slice for metadata
 // that is sdk.ReportMetadataHeaderLength long and has an assertable pattern.
 func createTestReportMetadata() []byte {
-	metadata := make([]byte, sdk.ReportMetadataHeaderLength)
-	for i := range sdk.ReportMetadataHeaderLength {
+	metadata := make([]byte, cre.ReportMetadataHeaderLength)
+	for i := range cre.ReportMetadataHeaderLength {
 		metadata[i] = byte(i % 256)
 	}
 	return metadata
@@ -193,7 +193,7 @@ func (rh *runtimeHelpers) Await(request *pb.AwaitCapabilitiesRequest, maxRespons
 
 	bytes, _ := proto.Marshal(response)
 	if len(bytes) > int(maxResponseSize) {
-		return nil, errors.New(sdk.ResponseBufferTooSmall)
+		return nil, errors.New(cre.ResponseBufferTooSmall)
 	}
 
 	return response, errors.Join(errs...)

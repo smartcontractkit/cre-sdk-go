@@ -9,20 +9,20 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 
 	sdkpb "github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
-	"github.com/smartcontractkit/cre-sdk-go/sdk"
+	"github.com/smartcontractkit/cre-sdk-go/cre"
 )
 
 type Basic struct {
 	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 allow defaults for capabilities
 }
 
-func (c *Basic) Action(runtime sdk.Runtime, input *Input) sdk.Promise[*Output] {
+func (c *Basic) Action(runtime cre.Runtime, input *Input) cre.Promise[*Output] {
 	wrapped := &anypb.Any{}
 	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
-		return sdk.PromiseFromResult[*Output](nil, err)
+		return cre.PromiseFromResult[*Output](nil, err)
 	}
-	return sdk.Then(runtime.CallCapability(&sdkpb.CapabilityRequest{
+	return cre.Then(runtime.CallCapability(&sdkpb.CapabilityRequest{
 		Id:      "basic-test-action-trigger@1.0.0",
 		Payload: wrapped,
 		Method:  "Action",
@@ -40,7 +40,7 @@ func (c *Basic) Action(runtime sdk.Runtime, input *Input) sdk.Promise[*Output] {
 	})
 }
 
-func Trigger(config *Config) sdk.Trigger[*TriggerEvent, *TriggerEvent] {
+func Trigger(config *Config) cre.Trigger[*TriggerEvent, *TriggerEvent] {
 	configAny := &anypb.Any{}
 	_ = anypb.MarshalFrom(configAny, config, proto.MarshalOptions{Deterministic: true})
 	return &basicTrigger{

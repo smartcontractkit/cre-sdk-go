@@ -10,6 +10,8 @@ import (
 	vals "github.com/smartcontractkit/chainlink-common/pkg/values"
 	valuespb "github.com/smartcontractkit/chainlink-common/pkg/values/pb"
 	"github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
+	"github.com/smartcontractkit/cre-sdk-go/cre"
+	"github.com/smartcontractkit/cre-sdk-go/cre/testutils"
 	"github.com/smartcontractkit/cre-sdk-go/internal/sdkimpl"
 	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/actionandtrigger"
 	actionandtriggermock "github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/actionandtrigger/mock"
@@ -19,8 +21,6 @@ import (
 	consensusmock "github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/consensus/mock"
 	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/nodeaction"
 	nodeactionmock "github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/nodeaction/mock"
-	"github.com/smartcontractkit/cre-sdk-go/sdk"
-	"github.com/smartcontractkit/cre-sdk-go/sdk/testutils"
 	"google.golang.org/protobuf/proto"
 
 	"github.com/stretchr/testify/assert"
@@ -50,7 +50,7 @@ func TestRuntime_CallCapability(t *testing.T) {
 			return &actionandtrigger.Output{Welcome: anyResult2}, nil
 		}
 
-		test := func(_ *sdk.Environment[string], rt sdk.Runtime, _ *basictrigger.Outputs) (string, error) {
+		test := func(_ *cre.Environment[string], rt cre.Runtime, _ *basictrigger.Outputs) (string, error) {
 			workflowAction1 := &basicaction.BasicAction{}
 			call1 := workflowAction1.PerformAction(rt, &basicaction.Inputs{InputThing: true})
 
@@ -71,7 +71,7 @@ func TestRuntime_CallCapability(t *testing.T) {
 
 	t.Run("call capability errors", func(t *testing.T) {
 		// The capability is not registered, so the call will fail.
-		test := func(_ *sdk.Environment[string], rt sdk.Runtime, _ *basictrigger.Outputs) (string, error) {
+		test := func(_ *cre.Environment[string], rt cre.Runtime, _ *basictrigger.Outputs) (string, error) {
 			workflowAction1 := &basicaction.BasicAction{}
 			call := workflowAction1.PerformAction(rt, &basicaction.Inputs{InputThing: true})
 			_, err := call.Await()
@@ -92,7 +92,7 @@ func TestRuntime_CallCapability(t *testing.T) {
 
 		capability := &basicaction.BasicAction{}
 
-		test := func(_ *sdk.Environment[string], rt sdk.Runtime, _ *basictrigger.Outputs) (string, error) {
+		test := func(_ *cre.Environment[string], rt cre.Runtime, _ *basictrigger.Outputs) (string, error) {
 			_, err := capability.PerformAction(rt, &basicaction.Inputs{InputThing: true}).Await()
 			return "", err
 		}
@@ -112,7 +112,7 @@ func TestRuntime_CallCapability(t *testing.T) {
 
 		capability := &basicaction.BasicAction{}
 
-		test := func(_ *sdk.Environment[string], rt sdk.Runtime, _ *basictrigger.Outputs) (string, error) {
+		test := func(_ *cre.Environment[string], rt cre.Runtime, _ *basictrigger.Outputs) (string, error) {
 			drt := rt.(*testutils.TestRuntime)
 			drt.RuntimeHelpers = &awaitOverride{
 				RuntimeHelpers: drt.RuntimeHelpers,
@@ -138,7 +138,7 @@ func TestRuntime_CallCapability(t *testing.T) {
 
 		capability := &basicaction.BasicAction{}
 
-		test := func(_ *sdk.Environment[string], rt sdk.Runtime, _ *basictrigger.Outputs) (string, error) {
+		test := func(_ *cre.Environment[string], rt cre.Runtime, _ *basictrigger.Outputs) (string, error) {
 			drt := rt.(*testutils.TestRuntime)
 			drt.RuntimeHelpers = &awaitOverride{
 				RuntimeHelpers: drt.RuntimeHelpers,
@@ -166,14 +166,14 @@ func TestRuntime_Rand(t *testing.T) {
 	})
 
 	t.Run("random does not allow use in the wrong mode", func(t *testing.T) {
-		test := func(env *sdk.Environment[string], rt sdk.Runtime, _ *basictrigger.Outputs) (uint64, error) {
-			return sdk.RunInNodeMode(env, rt, func(_ *sdk.NodeEnvironment[string], _ sdk.NodeRuntime) (uint64, error) {
+		test := func(env *cre.Environment[string], rt cre.Runtime, _ *basictrigger.Outputs) (uint64, error) {
+			return cre.RunInNodeMode(env, rt, func(_ *cre.NodeEnvironment[string], _ cre.NodeRuntime) (uint64, error) {
 				if _, err := rt.Rand(); err != nil {
 					return 0, err
 				}
 
 				return 0, fmt.Errorf("should not be called in node mode")
-			}, sdk.ConsensusMedianAggregation[uint64]()).Await()
+			}, cre.ConsensusMedianAggregation[uint64]()).Await()
 		}
 
 		_, err := testRuntime(t, test)
@@ -182,15 +182,15 @@ func TestRuntime_Rand(t *testing.T) {
 
 	t.Run("returned random panics if you use it in the wrong mode ", func(t *testing.T) {
 		assert.Panics(t, func() {
-			test := func(env *sdk.Environment[string], rt sdk.Runtime, _ *basictrigger.Outputs) (uint64, error) {
+			test := func(env *cre.Environment[string], rt cre.Runtime, _ *basictrigger.Outputs) (uint64, error) {
 				r, err := rt.Rand()
 				if err != nil {
 					return 0, err
 				}
-				return sdk.RunInNodeMode(env, rt, func(_ *sdk.NodeEnvironment[string], _ sdk.NodeRuntime) (uint64, error) {
+				return cre.RunInNodeMode(env, rt, func(_ *cre.NodeEnvironment[string], _ cre.NodeRuntime) (uint64, error) {
 					r.Uint64()
 					return 0, fmt.Errorf("should not be called in node mode")
-				}, sdk.ConsensusMedianAggregation[uint64]()).Await()
+				}, cre.ConsensusMedianAggregation[uint64]()).Await()
 			}
 
 			_, _ = testRuntime(t, test)
@@ -210,13 +210,13 @@ func TestDonRuntime_RunInNodeMode(t *testing.T) {
 
 		mockSimpleConsensus(t, &consensusValues[int64]{GiveObservation: int64(anyObservation), WantResponse: anyMedian})
 
-		test := func(env *sdk.Environment[string], rt sdk.Runtime, _ *basictrigger.Outputs) (int64, error) {
-			result, err := sdk.RunInNodeMode(env, rt, func(_ *sdk.NodeEnvironment[string], runtime sdk.NodeRuntime) (int64, error) {
+		test := func(env *cre.Environment[string], rt cre.Runtime, _ *basictrigger.Outputs) (int64, error) {
+			result, err := cre.RunInNodeMode(env, rt, func(_ *cre.NodeEnvironment[string], runtime cre.NodeRuntime) (int64, error) {
 				capability := &nodeaction.BasicAction{}
 				value, err := capability.PerformAction(runtime, &nodeaction.NodeInputs{InputThing: true}).Await()
 				require.NoError(t, err)
 				return int64(value.OutputThing), nil
-			}, sdk.ConsensusMedianAggregation[int64]()).Await()
+			}, cre.ConsensusMedianAggregation[int64]()).Await()
 			return result, err
 		}
 
@@ -230,10 +230,10 @@ func TestDonRuntime_RunInNodeMode(t *testing.T) {
 
 		mockSimpleConsensus(t, &consensusValues[int64]{GiveErr: anyError})
 
-		test := func(env *sdk.Environment[string], rt sdk.Runtime, _ *basictrigger.Outputs) (int64, error) {
-			return sdk.RunInNodeMode(env, rt, func(_ *sdk.NodeEnvironment[string], _ sdk.NodeRuntime) (int64, error) {
+		test := func(env *cre.Environment[string], rt cre.Runtime, _ *basictrigger.Outputs) (int64, error) {
+			return cre.RunInNodeMode(env, rt, func(_ *cre.NodeEnvironment[string], _ cre.NodeRuntime) (int64, error) {
 				return int64(0), anyError
-			}, sdk.ConsensusMedianAggregation[int64]()).Await()
+			}, cre.ConsensusMedianAggregation[int64]()).Await()
 		}
 
 		_, err := testRuntime(t, test)
@@ -248,18 +248,18 @@ func TestDonRuntime_RunInNodeMode(t *testing.T) {
 			return nil, fmt.Errorf("should not be called")
 		}
 
-		test := func(env *sdk.Environment[string], rt sdk.Runtime, input *basictrigger.Outputs) (*nodeaction.NodeOutputs, error) {
-			var nrt sdk.NodeRuntime
-			sdk.RunInNodeMode(env, rt, func(_ *sdk.NodeEnvironment[string], nodeRuntime sdk.NodeRuntime) (int32, error) {
+		test := func(env *cre.Environment[string], rt cre.Runtime, input *basictrigger.Outputs) (*nodeaction.NodeOutputs, error) {
+			var nrt cre.NodeRuntime
+			cre.RunInNodeMode(env, rt, func(_ *cre.NodeEnvironment[string], nodeRuntime cre.NodeRuntime) (int32, error) {
 				nrt = nodeRuntime
 				return 0, err
-			}, sdk.ConsensusMedianAggregation[int32]())
+			}, cre.ConsensusMedianAggregation[int32]())
 			na := nodeaction.BasicAction{}
 			return na.PerformAction(nrt, &nodeaction.NodeInputs{InputThing: true}).Await()
 		}
 
 		_, err = testRuntime(t, test)
-		assert.Equal(t, sdk.NodeModeCallInDonMode(), err)
+		assert.Equal(t, cre.NodeModeCallInDonMode(), err)
 	})
 
 	t.Run("Don runtime in Node mode fails", func(t *testing.T) {
@@ -270,17 +270,17 @@ func TestDonRuntime_RunInNodeMode(t *testing.T) {
 			return nil, errors.New("should not be called")
 		}
 
-		test := func(env *sdk.Environment[string], rt sdk.Runtime, input *basictrigger.Outputs) (int32, error) {
-			consensus := sdk.RunInNodeMode(env, rt, func(_ *sdk.NodeEnvironment[string], nodeRuntime sdk.NodeRuntime) (int32, error) {
+		test := func(env *cre.Environment[string], rt cre.Runtime, input *basictrigger.Outputs) (int32, error) {
+			consensus := cre.RunInNodeMode(env, rt, func(_ *cre.NodeEnvironment[string], nodeRuntime cre.NodeRuntime) (int32, error) {
 				action := basicaction.BasicAction{}
 				_, err := action.PerformAction(rt, &basicaction.Inputs{InputThing: true}).Await()
 				return 0, err
-			}, sdk.ConsensusMedianAggregation[int32]())
+			}, cre.ConsensusMedianAggregation[int32]())
 
 			return consensus.Await()
 		}
 		_, err = testRuntime(t, test)
-		assert.Equal(t, sdk.DonModeCallInNodeMode(), err)
+		assert.Equal(t, cre.DonModeCallInNodeMode(), err)
 	})
 }
 
@@ -289,7 +289,7 @@ func TestNewEnvironment_ReturnsConfig(t *testing.T) {
 	assert.Equal(t, anyEnvConfig, env.Config)
 }
 
-func testRuntime[T any](t *testing.T, testFn func(env *sdk.Environment[string], rt sdk.Runtime, _ *basictrigger.Outputs) (T, error)) (any, error) {
+func testRuntime[T any](t *testing.T, testFn func(env *cre.Environment[string], rt cre.Runtime, _ *basictrigger.Outputs) (T, error)) (any, error) {
 	runtime, env := testutils.NewRuntimeAndEnv(t, anyEnvConfig, map[string]string{})
 	return testFn(env, runtime, anyTrigger)
 }

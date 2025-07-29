@@ -1,10 +1,10 @@
 package main
 
 import (
+	"github.com/smartcontractkit/cre-sdk-go/cre"
+	"github.com/smartcontractkit/cre-sdk-go/cre/wasm"
 	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basictrigger"
 	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/nodeaction"
-	"github.com/smartcontractkit/cre-sdk-go/sdk"
-	"github.com/smartcontractkit/cre-sdk-go/sdk/wasm"
 )
 
 func main() {
@@ -14,25 +14,25 @@ func main() {
 	runner.Run(initFn)
 }
 
-func initFn(_ *sdk.Environment[[]byte]) (sdk.Workflow[[]byte], error) {
-	return sdk.Workflow[[]byte]{
-		sdk.Handler(
+func initFn(_ *cre.Environment[[]byte]) (cre.Workflow[[]byte], error) {
+	return cre.Workflow[[]byte]{
+		cre.Handler(
 			basictrigger.Trigger(&basictrigger.Config{}),
 			breakClosure,
 		),
 	}, nil
 }
 
-func breakClosure(env *sdk.Environment[[]byte], rt sdk.Runtime, _ *basictrigger.Outputs) (int32, error) {
-	var nrt sdk.NodeRuntime
-	_, err := sdk.RunInNodeMode(
+func breakClosure(env *cre.Environment[[]byte], rt cre.Runtime, _ *basictrigger.Outputs) (int32, error) {
+	var nrt cre.NodeRuntime
+	_, err := cre.RunInNodeMode(
 		env,
 		rt,
-		func(_ *sdk.NodeEnvironment[[]byte], r sdk.NodeRuntime) (string, error) {
+		func(_ *cre.NodeEnvironment[[]byte], r cre.NodeRuntime) (string, error) {
 			nrt = r
 			return "hi", nil
 		},
-		sdk.ConsensusIdenticalAggregation[string](),
+		cre.ConsensusIdenticalAggregation[string](),
 	).Await()
 	if err != nil {
 		return 0, err
