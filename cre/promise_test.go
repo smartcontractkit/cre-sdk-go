@@ -85,3 +85,37 @@ func TestThenHandlesFnError(t *testing.T) {
 	_, err := chained.Await()
 	assert.ErrorIs(t, err, fnErr)
 }
+
+func TestThenPromiseChainsCorrectly(t *testing.T) {
+	p := cre.PromiseFromResult(3, nil)
+	chained := cre.ThenPromise(p, func(i int) cre.Promise[string] {
+		return cre.PromiseFromResult(string(rune('A'+i)), nil)
+	})
+
+	result, err := chained.Await()
+	assert.NoError(t, err)
+	assert.Equal(t, "D", result)
+}
+
+func TestThenPromisePropagatesError(t *testing.T) {
+	expectedErr := errors.New("boom")
+	p := cre.PromiseFromResult[int](0, expectedErr)
+
+	chained := cre.ThenPromise(p, func(i int) cre.Promise[string] {
+		return cre.PromiseFromResult("should not happen", nil)
+	})
+
+	_, err := chained.Await()
+	assert.ErrorIs(t, err, expectedErr)
+}
+
+func TestThenPromiseHandlesFnError(t *testing.T) {
+	p := cre.PromiseFromResult(123, nil)
+	fnErr := errors.New("failed")
+	chained := cre.ThenPromise(p, func(i int) cre.Promise[string] {
+		return cre.PromiseFromResult("", fnErr)
+	})
+
+	_, err := chained.Await()
+	assert.ErrorIs(t, err, fnErr)
+}

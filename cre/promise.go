@@ -42,3 +42,14 @@ func Then[I, O any](p Promise[I], fn func(I) (O, error)) Promise[O] {
 		return fn(underlyingResult)
 	})
 }
+
+func ThenPromise[I, O any](p Promise[I], fn func(I) Promise[O]) Promise[O] {
+	return NewBasicPromise[O](func() (O, error) {
+		underlyingResult, err := p.Await()
+		if err != nil {
+			var o O
+			return o, err
+		}
+		return fn(underlyingResult).Await()
+	})
+}
