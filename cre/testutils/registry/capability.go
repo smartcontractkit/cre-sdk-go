@@ -6,15 +6,8 @@ import (
 	"github.com/smartcontractkit/chainlink-protos/cre/go/sdk"
 )
 
+// Capability is meant to be implemented by generated code for capability mocks.
 type Capability interface {
 	Invoke(ctx context.Context, request *sdk.CapabilityRequest) *sdk.CapabilityResponse
 	ID() string
 }
-
-type ErrNoTriggerStub string
-
-func (n ErrNoTriggerStub) Error() string {
-	return "Stub not implemented for trigger: " + string(n)
-}
-
-var _ error = ErrNoTriggerStub("")

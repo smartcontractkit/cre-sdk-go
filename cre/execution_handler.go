@@ -13,6 +13,8 @@ type ExecutionHandler[C, R any] interface {
 	Callback() func(config C, runtime R, payload *anypb.Any) (any, error)
 }
 
+// Handler creates a coupling of a Trigger and a callback function to be used by the SDK.
+// The coupling ensures that when the Trigger is invoked, the callback function is called with the appropriate parameters.
 func Handler[C any, M proto.Message, T any, O any](trigger Trigger[M, T], callback func(config C, runtime Runtime, payload T) (O, error)) ExecutionHandler[C, Runtime] {
 	return handler(trigger, callback)
 }

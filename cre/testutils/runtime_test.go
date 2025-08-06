@@ -26,7 +26,7 @@ func TestRuntime_CallCapability(t *testing.T) {
 			return &basicaction.Outputs{AdaptedThing: strings.Repeat("a", cre.DefaultMaxResponseSizeBytes+1)}, nil
 		}
 
-		rt := testutils.NewRuntime(t, map[string]string{})
+		rt := testutils.NewRuntime(t, nil)
 		workflowAction1 := &basicaction.BasicAction{}
 		call := workflowAction1.PerformAction(rt, &basicaction.Inputs{InputThing: true})
 		_, err = call.Await()
@@ -37,7 +37,7 @@ func TestRuntime_CallCapability(t *testing.T) {
 }
 
 func TestRuntime_ReturnsErrorsFromCapabilitiesThatDoNotExist(t *testing.T) {
-	rt := testutils.NewRuntime(t, map[string]string{})
+	rt := testutils.NewRuntime(t, nil)
 	workflowAction1 := &basicaction.BasicAction{}
 	call := workflowAction1.PerformAction(rt, &basicaction.Inputs{InputThing: true})
 	_, err := call.Await()
@@ -53,7 +53,7 @@ func TestRuntime_ConsensusReturnsTheObservation(t *testing.T) {
 		return &nodeaction.NodeOutputs{OutputThing: anyValue}, nil
 	}
 
-	rt := testutils.NewRuntime(t, map[string]string{})
+	rt := testutils.NewRuntime(t, nil)
 	require.NoError(t, err)
 
 	consensus := cre.RunInNodeMode("", rt, func(_ string, nodeRuntime cre.NodeRuntime) (int32, error) {
@@ -72,7 +72,7 @@ func TestRuntime_ConsensusReturnsTheObservation(t *testing.T) {
 func TestRuntime_ConsensusReturnsTheDefaultValue(t *testing.T) {
 	anyValue := int32(100)
 
-	runtime := testutils.NewRuntime(t, map[string]string{})
+	runtime := testutils.NewRuntime(t, nil)
 	consensus := cre.RunInNodeMode(
 		"",
 		runtime,
@@ -87,7 +87,7 @@ func TestRuntime_ConsensusReturnsTheDefaultValue(t *testing.T) {
 }
 
 func TestRuntime_ConsensusReturnsErrors(t *testing.T) {
-	runtime := testutils.NewRuntime(t, map[string]string{})
+	runtime := testutils.NewRuntime(t, nil)
 	anyErr := errors.New("no consensus")
 	consensus := cre.RunInNodeMode(
 		"",
