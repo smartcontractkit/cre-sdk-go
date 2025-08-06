@@ -26,7 +26,7 @@ func TestRuntime_CallCapability(t *testing.T) {
 			return &basicaction.Outputs{AdaptedThing: strings.Repeat("a", cre.DefaultMaxResponseSizeBytes+1)}, nil
 		}
 
-		rt, _ := testutils.NewRuntimeAndEnv(t, "", map[string]string{})
+		rt := testutils.NewRuntime(t, map[string]string{})
 		workflowAction1 := &basicaction.BasicAction{}
 		call := workflowAction1.PerformAction(rt, &basicaction.Inputs{InputThing: true})
 		_, err = call.Await()
@@ -37,7 +37,7 @@ func TestRuntime_CallCapability(t *testing.T) {
 }
 
 func TestRuntime_ReturnsErrorsFromCapabilitiesThatDoNotExist(t *testing.T) {
-	rt, _ := testutils.NewRuntimeAndEnv(t, "", map[string]string{})
+	rt := testutils.NewRuntime(t, map[string]string{})
 	workflowAction1 := &basicaction.BasicAction{}
 	call := workflowAction1.PerformAction(rt, &basicaction.Inputs{InputThing: true})
 	_, err := call.Await()
@@ -53,10 +53,10 @@ func TestRuntime_ConsensusReturnsTheObservation(t *testing.T) {
 		return &nodeaction.NodeOutputs{OutputThing: anyValue}, nil
 	}
 
-	rt, env := testutils.NewRuntimeAndEnv(t, "anything", map[string]string{})
+	rt := testutils.NewRuntime(t, map[string]string{})
 	require.NoError(t, err)
 
-	consensus := cre.RunInNodeMode(env, rt, func(_ *cre.NodeEnvironment[string], nodeRuntime cre.NodeRuntime) (int32, error) {
+	consensus := cre.RunInNodeMode("", rt, func(_ string, nodeRuntime cre.NodeRuntime) (int32, error) {
 		action := &nodeaction.BasicAction{}
 		resp, err := action.PerformAction(nodeRuntime, &nodeaction.NodeInputs{InputThing: true}).Await()
 		require.NoError(t, err)
@@ -72,11 +72,11 @@ func TestRuntime_ConsensusReturnsTheObservation(t *testing.T) {
 func TestRuntime_ConsensusReturnsTheDefaultValue(t *testing.T) {
 	anyValue := int32(100)
 
-	runtime, env := testutils.NewRuntimeAndEnv(t, "anything", map[string]string{})
+	runtime := testutils.NewRuntime(t, map[string]string{})
 	consensus := cre.RunInNodeMode(
-		env,
+		"",
 		runtime,
-		func(_ *cre.NodeEnvironment[string], nodeRuntime cre.NodeRuntime) (int32, error) {
+		func(_ string, nodeRuntime cre.NodeRuntime) (int32, error) {
 			return 0, errors.New("no consensus")
 		},
 		cre.ConsensusMedianAggregation[int32]().WithDefault(anyValue))
@@ -87,12 +87,12 @@ func TestRuntime_ConsensusReturnsTheDefaultValue(t *testing.T) {
 }
 
 func TestRuntime_ConsensusReturnsErrors(t *testing.T) {
-	runtime, env := testutils.NewRuntimeAndEnv(t, "anything", map[string]string{})
+	runtime := testutils.NewRuntime(t, map[string]string{})
 	anyErr := errors.New("no consensus")
 	consensus := cre.RunInNodeMode(
-		env,
+		"",
 		runtime,
-		func(_ *cre.NodeEnvironment[string], nodeRuntime cre.NodeRuntime) (int32, error) {
+		func(_ string, nodeRuntime cre.NodeRuntime) (int32, error) {
 			return 0, anyErr
 		},
 		cre.ConsensusMedianAggregation[int32]())
@@ -108,7 +108,7 @@ func TestRuntime_CallsReportMethod(t *testing.T) {
 	}
 	expectedRawReport := append(expectedMetadata, expectedInputPayload...)
 
-	runtime, _ := testutils.NewRuntimeAndEnv(t, "test_config", nil)
+	runtime := testutils.NewRuntime(t, nil)
 	reportRequest := &pb.ReportRequest{
 		EncodedPayload: expectedInputPayload,
 		EncoderName:    "my-encoder",

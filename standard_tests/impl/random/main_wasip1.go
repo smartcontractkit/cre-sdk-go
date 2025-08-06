@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log/slog"
 	"strconv"
 
 	"github.com/smartcontractkit/cre-sdk-go/cre"
@@ -16,7 +17,7 @@ func main() {
 	runner.Run(initFn)
 }
 
-func initFn(_ *cre.Environment[[]byte]) (cre.Workflow[[]byte], error) {
+func initFn([]byte, *slog.Logger, cre.SecretsProvider) (cre.Workflow[[]byte], error) {
 	return cre.Workflow[[]byte]{
 		cre.Handler(
 			basictrigger.Trigger(&basictrigger.Config{
@@ -32,7 +33,7 @@ type resultType struct {
 	OutputThing int32 `consensus_aggregation:"median"`
 }
 
-func proveRand(env *cre.Environment[[]byte], r cre.Runtime, _ *basictrigger.Outputs) (uint64, error) {
+func proveRand(config []byte, r cre.Runtime, _ *basictrigger.Outputs) (uint64, error) {
 	dr, err := r.Rand()
 	if err != nil {
 		return 0, err
@@ -40,7 +41,7 @@ func proveRand(env *cre.Environment[[]byte], r cre.Runtime, _ *basictrigger.Outp
 
 	total := dr.Uint64()
 	_, err = cre.RunInNodeMode(
-		env,
+		config,
 		r,
 		nodeMode,
 		cre.ConsensusAggregationFromTags[*resultType]().WithDefault(&resultType{OutputThing: 123}),
@@ -53,7 +54,7 @@ func proveRand(env *cre.Environment[[]byte], r cre.Runtime, _ *basictrigger.Outp
 	return total, nil
 }
 
-func nodeMode(env *cre.NodeEnvironment[[]byte], nrt cre.NodeRuntime) (*resultType, error) {
+func nodeMode(_ []byte, nrt cre.NodeRuntime) (*resultType, error) {
 	input := &nodeaction.NodeInputs{InputThing: true}
 	result, err := (&nodeaction.BasicAction{}).PerformAction(nrt, input).Await()
 	if err != nil {
@@ -66,7 +67,7 @@ func nodeMode(env *cre.NodeEnvironment[[]byte], nrt cre.NodeRuntime) (*resultTyp
 			return nil, err
 		}
 
-		env.Logger.Info("***" + strconv.FormatUint(nr.Uint64(), 10) + "***")
+		nrt.Logger().Info("***" + strconv.FormatUint(nr.Uint64(), 10) + "***")
 	}
 
 	return &resultType{OutputThing: result.OutputThing}, nil

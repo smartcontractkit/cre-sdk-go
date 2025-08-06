@@ -2,6 +2,7 @@ package wasm
 
 import (
 	"encoding/base64"
+	"log/slog"
 	"testing"
 
 	"github.com/smartcontractkit/chainlink-common/pkg/values"
@@ -51,8 +52,8 @@ func TestRunner_CreateWorkflows(t *testing.T) {
 
 func TestRunner_GetSecrets_PassesMaxResponseSize(t *testing.T) {
 	dr := getTestRunner(t, subscribeRequest)
-	dr.Run(func(env *cre.Environment[string]) (cre.Workflow[string], error) {
-		_, err := env.GetSecret(&pb.SecretRequest{Namespace: "Foo", Id: "Bar"}).Await()
+	dr.Run(func(_ string, _ *slog.Logger, secretsProvider cre.SecretsProvider) (cre.Workflow[string], error) {
+		_, err := secretsProvider.GetSecret(&pb.SecretRequest{Namespace: "Foo", Id: "Bar"}).Await()
 		// This will fail with "buffer cannot be empty" if we fail to pass the maxResponseSize from the
 		// runner to the runtime.
 		assert.ErrorContains(t, err, "secret Foo.Bar not found")
@@ -60,7 +61,7 @@ func TestRunner_GetSecrets_PassesMaxResponseSize(t *testing.T) {
 		return cre.Workflow[string]{
 			cre.Handler(
 				basictrigger.Trigger(testutils.TestWorkflowTriggerConfig()),
-				func(env *cre.Environment[string], _ cre.Runtime, _ *basictrigger.Outputs) (int, error) {
+				func(string, cre.Runtime, *basictrigger.Outputs) (int, error) {
 					return 0, nil
 				}),
 		}, nil
@@ -70,11 +71,11 @@ func TestRunner_GetSecrets_PassesMaxResponseSize(t *testing.T) {
 func TestRunner_Run(t *testing.T) {
 	t.Run("runner gathers subscriptions", func(t *testing.T) {
 		dr := getTestRunner(t, subscribeRequest)
-		dr.Run(func(_ *cre.Environment[string]) (cre.Workflow[string], error) {
+		dr.Run(func(string, *slog.Logger, cre.SecretsProvider) (cre.Workflow[string], error) {
 			return cre.Workflow[string]{
 				cre.Handler(
 					basictrigger.Trigger(testutils.TestWorkflowTriggerConfig()),
-					func(_ *cre.Environment[string], _ cre.Runtime, _ *basictrigger.Outputs) (int, error) {
+					func(string, cre.Runtime, *basictrigger.Outputs) (int, error) {
 						require.Fail(t, "Must not be called during registration to tiggers")
 						return 0, nil
 					}),
@@ -155,10 +156,9 @@ func TestRunner_Run(t *testing.T) {
 
 func assertEnv(t *testing.T, r cre.Runner[string]) {
 	ran := false
-	verifyEnv := func(env *cre.Environment[string]) (cre.Workflow[string], error) {
+	verifyEnv := func(config string, logger *slog.Logger, secretsProvider cre.SecretsProvider) (cre.Workflow[string], error) {
 		ran = true
-		assert.Equal(t, string(anyConfig), env.Config)
-		assert.IsType(t, &writer{}, env.LogWriter)
+		assert.Equal(t, string(anyConfig), config)
 		return cre.Workflow[string]{}, nil
 
 	}

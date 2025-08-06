@@ -1,14 +1,15 @@
 package testutils
 
 import (
-	"github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
+	"log/slog"
+
 	"github.com/smartcontractkit/cre-sdk-go/cre"
 	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basicaction"
 	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basictrigger"
 )
 
 func RunTestWorkflow(runner cre.Runner[string]) {
-	runner.Run(func(env *cre.Environment[string]) (cre.Workflow[string], error) {
+	runner.Run(func(config string, _ *slog.Logger, _ cre.SecretsProvider) (cre.Workflow[string], error) {
 		return cre.Workflow[string]{
 			cre.Handler(
 				basictrigger.Trigger(TestWorkflowTriggerConfig()),
@@ -18,7 +19,7 @@ func RunTestWorkflow(runner cre.Runner[string]) {
 }
 
 func RunIdenticalTriggersWorkflow(runner cre.Runner[string]) {
-	runner.Run(func(env *cre.Environment[string]) (cre.Workflow[string], error) {
+	runner.Run(func(string, *slog.Logger, cre.SecretsProvider) (cre.Workflow[string], error) {
 		return cre.Workflow[string]{
 			cre.Handler(
 				basictrigger.Trigger(TestWorkflowTriggerConfig()),
@@ -29,8 +30,8 @@ func RunIdenticalTriggersWorkflow(runner cre.Runner[string]) {
 					Name:   "second-trigger",
 					Number: 200,
 				}),
-				func(env *cre.Environment[string], rt cre.Runtime, outputs *basictrigger.Outputs) (string, error) {
-					res, err := onTrigger(env, rt, outputs)
+				func(config string, rt cre.Runtime, outputs *basictrigger.Outputs) (string, error) {
+					res, err := onTrigger(config, rt, outputs)
 					if err != nil {
 						return "", err
 					}
@@ -41,8 +42,8 @@ func RunIdenticalTriggersWorkflow(runner cre.Runner[string]) {
 	})
 }
 
-func onTrigger(env *cre.Environment[string], runtime cre.Runtime, outputs *basictrigger.Outputs) (string, error) {
-	env.Logger.Info("Hi")
+func onTrigger(_ string, runtime cre.Runtime, outputs *basictrigger.Outputs) (string, error) {
+	runtime.Logger().Info("Hi")
 	action := basicaction.BasicAction{ /* TODO config */ }
 	first := action.PerformAction(runtime, &basicaction.Inputs{InputThing: false})
 	firstResult, err := first.Await()
@@ -57,24 +58,4 @@ func onTrigger(env *cre.Environment[string], runtime cre.Runtime, outputs *basic
 	}
 
 	return outputs.CoolOutput + firstResult.AdaptedThing + secondResult.AdaptedThing, nil
-}
-
-func RunTestSecretsWorkflow(runner cre.Runner[string]) {
-	runner.Run(func(env *cre.Environment[string]) (cre.Workflow[string], error) {
-		_, err := env.GetSecret(&pb.SecretRequest{Id: "Foo"}).Await()
-		if err != nil {
-			return nil, err
-		}
-		return cre.Workflow[string]{
-			cre.Handler(
-				basictrigger.Trigger(TestWorkflowTriggerConfig()),
-				func(env *cre.Environment[string], rt cre.Runtime, outputs *basictrigger.Outputs) (string, error) {
-					secret, err := env.GetSecret(&pb.SecretRequest{Id: "Foo"}).Await()
-					if err != nil {
-						return "", err
-					}
-					return secret.Value, nil
-				}),
-		}, nil
-	})
 }

@@ -24,6 +24,7 @@ func newRuntime(internals runtimeInternals, mode sdkpb.Mode) sdkimpl.RuntimeBase
 	return sdkimpl.RuntimeBase{
 		Mode:           mode,
 		RuntimeHelpers: &runtimeHelper{runtimeInternals: internals},
+		Lggr:           newSlogger(),
 	}
 }
 
