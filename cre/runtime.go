@@ -41,6 +41,15 @@ type Runtime interface {
 	SecretsProvider
 }
 
+// ConsensusAggregation is an interface that informs consensus how to aggregate values.
+// Workflow author do not need to implement this interface directly; instead the helper functions
+// below can be used to create instances of this interface:
+// - ConsensusMedianAggregation
+// - ConsensusIdenticalAggregation
+// - ConsensusCommonPrefixAggregation
+// - ConsensusCommonSuffixAggregation
+// - ConsensusAggregationFromTags
+// By using this interface with capability SDKs or RunInNodeMode, you are assured that all aggregated values are Byzantine fault-tolerant.
 type ConsensusAggregation[T any] interface {
 	Descriptor() *pb.ConsensusDescriptor
 	Default() *T
