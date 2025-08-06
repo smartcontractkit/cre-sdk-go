@@ -1,0 +1,43 @@
+{{define "wrap_report"}}
+{{ if eq .GoPackageName .Message.GoIdent.GoImportPath.String }}
+{{ $wrappedType := WrapMessage .Message }}
+{{ if and (ne $wrappedType .Message.GoIdent) (RegisterType $wrappedType) }}
+{{ if .Message.Comments.Leading.String }}// {{name $wrappedType .GoPackageName}} {{CleanComments .Message.Comments.Leading.String}} {{ end }}
+type {{name $wrappedType .GoPackageName}} struct { {{- if .Message.Comments.Trailing.String }}// {{name $wrappedType .GoPackageName}} {{CleanComments .Message.Comments.Trailing.String}} {{ end }}
+    {{ range $field := .Message.Fields }}
+    {{ if $field.Comments.Leading.String }}// {{CleanComments $field.Comments.Leading.String}} {{ end }}
+    {{ $field.GoName }}  {{ FieldGoType $field $.GoPackageName }} {{- if $field.Comments.Trailing.String }}// {{CleanComments $field.Comments.Trailing.String}} {{ end }}
+    {{ end }}
+}
+
+// X_GeneratedCodeOnly_Wrap{{$wrappedType.GoName}} is only meant to be used by the generated code.
+func X_GeneratedCodeOnly_Wrap_{{$wrappedType.GoName}}(i *{{name .Message.GoIdent .GoPackageName}}) (*{{name $wrappedType .GoPackageName}}, error) { //nolint
+    {{ range $field := .Message.Fields }}
+        {{ if IsFieldReport $field}}
+        {{ LowerFirst $field.GoName }}, err :=  cre.X_GeneratedCodeOnly_WrapReport(i.{{$field.GoName}})
+            if err != nil {
+                return nil, fmt.Errorf("failed to wrap report for field %s: %w", "{{ $field.GoName }}", err)
+            }
+        {{ else }}
+        {{ LowerFirst $field.GoName }} :=  i.{{ $field.GoName }}
+        {{ end }}
+    {{- end }}
+
+    return &{{name $wrappedType .GoPackageName}}{
+    {{ range $field := .Message.Fields }}
+            {{ $field.GoName }}: {{LowerFirst $field.GoName}},
+    {{- end }}
+    }, nil
+}
+
+// X_GeneratedCodeOnly_Unwrap is only meant to be used by the generated code.
+func (i *{{name $wrappedType .GoPackageName}}) X_GeneratedCodeOnly_Unwrap() *{{name .Message.GoIdent .GoPackageName}} { //nolint
+    return &{{name .Message.GoIdent .GoPackageName}}{
+    {{ range $field := .Message.Fields }}
+            {{ $field.GoName }}:  i.{{ $field.GoName }}{{ if IsFieldReport $field}}.X_GeneratedCodeOnly_Unwrap(){{ end }},
+    {{- end }}
+    }
+}
+{{ end }}
+{{ end }}
+{{ end }}
