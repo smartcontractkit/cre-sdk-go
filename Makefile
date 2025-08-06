@@ -33,3 +33,31 @@ clean-generate: clean generate
 .PHONY: test
 test: gomods
 	gomods -s proto_vendor -go test ./...
+
+CRE_BRANCH ?= main
+
+update-capabilities:
+	@echo "Finding go.mod files under capabilities/..."
+	@dirs=$$(find capabilities -name go.mod -exec dirname {} \;); \
+	echo "Found directories:" $$dirs; \
+	failed=(); \
+	for dir in $$dirs; do \
+		( \
+			echo "Updating SDK in $$dir..."; \
+			cd $$dir && \
+			go get github.com/smartcontractkit/cre-sdk-go@`git log $${CRE_BRANCH} -n 1 --pretty=format:"%H"` && \
+			go mod tidy && \
+			go generate . && \
+			echo "✅ $$dir success" \
+		) || failed+=($$dir) & \
+	done; \
+	wait; \
+	if [ $${#failed[@]} -ne 0 ]; then \
+		echo ""; \
+		echo "❌ SDK update failed in the following directories:"; \
+		for f in $${failed[@]}; do echo " - $$f"; done; \
+		exit 1; \
+	else \
+		echo ""; \
+		echo "✅ All SDK updates completed successfully."; \
+	fi
