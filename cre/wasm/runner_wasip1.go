@@ -39,3 +39,7 @@ func (r runnerInternalsImpl) versionV2() {
 func (r runnerInternalsImpl) switchModes(mode int32) {
 	switchModes(mode)
 }
+
+func (r runnerInternalsImpl) exit() {
+	os.Exit(0)
+}
