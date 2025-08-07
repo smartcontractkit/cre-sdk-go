@@ -1,5 +1,7 @@
 package cre
 
+import "log/slog"
+
 type Runner[C any] interface {
-	Run(initFn func(env *Environment[C]) (Workflow[C], error))
+	Run(initFn func(config C, logger *slog.Logger, secretsProvider SecretsProvider) (Workflow[C], error))
 }

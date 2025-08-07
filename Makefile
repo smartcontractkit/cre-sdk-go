@@ -48,6 +48,7 @@ update-capabilities:
 			go get github.com/smartcontractkit/cre-sdk-go@`git log $${CRE_BRANCH} -n 1 --pretty=format:"%H"` && \
 			go mod tidy && \
 			go generate . && \
+			go test ./... && \
 			echo "✅ $$dir success" \
 		) || failed+=($$dir) & \
 	done; \

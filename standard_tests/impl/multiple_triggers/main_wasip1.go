@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log/slog"
 
 	"github.com/smartcontractkit/cre-sdk-go/cre"
 	"github.com/smartcontractkit/cre-sdk-go/cre/wasm"
@@ -16,7 +17,7 @@ func main() {
 	runner.Run(initFn)
 }
 
-func initFn(_ *cre.Environment[[]byte]) (cre.Workflow[[]byte], error) {
+func initFn([]byte, *slog.Logger, cre.SecretsProvider) (cre.Workflow[[]byte], error) {
 	return cre.Workflow[[]byte]{
 		cre.Handler(
 			basictrigger.Trigger(&basictrigger.Config{
@@ -42,19 +43,15 @@ func initFn(_ *cre.Environment[[]byte]) (cre.Workflow[[]byte], error) {
 	}, nil
 }
 
-type resultType struct {
-	OutputThing int32 `consensus_aggregation:"median"`
-}
-
-func prove0(_ *cre.Environment[[]byte], _ cre.Runtime, t *basictrigger.Outputs) (string, error) {
+func prove0(_ []byte, _ cre.Runtime, t *basictrigger.Outputs) (string, error) {
 	return returnMsg(0, t.CoolOutput), nil
 }
 
-func prove1(_ *cre.Environment[[]byte], _ cre.Runtime, t *actionandtrigger.TriggerEvent) (string, error) {
+func prove1(_ []byte, _ cre.Runtime, t *actionandtrigger.TriggerEvent) (string, error) {
 	return returnMsg(1, t.CoolOutput), nil
 }
 
-func prove2(_ *cre.Environment[[]byte], _ cre.Runtime, t *basictrigger.Outputs) (string, error) {
+func prove2(_ []byte, _ cre.Runtime, t *basictrigger.Outputs) (string, error) {
 	return returnMsg(2, t.CoolOutput), nil
 }
 

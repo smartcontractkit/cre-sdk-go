@@ -15,9 +15,9 @@ import (
 )
 
 func TestRunInNodeMode_SimpleConsensusType(t *testing.T) {
-	runtime := &mockDonRuntime{}
+	runtime := &mockRuntime{}
 
-	p := RunInNodeMode(&Environment[string]{}, runtime, func(_ *NodeEnvironment[string], nr NodeRuntime) (int, error) {
+	p := RunInNodeMode("", runtime, func(_ string, nr NodeRuntime) (int, error) {
 		return 42, nil
 	}, ConsensusMedianAggregation[int]())
 
@@ -27,9 +27,9 @@ func TestRunInNodeMode_SimpleConsensusType(t *testing.T) {
 }
 
 func TestRunInNodeMode_PrimitiveConsensusWithUnusedDefault(t *testing.T) {
-	runtime := &mockDonRuntime{}
+	runtime := &mockRuntime{}
 
-	p := RunInNodeMode(&Environment[string]{}, runtime, func(_ *NodeEnvironment[string], nr NodeRuntime) (int, error) {
+	p := RunInNodeMode("", runtime, func(_ string, nr NodeRuntime) (int, error) {
 		return 99, nil
 	}, ConsensusMedianAggregation[int]().WithDefault(100))
 
@@ -39,9 +39,9 @@ func TestRunInNodeMode_PrimitiveConsensusWithUnusedDefault(t *testing.T) {
 }
 
 func TestRunInNodeMode_PrimitiveConsensusWithUsedDefault(t *testing.T) {
-	runtime := &mockDonRuntime{}
+	runtime := &mockRuntime{}
 
-	p := RunInNodeMode(&Environment[string]{}, runtime, func(_ *NodeEnvironment[string], nr NodeRuntime) (int, error) {
+	p := RunInNodeMode("", runtime, func(_ string, nr NodeRuntime) (int, error) {
 		return 0, errors.New("error")
 	}, ConsensusMedianAggregation[int]().WithDefault(100))
 
@@ -51,9 +51,9 @@ func TestRunInNodeMode_PrimitiveConsensusWithUsedDefault(t *testing.T) {
 }
 
 func TestRunInNodeMode_ErrorFromFunction(t *testing.T) {
-	runtime := &mockDonRuntime{}
+	runtime := &mockRuntime{}
 
-	p := RunInNodeMode(&Environment[string]{}, runtime, func(_ *NodeEnvironment[string], nr NodeRuntime) (int, error) {
+	p := RunInNodeMode("", runtime, func(_ string, nr NodeRuntime) (int, error) {
 		return 0, errors.New("some error")
 	}, ConsensusMedianAggregation[int]())
 
@@ -63,13 +63,13 @@ func TestRunInNodeMode_ErrorFromFunction(t *testing.T) {
 }
 
 func TestRunInNodeMode_ErrorWrappingDefault(t *testing.T) {
-	runtime := &mockDonRuntime{}
+	runtime := &mockRuntime{}
 
 	type unsupported struct {
 		Test chan int
 	}
 
-	p := RunInNodeMode(&Environment[string]{}, runtime, func(_ *NodeEnvironment[string], nr NodeRuntime) (*unsupported, error) {
+	p := RunInNodeMode("", runtime, func(_ string, nr NodeRuntime) (*unsupported, error) {
 		return nil, errors.New("some error")
 	}, &medianTestFieldDescription[*unsupported]{T: &unsupported{Test: make(chan int)}})
 
@@ -103,17 +103,21 @@ func (m mockNodeRuntime) Logger() *slog.Logger {
 
 func (m mockNodeRuntime) IsNodeRuntime() {}
 
-type mockDonRuntime struct{}
+type mockRuntime struct{}
 
-func (m *mockDonRuntime) Rand() (*rand.Rand, error) {
+func (m *mockRuntime) GetSecret(_ *SecretRequest) Promise[*Secret] {
 	panic("unused in tests")
 }
 
-func (m *mockDonRuntime) GenerateReport(_ *pb.ReportRequest) Promise[*Report] {
+func (m *mockRuntime) Rand() (*rand.Rand, error) {
 	panic("unused in tests")
 }
 
-func (m *mockDonRuntime) RunInNodeMode(fn func(nodeRuntime NodeRuntime) *pb.SimpleConsensusInputs) Promise[values.Value] {
+func (m *mockRuntime) GenerateReport(_ *pb.ReportRequest) Promise[*Report] {
+	panic("unused in tests")
+}
+
+func (m *mockRuntime) RunInNodeMode(fn func(nodeRuntime NodeRuntime) *pb.SimpleConsensusInputs) Promise[values.Value] {
 	req := fn(mockNodeRuntime{})
 
 	if errObs, ok := req.Observation.(*pb.SimpleConsensusInputs_Error); ok {
@@ -127,12 +131,12 @@ func (m *mockDonRuntime) RunInNodeMode(fn func(nodeRuntime NodeRuntime) *pb.Simp
 	return PromiseFromResult(val, nil)
 }
 
-func (m *mockDonRuntime) CallCapability(*pb.CapabilityRequest) Promise[*pb.CapabilityResponse] {
+func (m *mockRuntime) CallCapability(*pb.CapabilityRequest) Promise[*pb.CapabilityResponse] {
 	panic("not used in test")
 }
-func (m *mockDonRuntime) Config() []byte       { return nil }
-func (m *mockDonRuntime) LogWriter() io.Writer { return nil }
-func (m *mockDonRuntime) Logger() *slog.Logger { return nil }
+func (m *mockRuntime) Config() []byte       { return nil }
+func (m *mockRuntime) LogWriter() io.Writer { return nil }
+func (m *mockRuntime) Logger() *slog.Logger { return nil }
 
 type medianTestFieldDescription[T any] struct {
 	T T

@@ -2,6 +2,7 @@ package sdkimpl
 
 import (
 	"fmt"
+	"log/slog"
 	"math/rand"
 
 	"github.com/smartcontractkit/chainlink-common/pkg/values"
@@ -25,6 +26,7 @@ type RuntimeHelpers interface {
 type RuntimeBase struct {
 	MaxResponseSize uint64
 	RuntimeHelpers
+	Lggr *slog.Logger
 
 	source   rand.Source
 	source64 rand.Source64
@@ -40,6 +42,10 @@ type RuntimeBase struct {
 	//     - second call node mode: nextCallId = -2
 	//     - etc...
 	nextCallId int32
+}
+
+func (r *RuntimeBase) Logger() *slog.Logger {
+	return r.Lggr
 }
 
 var (

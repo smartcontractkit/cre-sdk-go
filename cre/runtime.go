@@ -2,6 +2,7 @@ package cre
 
 import (
 	"errors"
+	"log/slog"
 	"math/rand"
 	"reflect"
 
@@ -9,15 +10,19 @@ import (
 	"github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
 )
 
-type ReportGenerator interface {
-	GenerateReport(*pb.ReportRequest) Promise[*Report]
-}
+type SecretRequest = pb.SecretRequest
+type Secret = pb.Secret
 
 // RuntimeBase is not thread safe and must not be used concurrently.
 type RuntimeBase interface {
 	// CallCapability is meant to be called by generated code
 	CallCapability(request *pb.CapabilityRequest) Promise[*pb.CapabilityResponse]
 	Rand() (*rand.Rand, error)
+	Logger() *slog.Logger
+}
+
+type SecretsProvider interface {
+	GetSecret(*SecretRequest) Promise[*Secret]
 }
 
 // NodeRuntime is not thread safe and must not be used concurrently.
@@ -32,7 +37,8 @@ type Runtime interface {
 
 	// RunInNodeMode is meant to be used by the helper method RunInNodeMode
 	RunInNodeMode(fn func(nodeRuntime NodeRuntime) *pb.SimpleConsensusInputs) Promise[values.Value]
-	ReportGenerator
+	GenerateReport(*pb.ReportRequest) Promise[*Report]
+	SecretsProvider
 }
 
 type ConsensusAggregation[T any] interface {
@@ -123,21 +129,20 @@ func DonModeCallInNodeMode() error {
 }
 
 func RunInNodeMode[C, T any](
-	env *Environment[C],
+	config C,
 	runtime Runtime,
-	fn func(env *NodeEnvironment[C], nodeRuntime NodeRuntime) (T, error),
-	cd ConsensusAggregation[T],
+	fn func(config C, nodeRuntime NodeRuntime) (T, error),
+	ca ConsensusAggregation[T],
 ) Promise[T] {
 	observationFn := func(nodeRuntime NodeRuntime) *pb.SimpleConsensusInputs {
-		envClone := env.NodeEnvironment
-		if cd.Err() != nil {
-			return &pb.SimpleConsensusInputs{Observation: &pb.SimpleConsensusInputs_Error{Error: cd.Err().Error()}}
+		if ca.Err() != nil {
+			return &pb.SimpleConsensusInputs{Observation: &pb.SimpleConsensusInputs_Error{Error: ca.Err().Error()}}
 		}
 
 		var defaultValue values.Value
-		descriptor := cd.Descriptor()
+		descriptor := ca.Descriptor()
 		var err error
-		if d := cd.Default(); d != nil {
+		if d := ca.Default(); d != nil {
 			defaultValue, err = values.Wrap(d)
 			if err != nil {
 				return &pb.SimpleConsensusInputs{Observation: &pb.SimpleConsensusInputs_Error{Error: err.Error()}}
@@ -149,7 +154,7 @@ func RunInNodeMode[C, T any](
 			Default:     values.Proto(defaultValue),
 		}
 
-		result, err := fn(&envClone, nodeRuntime)
+		result, err := fn(config, nodeRuntime)
 		if err != nil {
 			returnValue.Observation = &pb.SimpleConsensusInputs_Error{Error: err.Error()}
 			return returnValue

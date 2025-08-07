@@ -2,9 +2,12 @@ package testutils
 
 import (
 	"context"
+	"log/slog"
 	"sync"
 	"testing"
 
+	"github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
+	"github.com/smartcontractkit/cre-sdk-go/cre"
 	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basicaction"
 	basicactionmock "github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basicaction/mock"
 	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basictrigger"
@@ -44,4 +47,24 @@ func SetupExpectedCalls(t *testing.T) {
 
 func TestWorkflowExpectedResult() string {
 	return "Hifalsetrue"
+}
+
+func RunTestSecretsWorkflow(runner cre.Runner[string]) {
+	runner.Run(func(_ string, _ *slog.Logger, secretsProvider cre.SecretsProvider) (cre.Workflow[string], error) {
+		_, err := secretsProvider.GetSecret(&pb.SecretRequest{Id: "Foo"}).Await()
+		if err != nil {
+			return nil, err
+		}
+		return cre.Workflow[string]{
+			cre.Handler(
+				basictrigger.Trigger(TestWorkflowTriggerConfig()),
+				func(_ string, rt cre.Runtime, outputs *basictrigger.Outputs) (string, error) {
+					secret, err := rt.GetSecret(&pb.SecretRequest{Id: "Foo"}).Await()
+					if err != nil {
+						return "", err
+					}
+					return secret.Value, nil
+				}),
+		}, nil
+	})
 }

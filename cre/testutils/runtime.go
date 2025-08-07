@@ -18,13 +18,7 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-func NewRuntimeAndEnv[C any](tb testing.TB, config C, secrets map[string]string) (*TestRuntime, *cre.Environment[C]) {
-	rt := newRuntime(tb, secrets)
-	env := newEnvironment(config, rt)
-	return rt, env
-}
-
-func newRuntime(tb testing.TB, secrets map[string]string) *TestRuntime {
+func NewRuntime(tb testing.TB, secrets map[string]string) *TestRuntime {
 	defaultConsensus, err := consensusmock.NewConsensusCapability(tb)
 
 	// Do not override if the user provided their own consensus method
@@ -37,13 +31,16 @@ func newRuntime(tb testing.TB, secrets map[string]string) *TestRuntime {
 		secrets = map[string]string{}
 	}
 
+	tw := &testWriter{}
+
 	return &TestRuntime{
-		testWriter: &testWriter{},
+		testWriter: tw,
 		Runtime: sdkimpl.Runtime{
 			RuntimeBase: sdkimpl.RuntimeBase{
 				Mode:            pb.Mode_MODE_DON,
 				MaxResponseSize: cre.DefaultMaxResponseSizeBytes,
 				RuntimeHelpers:  &runtimeHelpers{tb: tb, calls: map[int32]chan *pb.CapabilityResponse{}, secretsCalls: map[int32][]*pb.SecretResponse{}, secrets: secrets},
+				Lggr:            slog.New(slog.NewTextHandler(tw, &slog.HandlerOptions{})),
 			},
 		},
 	}
@@ -51,19 +48,10 @@ func newRuntime(tb testing.TB, secrets map[string]string) *TestRuntime {
 
 type TestRuntime struct {
 	sdkimpl.Runtime
-	*testWriter
+	testWriter *testWriter
 }
 
-func newEnvironment[C any](config C, runtime *TestRuntime) *cre.Environment[C] {
-	return &cre.Environment[C]{
-		NodeEnvironment: cre.NodeEnvironment[C]{
-			Config:    config,
-			LogWriter: runtime.testWriter,
-			Logger:    slog.New(slog.NewTextHandler(runtime.testWriter, nil)),
-		},
-		SecretsProvider: runtime,
-	}
-}
+var _ cre.Runtime = (*TestRuntime)(nil)
 
 func (t *TestRuntime) GetLogs() [][]byte {
 	logs := make([][]byte, len(t.testWriter.logs))
@@ -200,7 +188,7 @@ func (rh *runtimeHelpers) Await(request *pb.AwaitCapabilitiesRequest, maxRespons
 }
 
 func (rh *runtimeHelpers) GetSecrets(req *pb.GetSecretsRequest, _ uint64) error {
-	resp := []*pb.SecretResponse{}
+	var resp []*pb.SecretResponse
 	for _, secret := range req.Requests {
 		key := secret.Namespace + "/" + secret.Id
 		sec, ok := rh.secrets[key]

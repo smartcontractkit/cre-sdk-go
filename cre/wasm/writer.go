@@ -2,6 +2,7 @@ package wasm
 
 import (
 	"io"
+	"log/slog"
 )
 
 type writer struct{}
@@ -17,3 +18,7 @@ func (w *writer) Write(p []byte) (n int, err error) {
 }
 
 var _ io.Writer = (*writer)(nil)
+
+func newSlogger() *slog.Logger {
+	return slog.New(slog.NewTextHandler(&writer{}, nil))
+}

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/smartcontractkit/cre-sdk-go/cre"
@@ -18,7 +19,7 @@ func main() {
 	runner.Run(initFn)
 }
 
-func initFn(_ *cre.Environment[[]byte]) (cre.Workflow[[]byte], error) {
+func initFn([]byte, *slog.Logger, cre.SecretsProvider) (cre.Workflow[[]byte], error) {
 	return cre.Workflow[[]byte]{
 		cre.Handler(
 			basictrigger.Trigger(&basictrigger.Config{}),
@@ -31,7 +32,7 @@ type resultType struct {
 	OutputThing int32 `consensus_aggregation:"median"`
 }
 
-func changeModes(env *cre.Environment[[]byte], rt cre.Runtime, _ *basictrigger.Outputs) (string, error) {
+func changeModes(config []byte, rt cre.Runtime, _ *basictrigger.Outputs) (string, error) {
 	ignoreTimeCall()
 	dinput := &basicaction.Inputs{InputThing: true}
 	doutput, err := (&basicaction.BasicAction{}).PerformAction(rt, dinput).Await()
@@ -41,7 +42,7 @@ func changeModes(env *cre.Environment[[]byte], rt cre.Runtime, _ *basictrigger.O
 
 	defaultValue := &resultType{OutputThing: 123}
 	coutput, err := cre.RunInNodeMode(
-		env,
+		config,
 		rt,
 		nodeMode,
 		cre.ConsensusAggregationFromTags[*resultType]().WithDefault(defaultValue),
@@ -54,7 +55,7 @@ func changeModes(env *cre.Environment[[]byte], rt cre.Runtime, _ *basictrigger.O
 	return fmt.Sprintf("%s%d", doutput.AdaptedThing, coutput.OutputThing), nil
 }
 
-func nodeMode(_ *cre.NodeEnvironment[[]byte], nrt cre.NodeRuntime) (*resultType, error) {
+func nodeMode(_ []byte, nrt cre.NodeRuntime) (*resultType, error) {
 	ignoreTimeCall()
 	ninput := &nodeaction.NodeInputs{InputThing: true}
 	result, err := (&nodeaction.BasicAction{}).PerformAction(nrt, ninput).Await()
