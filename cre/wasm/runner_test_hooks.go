@@ -32,4 +32,8 @@ func (r *runnerInternalsTestHook) switchModes(mode int32) {
 	r.modeSwitched = true
 }
 
+func (r *runnerInternalsTestHook) exit() {
+	// Unlike the WASM, tests continue to execute
+}
+
 var _ runnerInternals = (*runnerInternalsTestHook)(nil)
