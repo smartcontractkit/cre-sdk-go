@@ -6,7 +6,7 @@ import (
 	"math/rand"
 	"testing"
 
-	sdkpb "github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
+	sdkpb "github.com/smartcontractkit/chainlink-protos/cre/go/sdk"
 	"github.com/smartcontractkit/cre-sdk-go/cre"
 	"github.com/smartcontractkit/cre-sdk-go/internal/sdkimpl"
 	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basicaction"

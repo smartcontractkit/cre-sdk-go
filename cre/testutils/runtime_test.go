@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
+	"github.com/smartcontractkit/chainlink-protos/cre/go/sdk"
 	"github.com/smartcontractkit/cre-sdk-go/cre"
 	"github.com/smartcontractkit/cre-sdk-go/cre/testutils"
 	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basicaction"
@@ -109,7 +109,7 @@ func TestRuntime_CallsReportMethod(t *testing.T) {
 	expectedRawReport := append(expectedMetadata, expectedInputPayload...)
 
 	runtime := testutils.NewRuntime(t, nil)
-	reportRequest := &pb.ReportRequest{
+	reportRequest := &sdk.ReportRequest{
 		EncodedPayload: expectedInputPayload,
 		EncoderName:    "my-encoder",
 		SigningAlgo:    "my-signer",

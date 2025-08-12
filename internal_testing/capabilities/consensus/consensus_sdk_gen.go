@@ -8,9 +8,9 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
-	"github.com/smartcontractkit/chainlink-common/pkg/values/pb"
-	pb2 "github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
-	sdkpb "github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
+	"github.com/smartcontractkit/chainlink-protos/cre/go/sdk"
+	sdkpb "github.com/smartcontractkit/chainlink-protos/cre/go/sdk"
+	"github.com/smartcontractkit/chainlink-protos/cre/go/values/pb"
 	"github.com/smartcontractkit/cre-sdk-go/cre"
 )
 
@@ -18,7 +18,7 @@ type Consensus struct {
 	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 allow defaults for capabilities
 }
 
-func (c *Consensus) Simple(runtime cre.Runtime, input *pb2.SimpleConsensusInputs) cre.Promise[*pb.Value] {
+func (c *Consensus) Simple(runtime cre.Runtime, input *sdk.SimpleConsensusInputs) cre.Promise[*pb.Value] {
 	wrapped := &anypb.Any{}
 	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
@@ -46,7 +46,7 @@ func (c *Consensus) Simple(runtime cre.Runtime, input *pb2.SimpleConsensusInputs
 
 }
 
-func (c *Consensus) Report(runtime cre.Runtime, input *pb2.ReportRequest) cre.Promise[*cre.Report] {
+func (c *Consensus) Report(runtime cre.Runtime, input *sdk.ReportRequest) cre.Promise[*cre.Report] {
 	wrapped := &anypb.Any{}
 	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
@@ -57,12 +57,12 @@ func (c *Consensus) Report(runtime cre.Runtime, input *pb2.ReportRequest) cre.Pr
 		Id:      "consensus@1.0.0-alpha",
 		Payload: wrapped,
 		Method:  "Report",
-	}), func(i *sdkpb.CapabilityResponse) (*pb2.ReportResponse, error) {
+	}), func(i *sdkpb.CapabilityResponse) (*sdk.ReportResponse, error) {
 		switch payload := i.Response.(type) {
 		case *sdkpb.CapabilityResponse_Error:
 			return nil, errors.New(payload.Error)
 		case *sdkpb.CapabilityResponse_Payload:
-			output := &pb2.ReportResponse{}
+			output := &sdk.ReportResponse{}
 			err = payload.Payload.UnmarshalTo(output)
 			return output, err
 		default:

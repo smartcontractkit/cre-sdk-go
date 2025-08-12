@@ -7,9 +7,9 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/smartcontractkit/chainlink-common/pkg/values"
-	valuespb "github.com/smartcontractkit/chainlink-common/pkg/values/pb"
-	"github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
+	"github.com/smartcontractkit/chainlink-protos/cre/go/sdk"
+	"github.com/smartcontractkit/chainlink-protos/cre/go/values"
+	valuespb "github.com/smartcontractkit/chainlink-protos/cre/go/values/pb"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -85,7 +85,7 @@ func (m mockNodeRuntime) Rand() (*rand.Rand, error) {
 	panic("unused in tests")
 }
 
-func (m mockNodeRuntime) CallCapability(_ *pb.CapabilityRequest) Promise[*pb.CapabilityResponse] {
+func (m mockNodeRuntime) CallCapability(_ *sdk.CapabilityRequest) Promise[*sdk.CapabilityResponse] {
 	panic("unused in tests")
 }
 
@@ -113,25 +113,25 @@ func (m *mockRuntime) Rand() (*rand.Rand, error) {
 	panic("unused in tests")
 }
 
-func (m *mockRuntime) GenerateReport(_ *pb.ReportRequest) Promise[*Report] {
+func (m *mockRuntime) GenerateReport(_ *sdk.ReportRequest) Promise[*Report] {
 	panic("unused in tests")
 }
 
-func (m *mockRuntime) RunInNodeMode(fn func(nodeRuntime NodeRuntime) *pb.SimpleConsensusInputs) Promise[values.Value] {
+func (m *mockRuntime) RunInNodeMode(fn func(nodeRuntime NodeRuntime) *sdk.SimpleConsensusInputs) Promise[values.Value] {
 	req := fn(mockNodeRuntime{})
 
-	if errObs, ok := req.Observation.(*pb.SimpleConsensusInputs_Error); ok {
+	if errObs, ok := req.Observation.(*sdk.SimpleConsensusInputs_Error); ok {
 		if req.Default != nil && req.Default.Value != nil {
 			return PromiseFromResult[values.Value](values.FromProto(reportFromValue(req.Default)))
 		}
 
 		return PromiseFromResult[values.Value](nil, errors.New(errObs.Error))
 	}
-	val, _ := values.FromProto(reportFromValue(req.Observation.(*pb.SimpleConsensusInputs_Value).Value))
+	val, _ := values.FromProto(reportFromValue(req.Observation.(*sdk.SimpleConsensusInputs_Value).Value))
 	return PromiseFromResult(val, nil)
 }
 
-func (m *mockRuntime) CallCapability(*pb.CapabilityRequest) Promise[*pb.CapabilityResponse] {
+func (m *mockRuntime) CallCapability(*sdk.CapabilityRequest) Promise[*sdk.CapabilityResponse] {
 	panic("not used in test")
 }
 func (m *mockRuntime) Config() []byte       { return nil }
@@ -142,12 +142,12 @@ type medianTestFieldDescription[T any] struct {
 	T T
 }
 
-func (h *medianTestFieldDescription[T]) Descriptor() *pb.ConsensusDescriptor {
-	return &pb.ConsensusDescriptor{
-		Descriptor_: &pb.ConsensusDescriptor_FieldsMap{
-			FieldsMap: &pb.FieldsMap{
-				Fields: map[string]*pb.ConsensusDescriptor{
-					"Test": {Descriptor_: &pb.ConsensusDescriptor_Aggregation{Aggregation: pb.AggregationType_AGGREGATION_TYPE_MEDIAN}},
+func (h *medianTestFieldDescription[T]) Descriptor() *sdk.ConsensusDescriptor {
+	return &sdk.ConsensusDescriptor{
+		Descriptor_: &sdk.ConsensusDescriptor_FieldsMap{
+			FieldsMap: &sdk.FieldsMap{
+				Fields: map[string]*sdk.ConsensusDescriptor{
+					"Test": {Descriptor_: &sdk.ConsensusDescriptor_Aggregation{Aggregation: sdk.AggregationType_AGGREGATION_TYPE_MEDIAN}},
 				},
 			},
 		},
