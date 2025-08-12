@@ -6,7 +6,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
+	"github.com/smartcontractkit/chainlink-protos/cre/go/sdk"
 	"github.com/smartcontractkit/cre-sdk-go/cre"
 	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basicaction"
 	basicactionmock "github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basicaction/mock"
@@ -51,7 +51,7 @@ func TestWorkflowExpectedResult() string {
 
 func RunTestSecretsWorkflow(runner cre.Runner[string]) {
 	runner.Run(func(_ string, _ *slog.Logger, secretsProvider cre.SecretsProvider) (cre.Workflow[string], error) {
-		_, err := secretsProvider.GetSecret(&pb.SecretRequest{Id: "Foo"}).Await()
+		_, err := secretsProvider.GetSecret(&sdk.SecretRequest{Id: "Foo"}).Await()
 		if err != nil {
 			return nil, err
 		}
@@ -59,7 +59,7 @@ func RunTestSecretsWorkflow(runner cre.Runner[string]) {
 			cre.Handler(
 				basictrigger.Trigger(TestWorkflowTriggerConfig()),
 				func(_ string, rt cre.Runtime, outputs *basictrigger.Outputs) (string, error) {
-					secret, err := rt.GetSecret(&pb.SecretRequest{Id: "Foo"}).Await()
+					secret, err := rt.GetSecret(&sdk.SecretRequest{Id: "Foo"}).Await()
 					if err != nil {
 						return "", err
 					}

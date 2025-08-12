@@ -9,11 +9,11 @@ import (
 
 	"google.golang.org/protobuf/types/known/anypb"
 
-	pb2 "github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
+	"github.com/smartcontractkit/chainlink-protos/cre/go/sdk"
 
-	"github.com/smartcontractkit/chainlink-common/pkg/values/pb"
+	"github.com/smartcontractkit/chainlink-protos/cre/go/values/pb"
 
-	sdkpb "github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
+	sdkpb "github.com/smartcontractkit/chainlink-protos/cre/go/sdk"
 	"github.com/smartcontractkit/cre-sdk-go/cre/testutils/registry"
 )
 
@@ -30,17 +30,17 @@ func NewConsensusCapability(t testing.TB) (*ConsensusCapability, error) {
 type ConsensusCapability struct {
 	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
 
-	Simple func(ctx context.Context, input *pb2.SimpleConsensusInputs) (*pb.Value, error)
+	Simple func(ctx context.Context, input *sdk.SimpleConsensusInputs) (*pb.Value, error)
 	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
 
-	Report func(ctx context.Context, input *pb2.ReportRequest) (*pb2.ReportResponse, error)
+	Report func(ctx context.Context, input *sdk.ReportRequest) (*sdk.ReportResponse, error)
 }
 
 func (c *ConsensusCapability) Invoke(ctx context.Context, request *sdkpb.CapabilityRequest) *sdkpb.CapabilityResponse {
 	capResp := &sdkpb.CapabilityResponse{}
 	switch request.Method {
 	case "Simple":
-		input := &pb2.SimpleConsensusInputs{}
+		input := &sdk.SimpleConsensusInputs{}
 		if err := request.Payload.UnmarshalTo(input); err != nil {
 			capResp.Response = &sdkpb.CapabilityResponse_Error{Error: err.Error()}
 			break
@@ -62,7 +62,7 @@ func (c *ConsensusCapability) Invoke(ctx context.Context, request *sdkpb.Capabil
 			}
 		}
 	case "Report":
-		input := &pb2.ReportRequest{}
+		input := &sdk.ReportRequest{}
 		if err := request.Payload.UnmarshalTo(input); err != nil {
 			capResp.Response = &sdkpb.CapabilityResponse_Error{Error: err.Error()}
 			break

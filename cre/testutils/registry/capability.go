@@ -3,11 +3,11 @@ package registry
 import (
 	"context"
 
-	"github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
+	"github.com/smartcontractkit/chainlink-protos/cre/go/sdk"
 )
 
 type Capability interface {
-	Invoke(ctx context.Context, request *pb.CapabilityRequest) *pb.CapabilityResponse
+	Invoke(ctx context.Context, request *sdk.CapabilityRequest) *sdk.CapabilityResponse
 	ID() string
 }
 

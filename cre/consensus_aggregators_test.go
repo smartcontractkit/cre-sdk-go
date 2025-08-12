@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/shopspring/decimal"
-	"github.com/smartcontractkit/chainlink-common/pkg/values"
-	"github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
+	"github.com/smartcontractkit/chainlink-protos/cre/go/sdk"
+	"github.com/smartcontractkit/chainlink-protos/cre/go/values"
 	"github.com/smartcontractkit/cre-sdk-go/cre"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -17,14 +17,14 @@ import (
 func TestConsensusMedianAggregation(t *testing.T) {
 	descriptor := cre.ConsensusMedianAggregation[int]()
 	require.NoError(t, descriptor.Err())
-	assert.Equal(t, descriptor.Descriptor().GetAggregation(), pb.AggregationType_AGGREGATION_TYPE_MEDIAN)
+	assert.Equal(t, descriptor.Descriptor().GetAggregation(), sdk.AggregationType_AGGREGATION_TYPE_MEDIAN)
 }
 
 func TestConsensusIdenticalAggregation(t *testing.T) {
 	t.Run("valid types", func(t *testing.T) {
 		descriptor := cre.ConsensusIdenticalAggregation[int]()
 		require.NoError(t, descriptor.Err())
-		assert.Equal(t, descriptor.Descriptor().GetAggregation(), pb.AggregationType_AGGREGATION_TYPE_IDENTICAL)
+		assert.Equal(t, descriptor.Descriptor().GetAggregation(), sdk.AggregationType_AGGREGATION_TYPE_IDENTICAL)
 	})
 
 	t.Run("invalid types", func(t *testing.T) {
@@ -37,7 +37,7 @@ func TestConsensusCommonPrefixAggregation(t *testing.T) {
 	t.Run("valid primitive types", func(t *testing.T) {
 		descriptor, err := cre.ConsensusCommonPrefixAggregation[string]()()
 		require.NoError(t, err)
-		assert.Equal(t, descriptor.Descriptor().GetAggregation(), pb.AggregationType_AGGREGATION_TYPE_COMMON_PREFIX)
+		assert.Equal(t, descriptor.Descriptor().GetAggregation(), sdk.AggregationType_AGGREGATION_TYPE_COMMON_PREFIX)
 	})
 
 	t.Run("invalid primitive types", func(t *testing.T) {
@@ -50,7 +50,7 @@ func TestConsensusCommonSuffixAggregation(t *testing.T) {
 	t.Run("valid primitive types", func(t *testing.T) {
 		descriptor, err := cre.ConsensusCommonSuffixAggregation[string]()()
 		require.NoError(t, err)
-		assert.Equal(t, descriptor.Descriptor().GetAggregation(), pb.AggregationType_AGGREGATION_TYPE_COMMON_SUFFIX)
+		assert.Equal(t, descriptor.Descriptor().GetAggregation(), sdk.AggregationType_AGGREGATION_TYPE_COMMON_SUFFIX)
 	})
 
 	t.Run("invalid primitive types", func(t *testing.T) {
@@ -88,33 +88,33 @@ func TestConsensusAggregationFromTags(t *testing.T) {
 		}
 		desc := cre.ConsensusAggregationFromTags[S]()
 		require.NoError(t, desc.Err())
-		expected := &pb.ConsensusDescriptor{
-			Descriptor_: &pb.ConsensusDescriptor_FieldsMap{
-				FieldsMap: &pb.FieldsMap{
-					Fields: map[string]*pb.ConsensusDescriptor{
+		expected := &sdk.ConsensusDescriptor{
+			Descriptor_: &sdk.ConsensusDescriptor_FieldsMap{
+				FieldsMap: &sdk.FieldsMap{
+					Fields: map[string]*sdk.ConsensusDescriptor{
 						"Val": {
-							Descriptor_: &pb.ConsensusDescriptor_Aggregation{
-								Aggregation: pb.AggregationType_AGGREGATION_TYPE_IDENTICAL,
+							Descriptor_: &sdk.ConsensusDescriptor_Aggregation{
+								Aggregation: sdk.AggregationType_AGGREGATION_TYPE_IDENTICAL,
 							},
 						},
 						"PVal": {
-							Descriptor_: &pb.ConsensusDescriptor_Aggregation{
-								Aggregation: pb.AggregationType_AGGREGATION_TYPE_IDENTICAL,
+							Descriptor_: &sdk.ConsensusDescriptor_Aggregation{
+								Aggregation: sdk.AggregationType_AGGREGATION_TYPE_IDENTICAL,
 							},
 						},
 						"Slice": {
-							Descriptor_: &pb.ConsensusDescriptor_Aggregation{
-								Aggregation: pb.AggregationType_AGGREGATION_TYPE_IDENTICAL,
+							Descriptor_: &sdk.ConsensusDescriptor_Aggregation{
+								Aggregation: sdk.AggregationType_AGGREGATION_TYPE_IDENTICAL,
 							},
 						},
 						"Array": {
-							Descriptor_: &pb.ConsensusDescriptor_Aggregation{
-								Aggregation: pb.AggregationType_AGGREGATION_TYPE_IDENTICAL,
+							Descriptor_: &sdk.ConsensusDescriptor_Aggregation{
+								Aggregation: sdk.AggregationType_AGGREGATION_TYPE_IDENTICAL,
 							},
 						},
 						"Bi": {
-							Descriptor_: &pb.ConsensusDescriptor_Aggregation{
-								Aggregation: pb.AggregationType_AGGREGATION_TYPE_IDENTICAL,
+							Descriptor_: &sdk.ConsensusDescriptor_Aggregation{
+								Aggregation: sdk.AggregationType_AGGREGATION_TYPE_IDENTICAL,
 							},
 						},
 					},
@@ -130,13 +130,13 @@ func TestConsensusAggregationFromTags(t *testing.T) {
 		}
 		desc := cre.ConsensusAggregationFromTags[S]()
 		require.NoError(t, desc.Err())
-		expected := &pb.ConsensusDescriptor{
-			Descriptor_: &pb.ConsensusDescriptor_FieldsMap{
-				FieldsMap: &pb.FieldsMap{
-					Fields: map[string]*pb.ConsensusDescriptor{
+		expected := &sdk.ConsensusDescriptor{
+			Descriptor_: &sdk.ConsensusDescriptor_FieldsMap{
+				FieldsMap: &sdk.FieldsMap{
+					Fields: map[string]*sdk.ConsensusDescriptor{
 						"Val": {
-							Descriptor_: &pb.ConsensusDescriptor_Aggregation{
-								Aggregation: pb.AggregationType_AGGREGATION_TYPE_COMMON_PREFIX,
+							Descriptor_: &sdk.ConsensusDescriptor_Aggregation{
+								Aggregation: sdk.AggregationType_AGGREGATION_TYPE_COMMON_PREFIX,
 							},
 						},
 					},
@@ -152,13 +152,13 @@ func TestConsensusAggregationFromTags(t *testing.T) {
 		}
 		desc := cre.ConsensusAggregationFromTags[S]()
 		require.NoError(t, desc.Err())
-		expected := &pb.ConsensusDescriptor{
-			Descriptor_: &pb.ConsensusDescriptor_FieldsMap{
-				FieldsMap: &pb.FieldsMap{
-					Fields: map[string]*pb.ConsensusDescriptor{
+		expected := &sdk.ConsensusDescriptor{
+			Descriptor_: &sdk.ConsensusDescriptor_FieldsMap{
+				FieldsMap: &sdk.FieldsMap{
+					Fields: map[string]*sdk.ConsensusDescriptor{
 						"Val": {
-							Descriptor_: &pb.ConsensusDescriptor_Aggregation{
-								Aggregation: pb.AggregationType_AGGREGATION_TYPE_COMMON_SUFFIX,
+							Descriptor_: &sdk.ConsensusDescriptor_Aggregation{
+								Aggregation: sdk.AggregationType_AGGREGATION_TYPE_COMMON_SUFFIX,
 							},
 						},
 					},
@@ -177,17 +177,17 @@ func TestConsensusAggregationFromTags(t *testing.T) {
 		}
 		desc := cre.ConsensusAggregationFromTags[Outer]()
 		require.NoError(t, desc.Err())
-		expected := &pb.ConsensusDescriptor{
-			Descriptor_: &pb.ConsensusDescriptor_FieldsMap{
-				FieldsMap: &pb.FieldsMap{
-					Fields: map[string]*pb.ConsensusDescriptor{
+		expected := &sdk.ConsensusDescriptor{
+			Descriptor_: &sdk.ConsensusDescriptor_FieldsMap{
+				FieldsMap: &sdk.FieldsMap{
+					Fields: map[string]*sdk.ConsensusDescriptor{
 						"In": {
-							Descriptor_: &pb.ConsensusDescriptor_FieldsMap{
-								FieldsMap: &pb.FieldsMap{
-									Fields: map[string]*pb.ConsensusDescriptor{
+							Descriptor_: &sdk.ConsensusDescriptor_FieldsMap{
+								FieldsMap: &sdk.FieldsMap{
+									Fields: map[string]*sdk.ConsensusDescriptor{
 										"Score": {
-											Descriptor_: &pb.ConsensusDescriptor_Aggregation{
-												Aggregation: pb.AggregationType_AGGREGATION_TYPE_MEDIAN,
+											Descriptor_: &sdk.ConsensusDescriptor_Aggregation{
+												Aggregation: sdk.AggregationType_AGGREGATION_TYPE_MEDIAN,
 											},
 										},
 									},
@@ -212,18 +212,18 @@ func TestConsensusAggregationFromTags(t *testing.T) {
 		}
 		desc := cre.ConsensusAggregationFromTags[Outer]()
 		require.NoError(t, desc.Err())
-		expected := &pb.ConsensusDescriptor{
-			Descriptor_: &pb.ConsensusDescriptor_FieldsMap{
-				FieldsMap: &pb.FieldsMap{
-					Fields: map[string]*pb.ConsensusDescriptor{
+		expected := &sdk.ConsensusDescriptor{
+			Descriptor_: &sdk.ConsensusDescriptor_FieldsMap{
+				FieldsMap: &sdk.FieldsMap{
+					Fields: map[string]*sdk.ConsensusDescriptor{
 						"In": {
-							Descriptor_: &pb.ConsensusDescriptor_Aggregation{
-								Aggregation: pb.AggregationType_AGGREGATION_TYPE_IDENTICAL,
+							Descriptor_: &sdk.ConsensusDescriptor_Aggregation{
+								Aggregation: sdk.AggregationType_AGGREGATION_TYPE_IDENTICAL,
 							},
 						},
 						"PIn": {
-							Descriptor_: &pb.ConsensusDescriptor_Aggregation{
-								Aggregation: pb.AggregationType_AGGREGATION_TYPE_IDENTICAL,
+							Descriptor_: &sdk.ConsensusDescriptor_Aggregation{
+								Aggregation: sdk.AggregationType_AGGREGATION_TYPE_IDENTICAL,
 							},
 						},
 					},
@@ -246,18 +246,18 @@ func TestConsensusAggregationFromTags(t *testing.T) {
 		desc := cre.ConsensusAggregationFromTags[*MapstructureFields]()
 		require.NoError(t, desc.Err())
 
-		expected := &pb.ConsensusDescriptor{
-			Descriptor_: &pb.ConsensusDescriptor_FieldsMap{
-				FieldsMap: &pb.FieldsMap{
-					Fields: map[string]*pb.ConsensusDescriptor{
+		expected := &sdk.ConsensusDescriptor{
+			Descriptor_: &sdk.ConsensusDescriptor_FieldsMap{
+				FieldsMap: &sdk.FieldsMap{
+					Fields: map[string]*sdk.ConsensusDescriptor{
 						"renamed_val": {
-							Descriptor_: &pb.ConsensusDescriptor_Aggregation{
-								Aggregation: pb.AggregationType_AGGREGATION_TYPE_IDENTICAL,
+							Descriptor_: &sdk.ConsensusDescriptor_Aggregation{
+								Aggregation: sdk.AggregationType_AGGREGATION_TYPE_IDENTICAL,
 							},
 						},
 						"renamed_val_inner": {
-							Descriptor_: &pb.ConsensusDescriptor_Aggregation{
-								Aggregation: pb.AggregationType_AGGREGATION_TYPE_IDENTICAL,
+							Descriptor_: &sdk.ConsensusDescriptor_Aggregation{
+								Aggregation: sdk.AggregationType_AGGREGATION_TYPE_IDENTICAL,
 							},
 						},
 					},
@@ -303,13 +303,13 @@ func TestConsensusAggregationFromTags(t *testing.T) {
 
 		desc := cre.ConsensusAggregationFromTags[*S]()
 		require.NoError(t, desc.Err())
-		expected := &pb.ConsensusDescriptor{
-			Descriptor_: &pb.ConsensusDescriptor_FieldsMap{
-				FieldsMap: &pb.FieldsMap{
-					Fields: map[string]*pb.ConsensusDescriptor{
+		expected := &sdk.ConsensusDescriptor{
+			Descriptor_: &sdk.ConsensusDescriptor_FieldsMap{
+				FieldsMap: &sdk.FieldsMap{
+					Fields: map[string]*sdk.ConsensusDescriptor{
 						"Val": {
-							Descriptor_: &pb.ConsensusDescriptor_Aggregation{
-								Aggregation: pb.AggregationType_AGGREGATION_TYPE_IDENTICAL,
+							Descriptor_: &sdk.ConsensusDescriptor_Aggregation{
+								Aggregation: sdk.AggregationType_AGGREGATION_TYPE_IDENTICAL,
 							},
 						},
 					},
@@ -339,13 +339,13 @@ func TestConsensusAggregationFromTags(t *testing.T) {
 		}
 		desc := cre.ConsensusAggregationFromTags[S]()
 		require.NoError(t, desc.Err())
-		expected := &pb.ConsensusDescriptor{
-			Descriptor_: &pb.ConsensusDescriptor_FieldsMap{
-				FieldsMap: &pb.FieldsMap{
-					Fields: map[string]*pb.ConsensusDescriptor{
+		expected := &sdk.ConsensusDescriptor{
+			Descriptor_: &sdk.ConsensusDescriptor_FieldsMap{
+				FieldsMap: &sdk.FieldsMap{
+					Fields: map[string]*sdk.ConsensusDescriptor{
 						"Val": {
-							Descriptor_: &pb.ConsensusDescriptor_Aggregation{
-								Aggregation: pb.AggregationType_AGGREGATION_TYPE_IDENTICAL,
+							Descriptor_: &sdk.ConsensusDescriptor_Aggregation{
+								Aggregation: sdk.AggregationType_AGGREGATION_TYPE_IDENTICAL,
 							},
 						},
 					},
@@ -378,13 +378,13 @@ func TestConsensusAggregationFromTags(t *testing.T) {
 		}]()
 
 		require.NoError(t, descriptor.Err())
-		expected := &pb.ConsensusDescriptor{
-			Descriptor_: &pb.ConsensusDescriptor_FieldsMap{
-				FieldsMap: &pb.FieldsMap{
-					Fields: map[string]*pb.ConsensusDescriptor{
+		expected := &sdk.ConsensusDescriptor{
+			Descriptor_: &sdk.ConsensusDescriptor_FieldsMap{
+				FieldsMap: &sdk.FieldsMap{
+					Fields: map[string]*sdk.ConsensusDescriptor{
 						"Val": {
-							Descriptor_: &pb.ConsensusDescriptor_Aggregation{
-								Aggregation: pb.AggregationType_AGGREGATION_TYPE_COMMON_PREFIX,
+							Descriptor_: &sdk.ConsensusDescriptor_Aggregation{
+								Aggregation: sdk.AggregationType_AGGREGATION_TYPE_COMMON_PREFIX,
 							},
 						},
 					},
@@ -409,13 +409,13 @@ func TestConsensusAggregationFromTags(t *testing.T) {
 		}]()
 
 		require.NoError(t, descriptor.Err())
-		expected := &pb.ConsensusDescriptor{
-			Descriptor_: &pb.ConsensusDescriptor_FieldsMap{
-				FieldsMap: &pb.FieldsMap{
-					Fields: map[string]*pb.ConsensusDescriptor{
+		expected := &sdk.ConsensusDescriptor{
+			Descriptor_: &sdk.ConsensusDescriptor_FieldsMap{
+				FieldsMap: &sdk.FieldsMap{
+					Fields: map[string]*sdk.ConsensusDescriptor{
 						"Val": {
-							Descriptor_: &pb.ConsensusDescriptor_Aggregation{
-								Aggregation: pb.AggregationType_AGGREGATION_TYPE_COMMON_SUFFIX,
+							Descriptor_: &sdk.ConsensusDescriptor_Aggregation{
+								Aggregation: sdk.AggregationType_AGGREGATION_TYPE_COMMON_SUFFIX,
 							},
 						},
 					},
@@ -450,18 +450,18 @@ func testMedianField[T any](t *testing.T) {
 		PVal *T `consensus_aggregation:"median"`
 	}]()
 	require.NoError(t, desc.Err())
-	expected := &pb.ConsensusDescriptor{
-		Descriptor_: &pb.ConsensusDescriptor_FieldsMap{
-			FieldsMap: &pb.FieldsMap{
-				Fields: map[string]*pb.ConsensusDescriptor{
+	expected := &sdk.ConsensusDescriptor{
+		Descriptor_: &sdk.ConsensusDescriptor_FieldsMap{
+			FieldsMap: &sdk.FieldsMap{
+				Fields: map[string]*sdk.ConsensusDescriptor{
 					"Val": {
-						Descriptor_: &pb.ConsensusDescriptor_Aggregation{
-							Aggregation: pb.AggregationType_AGGREGATION_TYPE_MEDIAN,
+						Descriptor_: &sdk.ConsensusDescriptor_Aggregation{
+							Aggregation: sdk.AggregationType_AGGREGATION_TYPE_MEDIAN,
 						},
 					},
 					"PVal": {
-						Descriptor_: &pb.ConsensusDescriptor_Aggregation{
-							Aggregation: pb.AggregationType_AGGREGATION_TYPE_MEDIAN,
+						Descriptor_: &sdk.ConsensusDescriptor_Aggregation{
+							Aggregation: sdk.AggregationType_AGGREGATION_TYPE_MEDIAN,
 						},
 					},
 				},

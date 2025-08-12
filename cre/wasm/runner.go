@@ -10,8 +10,8 @@ import (
 	"github.com/smartcontractkit/cre-sdk-go/internal/sdkimpl"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/smartcontractkit/chainlink-common/pkg/values"
-	"github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
+	"github.com/smartcontractkit/chainlink-protos/cre/go/sdk"
+	"github.com/smartcontractkit/chainlink-protos/cre/go/values"
 )
 
 type Config any
@@ -26,8 +26,8 @@ type runnerInternals interface {
 
 func newRunner[C Config](parse func(configBytes []byte) (C, error), runnerInternals runnerInternals, runtimeInternals runtimeInternals) cre.Runner[C] {
 	runnerInternals.versionV2()
-	runnerInternals.switchModes(int32(pb.Mode_MODE_DON))
-	drt := &sdkimpl.Runtime{RuntimeBase: newRuntime(runtimeInternals, pb.Mode_MODE_DON)}
+	runnerInternals.switchModes(int32(sdk.Mode_MODE_DON))
+	drt := &sdkimpl.Runtime{RuntimeBase: newRuntime(runtimeInternals, sdk.Mode_MODE_DON)}
 	return runnerWrapper[C]{
 		baseRunner: getRunner(
 			parse,
@@ -52,7 +52,7 @@ func newRunner[C Config](parse func(configBytes []byte) (C, error), runnerIntern
 
 type runner[C, T any] struct {
 	runnerInternals
-	trigger    *pb.Trigger
+	trigger    *sdk.Trigger
 	id         string
 	runtime    T
 	setRuntime func(maxResponseSize uint64)
@@ -77,12 +77,12 @@ func (r *runner[C, T]) run(wfs []cre.ExecutionHandler[C, T]) {
 			if err == nil {
 				wrapped, err := values.Wrap(response)
 				if err != nil {
-					exit(r.runnerInternals, &pb.ExecutionResult{Result: &pb.ExecutionResult_Error{Error: err.Error()}})
+					exit(r.runnerInternals, &sdk.ExecutionResult{Result: &sdk.ExecutionResult_Error{Error: err.Error()}})
 				} else {
-					exit(r.runnerInternals, &pb.ExecutionResult{Result: &pb.ExecutionResult_Value{Value: values.Proto(wrapped)}})
+					exit(r.runnerInternals, &sdk.ExecutionResult{Result: &sdk.ExecutionResult_Value{Value: values.Proto(wrapped)}})
 				}
 			} else {
-				exit(r.runnerInternals, &pb.ExecutionResult{Result: &pb.ExecutionResult_Error{Error: err.Error()}})
+				exit(r.runnerInternals, &sdk.ExecutionResult{Result: &sdk.ExecutionResult_Error{Error: err.Error()}})
 			}
 		}
 	}
@@ -107,18 +107,18 @@ func (s *subscriber[C, T]) secretsProvider() cre.SecretsProvider {
 }
 
 func (s *subscriber[C, T]) run(wfs []cre.ExecutionHandler[C, T]) {
-	subscriptions := make([]*pb.TriggerSubscription, len(wfs))
+	subscriptions := make([]*sdk.TriggerSubscription, len(wfs))
 	for i, handler := range wfs {
-		subscriptions[i] = &pb.TriggerSubscription{
+		subscriptions[i] = &sdk.TriggerSubscription{
 			Id:      handler.CapabilityID(),
 			Payload: handler.TriggerCfg(),
 			Method:  handler.Method(),
 		}
 	}
-	triggerSubscription := &pb.TriggerSubscriptionRequest{Subscriptions: subscriptions}
+	triggerSubscription := &sdk.TriggerSubscriptionRequest{Subscriptions: subscriptions}
 
-	execResponse := &pb.ExecutionResult{
-		Result: &pb.ExecutionResult_TriggerSubscriptions{TriggerSubscriptions: triggerSubscription},
+	execResponse := &sdk.ExecutionResult{
+		Result: &sdk.ExecutionResult_TriggerSubscriptions{TriggerSubscriptions: triggerSubscription},
 	}
 
 	exit(s.runnerInternals, execResponse)
@@ -151,7 +151,7 @@ func getRunner[C, T any](parse func(configBytes []byte) (C, error), subscribe *s
 		exitErr(subscribe.runnerInternals, "invalid request: could not decode request into bytes")
 	}
 
-	execRequest := &pb.ExecuteRequest{}
+	execRequest := &sdk.ExecuteRequest{}
 	if err = proto.Unmarshal(b, execRequest); err != nil {
 		exitErr(subscribe.runnerInternals, "invalid request: could not unmarshal request into ExecuteRequest")
 	}
@@ -162,11 +162,11 @@ func getRunner[C, T any](parse func(configBytes []byte) (C, error), subscribe *s
 	}
 
 	switch req := execRequest.Request.(type) {
-	case *pb.ExecuteRequest_Subscribe:
+	case *sdk.ExecuteRequest_Subscribe:
 		subscribe.config = c
 		subscribe.setRuntime(execRequest.MaxResponseSize)
 		return subscribe
-	case *pb.ExecuteRequest_Trigger:
+	case *sdk.ExecuteRequest_Trigger:
 		run.trigger = req.Trigger
 		run.config = c
 		run.setRuntime(execRequest.MaxResponseSize)
@@ -178,10 +178,10 @@ func getRunner[C, T any](parse func(configBytes []byte) (C, error), subscribe *s
 }
 
 func exitErr(r runnerInternals, err string) {
-	exit(r, &pb.ExecutionResult{Result: &pb.ExecutionResult_Error{Error: err}})
+	exit(r, &sdk.ExecutionResult{Result: &sdk.ExecutionResult_Error{Error: err}})
 }
 
-func exit(r runnerInternals, result *pb.ExecutionResult) {
+func exit(r runnerInternals, result *sdk.ExecutionResult) {
 	marshalled, _ := proto.Marshal(result)
 	marshalledPtr, marshalledLen, _ := bufferToPointerLen(marshalled)
 	r.sendResponse(marshalledPtr, marshalledLen)

@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/smartcontractkit/chainlink-common/pkg/values/installer/pkg"
+	"github.com/smartcontractkit/chainlink-protos/cre/go/installer/pkg"
 	"github.com/smartcontractkit/cre-sdk-go/generator/protos"
 )
 

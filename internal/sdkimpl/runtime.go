@@ -5,22 +5,22 @@ import (
 	"log/slog"
 	"math/rand"
 
-	"github.com/smartcontractkit/chainlink-common/pkg/values"
-	valuespb "github.com/smartcontractkit/chainlink-common/pkg/values/pb"
-	"github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
+	"github.com/smartcontractkit/chainlink-protos/cre/go/sdk"
+	"github.com/smartcontractkit/chainlink-protos/cre/go/values"
+	valuespb "github.com/smartcontractkit/chainlink-protos/cre/go/values/pb"
 	"github.com/smartcontractkit/cre-sdk-go/cre"
 	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/consensus"
 )
 
 type RuntimeHelpers interface {
-	Call(request *pb.CapabilityRequest) error
-	Await(request *pb.AwaitCapabilitiesRequest, maxResponseSize uint64) (*pb.AwaitCapabilitiesResponse, error)
+	Call(request *sdk.CapabilityRequest) error
+	Await(request *sdk.AwaitCapabilitiesRequest, maxResponseSize uint64) (*sdk.AwaitCapabilitiesResponse, error)
 
-	GetSecrets(request *pb.GetSecretsRequest, maxResponseSize uint64) error
-	AwaitSecrets(request *pb.AwaitSecretsRequest, maxResponseSize uint64) (*pb.AwaitSecretsResponse, error)
+	GetSecrets(request *sdk.GetSecretsRequest, maxResponseSize uint64) error
+	AwaitSecrets(request *sdk.AwaitSecretsRequest, maxResponseSize uint64) (*sdk.AwaitSecretsResponse, error)
 
-	SwitchModes(mode pb.Mode)
-	GetSource(mode pb.Mode) rand.Source
+	SwitchModes(mode sdk.Mode)
+	GetSource(mode sdk.Mode) rand.Source
 }
 
 type RuntimeBase struct {
@@ -31,7 +31,7 @@ type RuntimeBase struct {
 	source   rand.Source
 	source64 rand.Source64
 	modeErr  error
-	Mode     pb.Mode
+	Mode     sdk.Mode
 
 	// nextCallId tracks the unique id for a request to the WASM host.
 	// to avoid collisions of the ID in different modes, it is
@@ -54,8 +54,8 @@ var (
 	_ rand.Source64   = (*RuntimeBase)(nil)
 )
 
-func (r *RuntimeBase) CallCapability(request *pb.CapabilityRequest) cre.Promise[*pb.CapabilityResponse] {
-	if r.Mode == pb.Mode_MODE_DON {
+func (r *RuntimeBase) CallCapability(request *sdk.CapabilityRequest) cre.Promise[*sdk.CapabilityResponse] {
+	if r.Mode == sdk.Mode_MODE_DON {
 		r.nextCallId++
 	} else {
 		r.nextCallId--
@@ -64,16 +64,16 @@ func (r *RuntimeBase) CallCapability(request *pb.CapabilityRequest) cre.Promise[
 	myId := r.nextCallId
 	request.CallbackId = myId
 	if r.modeErr != nil {
-		return cre.PromiseFromResult[*pb.CapabilityResponse](nil, r.modeErr)
+		return cre.PromiseFromResult[*sdk.CapabilityResponse](nil, r.modeErr)
 	}
 
 	err := r.RuntimeHelpers.Call(request)
 	if err != nil {
-		return cre.PromiseFromResult[*pb.CapabilityResponse](nil, err)
+		return cre.PromiseFromResult[*sdk.CapabilityResponse](nil, err)
 	}
 
-	return cre.NewBasicPromise(func() (*pb.CapabilityResponse, error) {
-		awaitRequest := &pb.AwaitCapabilitiesRequest{
+	return cre.NewBasicPromise(func() (*sdk.CapabilityResponse, error) {
+		awaitRequest := &sdk.AwaitCapabilitiesRequest{
 			Ids: []int32{myId},
 		}
 		awaitResponse, err := r.Await(awaitRequest, r.MaxResponseSize)
@@ -106,7 +106,7 @@ func (r *RuntimeBase) Rand() (*rand.Rand, error) {
 	return rand.New(r), nil
 }
 
-func (d *Runtime) GenerateReport(request *pb.ReportRequest) cre.Promise[*cre.Report] {
+func (d *Runtime) GenerateReport(request *sdk.ReportRequest) cre.Promise[*cre.Report] {
 	return (&consensus.Consensus{}).Report(d, request)
 }
 
@@ -115,21 +115,21 @@ type Runtime struct {
 	nextNodeCallId int32
 }
 
-func (d *Runtime) GetSecret(req *pb.SecretRequest) cre.Promise[*pb.Secret] {
+func (d *Runtime) GetSecret(req *sdk.SecretRequest) cre.Promise[*sdk.Secret] {
 	d.nextCallId++
 
-	sr := &pb.GetSecretsRequest{
-		Requests:   []*pb.SecretRequest{req},
+	sr := &sdk.GetSecretsRequest{
+		Requests:   []*sdk.SecretRequest{req},
 		CallbackId: d.nextCallId,
 	}
 
 	err := d.RuntimeHelpers.GetSecrets(sr, d.MaxResponseSize)
 	if err != nil {
-		return cre.PromiseFromResult[*pb.Secret](nil, err)
+		return cre.PromiseFromResult[*sdk.Secret](nil, err)
 	}
 
-	return cre.NewBasicPromise(func() (*pb.Secret, error) {
-		awaitRequest := &pb.AwaitSecretsRequest{
+	return cre.NewBasicPromise(func() (*sdk.Secret, error) {
+		awaitRequest := &sdk.AwaitSecretsRequest{
 			Ids: []int32{d.nextCallId},
 		}
 		awaitResponse, err := d.AwaitSecrets(awaitRequest, d.MaxResponseSize)
@@ -154,18 +154,18 @@ func (d *Runtime) GetSecret(req *pb.SecretRequest) cre.Promise[*pb.Secret] {
 	})
 }
 
-func (d *Runtime) RunInNodeMode(fn func(nodeRuntime cre.NodeRuntime) *pb.SimpleConsensusInputs) cre.Promise[values.Value] {
+func (d *Runtime) RunInNodeMode(fn func(nodeRuntime cre.NodeRuntime) *sdk.SimpleConsensusInputs) cre.Promise[values.Value] {
 	nodeBase := d.RuntimeBase
-	nodeBase.Mode = pb.Mode_MODE_NODE
+	nodeBase.Mode = sdk.Mode_MODE_NODE
 	nodeBase.source = nil
 	nodeBase.source64 = nil
 	nrt := &NodeRuntime{RuntimeBase: nodeBase}
 	nrt.nextCallId = d.nextNodeCallId
-	nrt.Mode = pb.Mode_MODE_NODE
+	nrt.Mode = sdk.Mode_MODE_NODE
 	d.modeErr = cre.DonModeCallInNodeMode()
-	d.SwitchModes(pb.Mode_MODE_NODE)
+	d.SwitchModes(sdk.Mode_MODE_NODE)
 	observation := fn(nrt)
-	d.SwitchModes(pb.Mode_MODE_DON)
+	d.SwitchModes(sdk.Mode_MODE_DON)
 	nrt.modeErr = cre.NodeModeCallInDonMode()
 	d.modeErr = nil
 	d.nextNodeCallId = nrt.nextCallId
