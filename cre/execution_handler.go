@@ -17,6 +17,15 @@ func Handler[C any, M proto.Message, T any, O any](trigger Trigger[M, T], callba
 	return handler(trigger, callback)
 }
 
+func DynamicHandler[C any, M proto.Message, H, T, O, R any](trigger DynamicTrigger[M, T, H], callback func(config C, runtime Runtime, payload T) (O, error)) (ExecutionHandler[C, Runtime], R) {
+	// TODO use a special capability like "dynamic@1.0.0" to indicate that this is a dynamic handler
+	panic("not implemented")
+}
+
+func TEEHandler[C any, M proto.Message, T any, O any](trigger Trigger[M, T], callback func(config C, runtime TEERuntime, payload T) (O, error)) ExecutionHandler[C, TEERuntime] {
+	return handler(trigger, callback)
+}
+
 func handler[R, C any, M proto.Message, T any, O any](trigger Trigger[M, T], callback func(config C, runtime R, payload T) (O, error)) ExecutionHandler[C, R] {
 	wrapped := func(config C, runtime R, payload *anypb.Any) (any, error) {
 		unwrappedTrigger := trigger.NewT()

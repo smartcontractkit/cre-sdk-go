@@ -17,6 +17,9 @@ type Secret = sdk.Secret
 type RuntimeBase interface {
 	// CallCapability is meant to be called by generated code
 	CallCapability(request *sdk.CapabilityRequest) Promise[*sdk.CapabilityResponse]
+
+	// Add and remove trigger would be added here with a new message.
+
 	Rand() (*rand.Rand, error)
 	Logger() *slog.Logger
 }
@@ -39,6 +42,19 @@ type Runtime interface {
 	RunInNodeMode(fn func(nodeRuntime NodeRuntime) *sdk.SimpleConsensusInputs) Promise[values.Value]
 	GenerateReport(*ReportRequest) Promise[*Report]
 	SecretsProvider
+}
+
+type TEERuntime interface {
+	Runtime
+	NodeRuntime
+	Attest(payload []byte) Promise[*Attestation]
+}
+
+type Attestation interface {
+	Body() []byte
+	RawAttestation() []byte
+	Signature() []byte
+	Metadata() []byte
 }
 
 type ConsensusAggregation[T any] interface {

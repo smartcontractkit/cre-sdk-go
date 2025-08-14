@@ -20,6 +20,10 @@ func NewRunner[C Config](parse func(configBytes []byte) (C, error)) cre.Runner[C
 	return newRunner[C](parse, runnerInternalsImpl{}, runtimeInternalsImpl{})
 }
 
+func NewTEERunner[C Config](parse func(configBytes []byte) (C, error)) cre.TEERunner[C] {
+	panic("Only here to show how to call this...")
+}
+
 type runnerInternalsImpl struct{}
 
 var _ runnerInternals = runnerInternalsImpl{}
