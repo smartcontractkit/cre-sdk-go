@@ -41,6 +41,19 @@ type Runtime interface {
 	SecretsProvider
 }
 
+type TEERuntime interface {
+	Runtime
+	NodeRuntime
+	Attest(payload []byte) Promise[*Attestation]
+}
+
+type Attestation interface {
+	Body() []byte
+	RawAttestation() []byte
+	Signature() []byte
+	Metadata() []byte
+}
+
 type ConsensusAggregation[T any] interface {
 	Descriptor() *sdk.ConsensusDescriptor
 	Default() *T

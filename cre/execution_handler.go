@@ -17,6 +17,10 @@ func Handler[C any, M proto.Message, T any, O any](trigger Trigger[M, T], callba
 	return handler(trigger, callback)
 }
 
+func TEEHandler[C any, M proto.Message, T any, O any](trigger Trigger[M, T], callback func(config C, runtime TEERuntime, payload T) (O, error)) ExecutionHandler[C, TEERuntime] {
+	return handler(trigger, callback)
+}
+
 func handler[R, C any, M proto.Message, T any, O any](trigger Trigger[M, T], callback func(config C, runtime R, payload T) (O, error)) ExecutionHandler[C, R] {
 	wrapped := func(config C, runtime R, payload *anypb.Any) (any, error) {
 		unwrappedTrigger := trigger.NewT()
