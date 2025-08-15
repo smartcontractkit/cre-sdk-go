@@ -1,13 +1,20 @@
 package wasm
 
 import (
+	"encoding/binary"
 	"errors"
+	"fmt"
 	"math/rand"
+	"time"
 	"unsafe"
 
 	"github.com/smartcontractkit/chainlink-protos/cre/go/sdk"
 	"github.com/smartcontractkit/cre-sdk-go/internal/sdkimpl"
 	"google.golang.org/protobuf/proto"
+)
+
+const (
+	ErrnoSuccess = 0
 )
 
 type runtimeInternals interface {
@@ -159,4 +166,14 @@ func (r *runtimeHelper) Await(request *sdk.AwaitCapabilitiesRequest, maxResponse
 
 func (r *runtimeHelper) SwitchModes(mode sdk.Mode) {
 	r.switchModes(int32(mode))
+}
+
+func (r *runtimeHelper) Now() time.Time {
+	var buf [8]byte // host writes UnixNano as little-endian uint64
+	rc := now(unsafe.Pointer(&buf[0]))
+	if rc != ErrnoSuccess {
+		panic(fmt.Errorf("failed to fetch time from host: now() returned errno %d", rc))
+	}
+	ns := int64(binary.LittleEndian.Uint64(buf[:]))
+	return time.Unix(0, ns)
 }

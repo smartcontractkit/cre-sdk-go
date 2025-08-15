@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"math/rand"
 	"testing"
+	"time"
 
 	"github.com/smartcontractkit/chainlink-protos/cre/go/sdk"
 	valuespb "github.com/smartcontractkit/chainlink-protos/cre/go/values/pb"
@@ -237,3 +238,7 @@ func (rh *runtimeHelpers) AwaitSecrets(req *sdk.AwaitSecretsRequest, _ uint64) (
 }
 
 func (rh *runtimeHelpers) SwitchModes(_ sdk.Mode) {}
+
+func (rh *runtimeHelpers) Now() time.Time {
+	return time.Time{}
+}

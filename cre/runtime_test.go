@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"math/rand"
 	"testing"
+	"time"
 
 	"github.com/smartcontractkit/chainlink-protos/cre/go/sdk"
 	"github.com/smartcontractkit/chainlink-protos/cre/go/values"
@@ -89,6 +90,10 @@ func (m mockNodeRuntime) CallCapability(_ *sdk.CapabilityRequest) Promise[*sdk.C
 	panic("unused in tests")
 }
 
+func (m mockNodeRuntime) Now() time.Time {
+	panic("unused in tests")
+}
+
 func (m mockNodeRuntime) Config() []byte {
 	panic("unused in tests")
 }
@@ -114,6 +119,10 @@ func (m *mockRuntime) Rand() (*rand.Rand, error) {
 }
 
 func (m *mockRuntime) GenerateReport(_ *sdk.ReportRequest) Promise[*Report] {
+	panic("unused in tests")
+}
+
+func (m *mockRuntime) Now() time.Time {
 	panic("unused in tests")
 }
 
