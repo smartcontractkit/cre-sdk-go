@@ -25,7 +25,6 @@ flowchart LR
 	click chainlink-protos/cre/go href "https://github.com/smartcontractkit/chainlink-protos"
 	chainlink-protos/workflows/go
 	click chainlink-protos/workflows/go href "https://github.com/smartcontractkit/chainlink-protos"
-	cre-sdk-go --> chainlink-common/pkg/workflows/sdk/v2/pb
 	cre-sdk-go --> chainlink-protos/cre/go
 	click cre-sdk-go href "https://github.com/smartcontractkit/cre-sdk-go"
 	cre-sdk-go/capabilities/blockchain/evm --> cre-sdk-go

@@ -11,7 +11,7 @@ import (
 
 	"github.com/smartcontractkit/cre-sdk-go/capabilities/networking/http"
 
-	sdkpb "github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
+	sdkpb "github.com/smartcontractkit/chainlink-protos/cre/go/sdk"
 	"github.com/smartcontractkit/cre-sdk-go/cre/testutils/registry"
 )
 
