@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const commonVersion = "cre-std-tests@0.3.0"
+const commonVersion = "b4b2af4fa578ab2ae6eda980605073dece26ad53"
 
 func TestRunStandardTest(t *testing.T) {
 	t.Parallel()
