@@ -7,9 +7,9 @@ import (
 	"math/rand"
 	"testing"
 
-	vals "github.com/smartcontractkit/chainlink-common/pkg/values"
-	valuespb "github.com/smartcontractkit/chainlink-common/pkg/values/pb"
-	"github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
+	"github.com/smartcontractkit/chainlink-protos/cre/go/sdk"
+	vals "github.com/smartcontractkit/chainlink-protos/cre/go/values"
+	valuespb "github.com/smartcontractkit/chainlink-protos/cre/go/values/pb"
 	"github.com/smartcontractkit/cre-sdk-go/cre"
 	"github.com/smartcontractkit/cre-sdk-go/cre/testutils"
 	"github.com/smartcontractkit/cre-sdk-go/internal/sdkimpl"
@@ -116,7 +116,7 @@ func TestRuntime_CallCapability(t *testing.T) {
 			drt := rt.(*testutils.TestRuntime)
 			drt.RuntimeHelpers = &awaitOverride{
 				RuntimeHelpers: drt.RuntimeHelpers,
-				await: func(request *pb.AwaitCapabilitiesRequest, maxResponseSize uint64) (*pb.AwaitCapabilitiesResponse, error) {
+				await: func(request *sdk.AwaitCapabilitiesRequest, maxResponseSize uint64) (*sdk.AwaitCapabilitiesResponse, error) {
 					return nil, expectedErr
 				},
 			}
@@ -142,8 +142,8 @@ func TestRuntime_CallCapability(t *testing.T) {
 			drt := rt.(*testutils.TestRuntime)
 			drt.RuntimeHelpers = &awaitOverride{
 				RuntimeHelpers: drt.RuntimeHelpers,
-				await: func(request *pb.AwaitCapabilitiesRequest, maxResponseSize uint64) (*pb.AwaitCapabilitiesResponse, error) {
-					return &pb.AwaitCapabilitiesResponse{Responses: map[int32]*pb.CapabilityResponse{}}, nil
+				await: func(request *sdk.AwaitCapabilitiesRequest, maxResponseSize uint64) (*sdk.AwaitCapabilitiesResponse, error) {
+					return &sdk.AwaitCapabilitiesResponse{Responses: map[int32]*sdk.CapabilityResponse{}}, nil
 				},
 			}
 			_, err := capability.PerformAction(rt, &basicaction.Inputs{InputThing: true}).Await()
@@ -299,7 +299,7 @@ func mockSimpleConsensus[T any](t *testing.T, values *consensusValues[T]) {
 	consensus, err := consensusmock.NewConsensusCapability(t)
 	require.NoError(t, err)
 
-	consensus.Simple = func(ctx context.Context, input *pb.SimpleConsensusInputs) (*valuespb.Value, error) {
+	consensus.Simple = func(ctx context.Context, input *sdk.SimpleConsensusInputs) (*valuespb.Value, error) {
 		return handleSimpleConsensusRequest(t, values, input)
 	}
 }
@@ -309,15 +309,15 @@ func mockSimpleConsensus[T any](t *testing.T, values *consensusValues[T]) {
 func handleSimpleConsensusRequest[T any](
 	t *testing.T,
 	values *consensusValues[T],
-	input *pb.SimpleConsensusInputs,
+	input *sdk.SimpleConsensusInputs,
 ) (*valuespb.Value, error) {
 	// 1. Initial Validation: Default input value
 	assert.Nil(t, input.Default.Value, "Default input value should be nil") // Added custom message
 
 	// 2. Validate Descriptor Type
 	switch d := input.Descriptors.Descriptor_.(type) {
-	case *pb.ConsensusDescriptor_Aggregation:
-		assert.Equal(t, pb.AggregationType_AGGREGATION_TYPE_MEDIAN, d.Aggregation, "Descriptor aggregation type mismatch") // Added custom message
+	case *sdk.ConsensusDescriptor_Aggregation:
+		assert.Equal(t, sdk.AggregationType_AGGREGATION_TYPE_MEDIAN, d.Aggregation, "Descriptor aggregation type mismatch") // Added custom message
 	default:
 		assert.Fail(t, "unexpected descriptor type: %T", d)
 		return nil, errors.New("unsupported descriptor type") // Return early on fail
@@ -325,10 +325,10 @@ func handleSimpleConsensusRequest[T any](
 
 	// 3. Handle Observation Type
 	switch o := input.Observation.(type) {
-	case *pb.SimpleConsensusInputs_Value:
+	case *sdk.SimpleConsensusInputs_Value:
 		// Handle value observation
 		return handleSimpleConsensusValueObservation(t, values, o.Value)
-	case *pb.SimpleConsensusInputs_Error:
+	case *sdk.SimpleConsensusInputs_Error:
 		// Handle error observation
 		assert.Equal(t, values.GiveErr.Error(), o.Error, "Error observation message mismatch")
 		return nil, values.GiveErr
@@ -357,9 +357,9 @@ func handleSimpleConsensusValueObservation[T any](
 
 type awaitOverride struct {
 	sdkimpl.RuntimeHelpers
-	await func(request *pb.AwaitCapabilitiesRequest, maxResponseSize uint64) (*pb.AwaitCapabilitiesResponse, error)
+	await func(request *sdk.AwaitCapabilitiesRequest, maxResponseSize uint64) (*sdk.AwaitCapabilitiesResponse, error)
 }
 
-func (a *awaitOverride) Await(request *pb.AwaitCapabilitiesRequest, maxResponseSize uint64) (*pb.AwaitCapabilitiesResponse, error) {
+func (a *awaitOverride) Await(request *sdk.AwaitCapabilitiesRequest, maxResponseSize uint64) (*sdk.AwaitCapabilitiesResponse, error) {
 	return a.await(request, maxResponseSize)
 }

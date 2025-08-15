@@ -21,9 +21,12 @@ flowchart LR
 	click chainlink-common/pkg/workflows/sdk/v2/pb href "https://github.com/smartcontractkit/chainlink-common"
 	chainlink-protos/billing/go
 	click chainlink-protos/billing/go href "https://github.com/smartcontractkit/chainlink-protos"
+	chainlink-protos/cre/go
+	click chainlink-protos/cre/go href "https://github.com/smartcontractkit/chainlink-protos"
 	chainlink-protos/workflows/go
 	click chainlink-protos/workflows/go href "https://github.com/smartcontractkit/chainlink-protos"
 	cre-sdk-go --> chainlink-common/pkg/workflows/sdk/v2/pb
+	cre-sdk-go --> chainlink-protos/cre/go
 	click cre-sdk-go href "https://github.com/smartcontractkit/cre-sdk-go"
 	cre-sdk-go/capabilities/blockchain/evm --> cre-sdk-go
 	click cre-sdk-go/capabilities/blockchain/evm href "https://github.com/smartcontractkit/cre-sdk-go"
@@ -50,6 +53,7 @@ flowchart LR
 
 	subgraph chainlink-protos-repo[chainlink-protos]
 		 chainlink-protos/billing/go
+		 chainlink-protos/cre/go
 		 chainlink-protos/workflows/go
 	end
 	click chainlink-protos-repo href "https://github.com/smartcontractkit/chainlink-protos"

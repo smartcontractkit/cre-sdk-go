@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/shopspring/decimal"
-	"github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
+	"github.com/smartcontractkit/chainlink-protos/cre/go/sdk"
 )
 
 type NumericType interface {
@@ -20,13 +20,13 @@ type Primitive interface {
 }
 
 func ConsensusMedianAggregation[T NumericType]() ConsensusAggregation[T] {
-	return &consensusDescriptor[T]{Descriptor_: &pb.ConsensusDescriptor_Aggregation{Aggregation: pb.AggregationType_AGGREGATION_TYPE_MEDIAN}}
+	return &consensusDescriptor[T]{Descriptor_: &sdk.ConsensusDescriptor_Aggregation{Aggregation: sdk.AggregationType_AGGREGATION_TYPE_MEDIAN}}
 }
 
 func ConsensusIdenticalAggregation[T any]() ConsensusAggregation[T] {
 	var t T
 	if isIdenticalType(reflect.TypeOf(t)) {
-		return &consensusDescriptor[T]{Descriptor_: &pb.ConsensusDescriptor_Aggregation{Aggregation: pb.AggregationType_AGGREGATION_TYPE_IDENTICAL}}
+		return &consensusDescriptor[T]{Descriptor_: &sdk.ConsensusDescriptor_Aggregation{Aggregation: sdk.AggregationType_AGGREGATION_TYPE_IDENTICAL}}
 	}
 
 	return &consensusDescriptorError[T]{Error: fmt.Errorf("%T is not a valid type for identical consensus", t)}
@@ -36,7 +36,7 @@ func ConsensusCommonPrefixAggregation[T any]() func() (ConsensusAggregation[[]T]
 	return func() (ConsensusAggregation[[]T], error) {
 		var t []T
 		if isIdenticalSliceOrArray(reflect.TypeOf(t)) {
-			return &consensusDescriptor[[]T]{Descriptor_: &pb.ConsensusDescriptor_Aggregation{Aggregation: pb.AggregationType_AGGREGATION_TYPE_COMMON_PREFIX}}, nil
+			return &consensusDescriptor[[]T]{Descriptor_: &sdk.ConsensusDescriptor_Aggregation{Aggregation: sdk.AggregationType_AGGREGATION_TYPE_COMMON_PREFIX}}, nil
 		}
 
 		return &consensusDescriptor[[]T]{}, fmt.Errorf("%T is not a valid type for common prefix consensus", t)
@@ -47,7 +47,7 @@ func ConsensusCommonSuffixAggregation[T any]() func() (ConsensusAggregation[[]T]
 	return func() (ConsensusAggregation[[]T], error) {
 		var t []T
 		if isIdenticalSliceOrArray(reflect.TypeOf(t)) {
-			return &consensusDescriptor[[]T]{Descriptor_: &pb.ConsensusDescriptor_Aggregation{Aggregation: pb.AggregationType_AGGREGATION_TYPE_COMMON_SUFFIX}}, nil
+			return &consensusDescriptor[[]T]{Descriptor_: &sdk.ConsensusDescriptor_Aggregation{Aggregation: sdk.AggregationType_AGGREGATION_TYPE_COMMON_SUFFIX}}, nil
 		}
 
 		return &consensusDescriptor[[]T]{}, fmt.Errorf("%T is not a valid type for common prefix consensus", t)
@@ -68,7 +68,7 @@ var bigIntType = reflect.TypeOf((*big.Int)(nil))
 var timeType = reflect.TypeOf(time.Time{})
 var decimalType = reflect.TypeOf(decimal.Decimal{})
 
-func parseConsensusTag(t reflect.Type, path string) (*pb.ConsensusDescriptor, error) {
+func parseConsensusTag(t reflect.Type, path string) (*sdk.ConsensusDescriptor, error) {
 	if t.Kind() == reflect.Pointer {
 		t = t.Elem()
 	}
@@ -77,7 +77,7 @@ func parseConsensusTag(t reflect.Type, path string) (*pb.ConsensusDescriptor, er
 		return nil, fmt.Errorf("ConsensusAggregationFromTags expects a struct type, got %s", t.Kind())
 	}
 
-	descriptors := make(map[string]*pb.ConsensusDescriptor)
+	descriptors := make(map[string]*sdk.ConsensusDescriptor)
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
 		tag := field.Tag.Get("consensus_aggregation")
@@ -117,22 +117,22 @@ func parseConsensusTag(t reflect.Type, path string) (*pb.ConsensusDescriptor, er
 			if !isNumeric(tpe) {
 				return nil, fmt.Errorf("field %s marked as median but is not a numeric type", field.Name)
 			}
-			descriptors[serializedName] = &pb.ConsensusDescriptor{Descriptor_: &pb.ConsensusDescriptor_Aggregation{Aggregation: pb.AggregationType_AGGREGATION_TYPE_MEDIAN}}
+			descriptors[serializedName] = &sdk.ConsensusDescriptor{Descriptor_: &sdk.ConsensusDescriptor_Aggregation{Aggregation: sdk.AggregationType_AGGREGATION_TYPE_MEDIAN}}
 		case "identical":
 			if !isIdenticalType(tpe) {
 				return nil, fmt.Errorf("field %s marked as identical but is not a valid type", field.Name)
 			}
-			descriptors[serializedName] = &pb.ConsensusDescriptor{Descriptor_: &pb.ConsensusDescriptor_Aggregation{Aggregation: pb.AggregationType_AGGREGATION_TYPE_IDENTICAL}}
+			descriptors[serializedName] = &sdk.ConsensusDescriptor{Descriptor_: &sdk.ConsensusDescriptor_Aggregation{Aggregation: sdk.AggregationType_AGGREGATION_TYPE_IDENTICAL}}
 		case "common_prefix":
 			if !isIdenticalSliceOrArray(tpe) {
 				return nil, fmt.Errorf("field %s marked as common_prefix but is not slice/array", field.Name)
 			}
-			descriptors[serializedName] = &pb.ConsensusDescriptor{Descriptor_: &pb.ConsensusDescriptor_Aggregation{Aggregation: pb.AggregationType_AGGREGATION_TYPE_COMMON_PREFIX}}
+			descriptors[serializedName] = &sdk.ConsensusDescriptor{Descriptor_: &sdk.ConsensusDescriptor_Aggregation{Aggregation: sdk.AggregationType_AGGREGATION_TYPE_COMMON_PREFIX}}
 		case "common_suffix":
 			if !isIdenticalSliceOrArray(field.Type) {
 				return nil, fmt.Errorf("field %s marked as common_suffix but is not slice/array", field.Name)
 			}
-			descriptors[serializedName] = &pb.ConsensusDescriptor{Descriptor_: &pb.ConsensusDescriptor_Aggregation{Aggregation: pb.AggregationType_AGGREGATION_TYPE_COMMON_SUFFIX}}
+			descriptors[serializedName] = &sdk.ConsensusDescriptor{Descriptor_: &sdk.ConsensusDescriptor_Aggregation{Aggregation: sdk.AggregationType_AGGREGATION_TYPE_COMMON_SUFFIX}}
 		case "nested":
 			descriptors[serializedName], err = parseConsensusTag(field.Type, path+field.Name+".")
 			if err != nil {
@@ -143,9 +143,9 @@ func parseConsensusTag(t reflect.Type, path string) (*pb.ConsensusDescriptor, er
 		}
 	}
 
-	return &pb.ConsensusDescriptor{
-		Descriptor_: &pb.ConsensusDescriptor_FieldsMap{
-			FieldsMap: &pb.FieldsMap{Fields: descriptors},
+	return &sdk.ConsensusDescriptor{
+		Descriptor_: &sdk.ConsensusDescriptor_FieldsMap{
+			FieldsMap: &sdk.FieldsMap{Fields: descriptors},
 		},
 	}, nil
 }

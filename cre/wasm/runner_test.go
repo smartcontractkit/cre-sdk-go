@@ -5,8 +5,8 @@ import (
 	"log/slog"
 	"testing"
 
-	"github.com/smartcontractkit/chainlink-common/pkg/values"
-	"github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
+	"github.com/smartcontractkit/chainlink-protos/cre/go/sdk"
+	"github.com/smartcontractkit/chainlink-protos/cre/go/values"
 	"github.com/smartcontractkit/cre-sdk-go/cre/testutils"
 	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basictrigger"
 	"google.golang.org/protobuf/proto"
@@ -27,17 +27,17 @@ var (
 	triggerIndex        = int(0)
 	capID               = defaultBasicTrigger.CapabilityID()
 
-	subscribeRequest = &pb.ExecuteRequest{
+	subscribeRequest = &sdk.ExecuteRequest{
 		Config:          anyConfig,
 		MaxResponseSize: anyMaxResponseSize,
-		Request:         &pb.ExecuteRequest_Subscribe{Subscribe: &emptypb.Empty{}},
+		Request:         &sdk.ExecuteRequest_Subscribe{Subscribe: &emptypb.Empty{}},
 	}
 
-	anyExecuteRequest = &pb.ExecuteRequest{
+	anyExecuteRequest = &sdk.ExecuteRequest{
 		Config:          anyConfig,
 		MaxResponseSize: anyMaxResponseSize,
-		Request: &pb.ExecuteRequest_Trigger{
-			Trigger: &pb.Trigger{
+		Request: &sdk.ExecuteRequest_Trigger{
+			Trigger: &sdk.Trigger{
 				Id:      uint64(triggerIndex),
 				Payload: mustAny(testutils.TestWorkflowTrigger()),
 			},
@@ -53,7 +53,7 @@ func TestRunner_CreateWorkflows(t *testing.T) {
 func TestRunner_GetSecrets_PassesMaxResponseSize(t *testing.T) {
 	dr := getTestRunner(t, subscribeRequest)
 	dr.Run(func(_ string, _ *slog.Logger, secretsProvider cre.SecretsProvider) (cre.Workflow[string], error) {
-		_, err := secretsProvider.GetSecret(&pb.SecretRequest{Namespace: "Foo", Id: "Bar"}).Await()
+		_, err := secretsProvider.GetSecret(&sdk.SecretRequest{Namespace: "Foo", Id: "Bar"}).Await()
 		// This will fail with "buffer cannot be empty" if we fail to pass the maxResponseSize from the
 		// runner to the runtime.
 		assert.ErrorContains(t, err, "secret Foo.Bar not found")
@@ -82,12 +82,12 @@ func TestRunner_Run(t *testing.T) {
 			}, nil
 		})
 
-		actual := &pb.ExecutionResult{}
+		actual := &sdk.ExecutionResult{}
 		sentResponse := dr.(runnerWrapper[string]).baseRunner.(*subscriber[string, cre.Runtime]).runnerInternals.(*runnerInternalsTestHook).sentResponse
 		require.NoError(t, proto.Unmarshal(sentResponse, actual))
 
 		switch result := actual.Result.(type) {
-		case *pb.ExecutionResult_TriggerSubscriptions:
+		case *sdk.ExecutionResult_TriggerSubscriptions:
 			subscriptions := result.TriggerSubscriptions.Subscriptions
 			require.Len(t, subscriptions, 1)
 			subscription := subscriptions[triggerIndex]
@@ -106,12 +106,12 @@ func TestRunner_Run(t *testing.T) {
 		dr := getTestRunner(t, anyExecuteRequest)
 		testutils.RunTestWorkflow(dr)
 
-		actual := &pb.ExecutionResult{}
+		actual := &sdk.ExecutionResult{}
 		sentResponse := dr.(runnerWrapper[string]).baseRunner.(*runner[string, cre.Runtime]).runnerInternals.(*runnerInternalsTestHook).sentResponse
 		require.NoError(t, proto.Unmarshal(sentResponse, actual))
 
 		switch result := actual.Result.(type) {
-		case *pb.ExecutionResult_Value:
+		case *sdk.ExecutionResult_Value:
 			v, err := values.FromProto(result.Value)
 			require.NoError(t, err)
 			returnedValue, err := v.Unwrap()
@@ -123,11 +123,11 @@ func TestRunner_Run(t *testing.T) {
 	})
 
 	t.Run("makes callback with correct runner and multiple handlers", func(t *testing.T) {
-		secondTriggerReq := &pb.ExecuteRequest{
+		secondTriggerReq := &sdk.ExecuteRequest{
 			Config:          anyConfig,
 			MaxResponseSize: anyMaxResponseSize,
-			Request: &pb.ExecuteRequest_Trigger{
-				Trigger: &pb.Trigger{
+			Request: &sdk.ExecuteRequest_Trigger{
+				Trigger: &sdk.Trigger{
 					Id:      uint64(triggerIndex + 1),
 					Payload: mustAny(testutils.TestWorkflowTrigger()),
 				},
@@ -137,12 +137,12 @@ func TestRunner_Run(t *testing.T) {
 		dr := getTestRunner(t, secondTriggerReq)
 		testutils.RunIdenticalTriggersWorkflow(dr)
 
-		actual := &pb.ExecutionResult{}
+		actual := &sdk.ExecutionResult{}
 		sentResponse := dr.(runnerWrapper[string]).baseRunner.(*runner[string, cre.Runtime]).runnerInternals.(*runnerInternalsTestHook).sentResponse
 		require.NoError(t, proto.Unmarshal(sentResponse, actual))
 
 		switch result := actual.Result.(type) {
-		case *pb.ExecutionResult_Value:
+		case *sdk.ExecutionResult_Value:
 			v, err := values.FromProto(result.Value)
 			require.NoError(t, err)
 			returnedValue, err := v.Unwrap()
@@ -166,11 +166,11 @@ func assertEnv(t *testing.T, r cre.Runner[string]) {
 	assert.True(t, ran, "Workflow should have been run")
 }
 
-func getTestRunner(tb testing.TB, request *pb.ExecuteRequest) cre.Runner[string] {
+func getTestRunner(tb testing.TB, request *sdk.ExecuteRequest) cre.Runner[string] {
 	return newRunner(func(b []byte) (string, error) { return string(b), nil }, testRunnerInternals(tb, request), testRuntimeInternals(tb))
 }
 
-func testRunnerInternals(tb testing.TB, request *pb.ExecuteRequest) *runnerInternalsTestHook {
+func testRunnerInternals(tb testing.TB, request *sdk.ExecuteRequest) *runnerInternalsTestHook {
 	serialzied, err := proto.Marshal(request)
 	require.NoError(tb, err)
 	encoded := base64.StdEncoding.EncodeToString(serialzied)
@@ -184,9 +184,9 @@ func testRunnerInternals(tb testing.TB, request *pb.ExecuteRequest) *runnerInter
 func testRuntimeInternals(tb testing.TB) *runtimeInternalsTestHook {
 	return &runtimeInternalsTestHook{
 		testTb:                  tb,
-		outstandingCalls:        map[int32]cre.Promise[*pb.CapabilityResponse]{},
-		outstandingSecretsCalls: map[int32]cre.Promise[[]*pb.SecretResponse]{},
-		secrets:                 map[string]*pb.Secret{},
+		outstandingCalls:        map[int32]cre.Promise[*sdk.CapabilityResponse]{},
+		outstandingSecretsCalls: map[int32]cre.Promise[[]*sdk.SecretResponse]{},
+		secrets:                 map[string]*sdk.Secret{},
 	}
 }
 

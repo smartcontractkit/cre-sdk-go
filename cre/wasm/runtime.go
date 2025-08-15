@@ -5,8 +5,7 @@ import (
 	"math/rand"
 	"unsafe"
 
-	"github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
-	sdkpb "github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
+	"github.com/smartcontractkit/chainlink-protos/cre/go/sdk"
 	"github.com/smartcontractkit/cre-sdk-go/internal/sdkimpl"
 	"google.golang.org/protobuf/proto"
 )
@@ -20,7 +19,7 @@ type runtimeInternals interface {
 	getSeed(mode int32) int64
 }
 
-func newRuntime(internals runtimeInternals, mode sdkpb.Mode) sdkimpl.RuntimeBase {
+func newRuntime(internals runtimeInternals, mode sdk.Mode) sdkimpl.RuntimeBase {
 	return sdkimpl.RuntimeBase{
 		Mode:           mode,
 		RuntimeHelpers: &runtimeHelper{runtimeInternals: internals},
@@ -34,9 +33,9 @@ type runtimeHelper struct {
 	nodeSource rand.Source
 }
 
-func (r *runtimeHelper) GetSource(mode sdkpb.Mode) rand.Source {
+func (r *runtimeHelper) GetSource(mode sdk.Mode) rand.Source {
 	switch mode {
-	case sdkpb.Mode_MODE_DON:
+	case sdk.Mode_MODE_DON:
 		if r.donSource == nil {
 			seed := r.getSeed(int32(mode))
 			r.donSource = rand.NewSource(seed)
@@ -51,7 +50,7 @@ func (r *runtimeHelper) GetSource(mode sdkpb.Mode) rand.Source {
 	}
 }
 
-func (r *runtimeHelper) GetSecrets(request *sdkpb.GetSecretsRequest, maxResponseSize uint64) error {
+func (r *runtimeHelper) GetSecrets(request *sdk.GetSecretsRequest, maxResponseSize uint64) error {
 	marshalled, err := proto.Marshal(request)
 	if err != nil {
 		return err
@@ -76,7 +75,7 @@ func (r *runtimeHelper) GetSecrets(request *sdkpb.GetSecretsRequest, maxResponse
 	return nil
 }
 
-func (r *runtimeHelper) AwaitSecrets(request *sdkpb.AwaitSecretsRequest, maxResponseSize uint64) (*pb.AwaitSecretsResponse, error) {
+func (r *runtimeHelper) AwaitSecrets(request *sdk.AwaitSecretsRequest, maxResponseSize uint64) (*sdk.AwaitSecretsResponse, error) {
 	m, err := proto.Marshal(request)
 	if err != nil {
 		return nil, err
@@ -98,7 +97,7 @@ func (r *runtimeHelper) AwaitSecrets(request *sdkpb.AwaitSecretsRequest, maxResp
 		return nil, errors.New(string(response[:-bytes]))
 	}
 
-	awaitResponse := &sdkpb.AwaitSecretsResponse{}
+	awaitResponse := &sdk.AwaitSecretsResponse{}
 	err = proto.Unmarshal(response[:bytes], awaitResponse)
 	if err != nil {
 		return nil, err
@@ -107,7 +106,7 @@ func (r *runtimeHelper) AwaitSecrets(request *sdkpb.AwaitSecretsRequest, maxResp
 	return awaitResponse, nil
 }
 
-func (r *runtimeHelper) Call(request *sdkpb.CapabilityRequest) error {
+func (r *runtimeHelper) Call(request *sdk.CapabilityRequest) error {
 	marshalled, err := proto.Marshal(request)
 	if err != nil {
 		return err
@@ -127,7 +126,7 @@ func (r *runtimeHelper) Call(request *sdkpb.CapabilityRequest) error {
 	return nil
 }
 
-func (r *runtimeHelper) Await(request *sdkpb.AwaitCapabilitiesRequest, maxResponseSize uint64) (*sdkpb.AwaitCapabilitiesResponse, error) {
+func (r *runtimeHelper) Await(request *sdk.AwaitCapabilitiesRequest, maxResponseSize uint64) (*sdk.AwaitCapabilitiesResponse, error) {
 	m, err := proto.Marshal(request)
 	if err != nil {
 		return nil, err
@@ -149,7 +148,7 @@ func (r *runtimeHelper) Await(request *sdkpb.AwaitCapabilitiesRequest, maxRespon
 		return nil, errors.New(string(response[:-bytes]))
 	}
 
-	awaitResponse := &sdkpb.AwaitCapabilitiesResponse{}
+	awaitResponse := &sdk.AwaitCapabilitiesResponse{}
 	err = proto.Unmarshal(response[:bytes], awaitResponse)
 	if err != nil {
 		return nil, err
@@ -158,6 +157,6 @@ func (r *runtimeHelper) Await(request *sdkpb.AwaitCapabilitiesRequest, maxRespon
 	return awaitResponse, nil
 }
 
-func (r *runtimeHelper) SwitchModes(mode sdkpb.Mode) {
+func (r *runtimeHelper) SwitchModes(mode sdk.Mode) {
 	r.switchModes(int32(mode))
 }

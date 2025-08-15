@@ -6,17 +6,17 @@ import (
 	"math/rand"
 	"reflect"
 
-	"github.com/smartcontractkit/chainlink-common/pkg/values"
-	"github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
+	"github.com/smartcontractkit/chainlink-protos/cre/go/sdk"
+	"github.com/smartcontractkit/chainlink-protos/cre/go/values"
 )
 
-type SecretRequest = pb.SecretRequest
-type Secret = pb.Secret
+type SecretRequest = sdk.SecretRequest
+type Secret = sdk.Secret
 
 // RuntimeBase is not thread safe and must not be used concurrently.
 type RuntimeBase interface {
 	// CallCapability is meant to be called by generated code
-	CallCapability(request *pb.CapabilityRequest) Promise[*pb.CapabilityResponse]
+	CallCapability(request *sdk.CapabilityRequest) Promise[*sdk.CapabilityResponse]
 	Rand() (*rand.Rand, error)
 	Logger() *slog.Logger
 }
@@ -36,22 +36,22 @@ type Runtime interface {
 	RuntimeBase
 
 	// RunInNodeMode is meant to be used by the helper method RunInNodeMode
-	RunInNodeMode(fn func(nodeRuntime NodeRuntime) *pb.SimpleConsensusInputs) Promise[values.Value]
-	GenerateReport(*pb.ReportRequest) Promise[*Report]
+	RunInNodeMode(fn func(nodeRuntime NodeRuntime) *sdk.SimpleConsensusInputs) Promise[values.Value]
+	GenerateReport(*ReportRequest) Promise[*Report]
 	SecretsProvider
 }
 
 type ConsensusAggregation[T any] interface {
-	Descriptor() *pb.ConsensusDescriptor
+	Descriptor() *sdk.ConsensusDescriptor
 	Default() *T
 	Err() error
 	WithDefault(t T) ConsensusAggregation[T]
 }
 
-type consensusDescriptor[T any] pb.ConsensusDescriptor
+type consensusDescriptor[T any] sdk.ConsensusDescriptor
 
-func (c *consensusDescriptor[T]) Descriptor() *pb.ConsensusDescriptor {
-	return (*pb.ConsensusDescriptor)(c)
+func (c *consensusDescriptor[T]) Descriptor() *sdk.ConsensusDescriptor {
+	return (*sdk.ConsensusDescriptor)(c)
 }
 
 func (c *consensusDescriptor[T]) Default() *T {
@@ -72,11 +72,11 @@ func (c *consensusDescriptor[T]) WithDefault(t T) ConsensusAggregation[T] {
 var _ ConsensusAggregation[int] = (*consensusDescriptor[int])(nil)
 
 type consensusWithDefault[T any] struct {
-	ConsensusDescriptor *pb.ConsensusDescriptor
+	ConsensusDescriptor *sdk.ConsensusDescriptor
 	DefaultValue        T
 }
 
-func (c *consensusWithDefault[T]) Descriptor() *pb.ConsensusDescriptor {
+func (c *consensusWithDefault[T]) Descriptor() *sdk.ConsensusDescriptor {
 	return c.ConsensusDescriptor
 }
 
@@ -100,7 +100,7 @@ type consensusDescriptorError[T any] struct {
 	Error error
 }
 
-func (d *consensusDescriptorError[T]) Descriptor() *pb.ConsensusDescriptor {
+func (d *consensusDescriptorError[T]) Descriptor() *sdk.ConsensusDescriptor {
 	return nil
 }
 
@@ -134,9 +134,9 @@ func RunInNodeMode[C, T any](
 	fn func(config C, nodeRuntime NodeRuntime) (T, error),
 	ca ConsensusAggregation[T],
 ) Promise[T] {
-	observationFn := func(nodeRuntime NodeRuntime) *pb.SimpleConsensusInputs {
+	observationFn := func(nodeRuntime NodeRuntime) *sdk.SimpleConsensusInputs {
 		if ca.Err() != nil {
-			return &pb.SimpleConsensusInputs{Observation: &pb.SimpleConsensusInputs_Error{Error: ca.Err().Error()}}
+			return &sdk.SimpleConsensusInputs{Observation: &sdk.SimpleConsensusInputs_Error{Error: ca.Err().Error()}}
 		}
 
 		var defaultValue values.Value
@@ -145,28 +145,28 @@ func RunInNodeMode[C, T any](
 		if d := ca.Default(); d != nil {
 			defaultValue, err = values.Wrap(d)
 			if err != nil {
-				return &pb.SimpleConsensusInputs{Observation: &pb.SimpleConsensusInputs_Error{Error: err.Error()}}
+				return &sdk.SimpleConsensusInputs{Observation: &sdk.SimpleConsensusInputs_Error{Error: err.Error()}}
 			}
 		}
 
-		returnValue := &pb.SimpleConsensusInputs{
+		returnValue := &sdk.SimpleConsensusInputs{
 			Descriptors: descriptor,
 			Default:     values.Proto(defaultValue),
 		}
 
 		result, err := fn(config, nodeRuntime)
 		if err != nil {
-			returnValue.Observation = &pb.SimpleConsensusInputs_Error{Error: err.Error()}
+			returnValue.Observation = &sdk.SimpleConsensusInputs_Error{Error: err.Error()}
 			return returnValue
 		}
 
 		wrapped, err := values.Wrap(result)
 		if err != nil {
-			returnValue.Observation = &pb.SimpleConsensusInputs_Error{Error: err.Error()}
+			returnValue.Observation = &sdk.SimpleConsensusInputs_Error{Error: err.Error()}
 			return returnValue
 		}
 
-		returnValue.Observation = &pb.SimpleConsensusInputs_Value{Value: values.Proto(wrapped)}
+		returnValue.Observation = &sdk.SimpleConsensusInputs_Value{Value: values.Proto(wrapped)}
 		return returnValue
 	}
 

@@ -8,8 +8,8 @@ import (
 	"math/rand"
 	"testing"
 
-	valuespb "github.com/smartcontractkit/chainlink-common/pkg/values/pb"
-	"github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
+	"github.com/smartcontractkit/chainlink-protos/cre/go/sdk"
+	valuespb "github.com/smartcontractkit/chainlink-protos/cre/go/values/pb"
 	"github.com/smartcontractkit/cre-sdk-go/cre"
 	"github.com/smartcontractkit/cre-sdk-go/cre/testutils/registry"
 	"github.com/smartcontractkit/cre-sdk-go/internal/sdkimpl"
@@ -37,9 +37,9 @@ func NewRuntime(tb testing.TB, secrets map[string]string) *TestRuntime {
 		testWriter: tw,
 		Runtime: sdkimpl.Runtime{
 			RuntimeBase: sdkimpl.RuntimeBase{
-				Mode:            pb.Mode_MODE_DON,
+				Mode:            sdk.Mode_MODE_DON,
 				MaxResponseSize: cre.DefaultMaxResponseSizeBytes,
-				RuntimeHelpers:  &runtimeHelpers{tb: tb, calls: map[int32]chan *pb.CapabilityResponse{}, secretsCalls: map[int32][]*pb.SecretResponse{}, secrets: secrets},
+				RuntimeHelpers:  &runtimeHelpers{tb: tb, calls: map[int32]chan *sdk.CapabilityResponse{}, secretsCalls: map[int32][]*sdk.SecretResponse{}, secrets: secrets},
 				Lggr:            slog.New(slog.NewTextHandler(tw, &slog.HandlerOptions{})),
 			},
 		},
@@ -70,11 +70,11 @@ func (t *TestRuntime) SetNodeRandomSource(source rand.Source) {
 	t.RuntimeHelpers.(*runtimeHelpers).nodeSrc = source
 }
 
-func defaultSimpleConsensus(_ context.Context, input *pb.SimpleConsensusInputs) (*valuespb.Value, error) {
+func defaultSimpleConsensus(_ context.Context, input *sdk.SimpleConsensusInputs) (*valuespb.Value, error) {
 	switch o := input.Observation.(type) {
-	case *pb.SimpleConsensusInputs_Value:
+	case *sdk.SimpleConsensusInputs_Value:
 		return reportFromValue(o.Value), nil
-	case *pb.SimpleConsensusInputs_Error:
+	case *sdk.SimpleConsensusInputs_Error:
 		if input.Default == nil || input.Default.Value == nil {
 			return nil, errors.New(o.Error)
 		}
@@ -85,16 +85,16 @@ func defaultSimpleConsensus(_ context.Context, input *pb.SimpleConsensusInputs) 
 	}
 }
 
-func defaultReport(_ context.Context, input *pb.ReportRequest) (*pb.ReportResponse, error) {
+func defaultReport(_ context.Context, input *sdk.ReportRequest) (*sdk.ReportResponse, error) {
 	metadata := createTestReportMetadata()
 	rawReportBytes := append(metadata, input.EncodedPayload...)
 	defaultSigs := [][]byte{
 		[]byte("default_signature_1"),
 		[]byte("default_signature_2"),
 	}
-	return &pb.ReportResponse{
+	return &sdk.ReportResponse{
 		RawReport: rawReportBytes,
-		Sigs: []*pb.AttributedSignature{
+		Sigs: []*sdk.AttributedSignature{
 			{
 				Signature: defaultSigs[0],
 				SignerId:  0,
@@ -124,16 +124,16 @@ func reportFromValue(result *valuespb.Value) *valuespb.Value {
 
 type runtimeHelpers struct {
 	tb      testing.TB
-	calls   map[int32]chan *pb.CapabilityResponse
+	calls   map[int32]chan *sdk.CapabilityResponse
 	donSrc  rand.Source
 	nodeSrc rand.Source
 
-	secretsCalls map[int32][]*pb.SecretResponse
+	secretsCalls map[int32][]*sdk.SecretResponse
 	secrets      map[string]string
 }
 
-func (rh *runtimeHelpers) GetSource(mode pb.Mode) rand.Source {
-	if mode == pb.Mode_MODE_DON {
+func (rh *runtimeHelpers) GetSource(mode sdk.Mode) rand.Source {
+	if mode == sdk.Mode_MODE_DON {
 		if rh.donSrc == nil {
 			rh.donSrc = rand.NewSource(123)
 		}
@@ -146,14 +146,14 @@ func (rh *runtimeHelpers) GetSource(mode pb.Mode) rand.Source {
 	return rh.nodeSrc
 }
 
-func (rh *runtimeHelpers) Call(request *pb.CapabilityRequest) error {
+func (rh *runtimeHelpers) Call(request *sdk.CapabilityRequest) error {
 	reg := registry.GetRegistry(rh.tb)
 	capability, err := reg.GetCapability(request.Id)
 	if err != nil {
 		return err
 	}
 
-	respCh := make(chan *pb.CapabilityResponse, 1)
+	respCh := make(chan *sdk.CapabilityResponse, 1)
 	rh.calls[request.CallbackId] = respCh
 	go func() {
 		respCh <- capability.Invoke(rh.tb.Context(), request)
@@ -161,8 +161,8 @@ func (rh *runtimeHelpers) Call(request *pb.CapabilityRequest) error {
 	return nil
 }
 
-func (rh *runtimeHelpers) Await(request *pb.AwaitCapabilitiesRequest, maxResponseSize uint64) (*pb.AwaitCapabilitiesResponse, error) {
-	response := &pb.AwaitCapabilitiesResponse{Responses: map[int32]*pb.CapabilityResponse{}}
+func (rh *runtimeHelpers) Await(request *sdk.AwaitCapabilitiesRequest, maxResponseSize uint64) (*sdk.AwaitCapabilitiesResponse, error) {
+	response := &sdk.AwaitCapabilitiesResponse{Responses: map[int32]*sdk.CapabilityResponse{}}
 
 	var errs []error
 	for _, id := range request.Ids {
@@ -187,15 +187,15 @@ func (rh *runtimeHelpers) Await(request *pb.AwaitCapabilitiesRequest, maxRespons
 	return response, errors.Join(errs...)
 }
 
-func (rh *runtimeHelpers) GetSecrets(req *pb.GetSecretsRequest, _ uint64) error {
-	var resp []*pb.SecretResponse
+func (rh *runtimeHelpers) GetSecrets(req *sdk.GetSecretsRequest, _ uint64) error {
+	var resp []*sdk.SecretResponse
 	for _, secret := range req.Requests {
 		key := secret.Namespace + "/" + secret.Id
 		sec, ok := rh.secrets[key]
 		if !ok {
-			resp = append(resp, &pb.SecretResponse{
-				Response: &pb.SecretResponse_Error{
-					Error: &pb.SecretError{
+			resp = append(resp, &sdk.SecretResponse{
+				Response: &sdk.SecretResponse_Error{
+					Error: &sdk.SecretError{
 						Id:        secret.Id,
 						Namespace: secret.Namespace,
 						Error:     "could not find secret " + key,
@@ -203,9 +203,9 @@ func (rh *runtimeHelpers) GetSecrets(req *pb.GetSecretsRequest, _ uint64) error 
 				},
 			})
 		} else {
-			resp = append(resp, &pb.SecretResponse{
-				Response: &pb.SecretResponse_Secret{
-					Secret: &pb.Secret{
+			resp = append(resp, &sdk.SecretResponse{
+				Response: &sdk.SecretResponse_Secret{
+					Secret: &sdk.Secret{
 						Id:        secret.Id,
 						Namespace: secret.Namespace,
 						Value:     sec,
@@ -219,8 +219,8 @@ func (rh *runtimeHelpers) GetSecrets(req *pb.GetSecretsRequest, _ uint64) error 
 	return nil
 }
 
-func (rh *runtimeHelpers) AwaitSecrets(req *pb.AwaitSecretsRequest, _ uint64) (*pb.AwaitSecretsResponse, error) {
-	response := &pb.AwaitSecretsResponse{Responses: map[int32]*pb.SecretResponses{}}
+func (rh *runtimeHelpers) AwaitSecrets(req *sdk.AwaitSecretsRequest, _ uint64) (*sdk.AwaitSecretsResponse, error) {
+	response := &sdk.AwaitSecretsResponse{Responses: map[int32]*sdk.SecretResponses{}}
 
 	for _, id := range req.Ids {
 		resp, ok := rh.secretsCalls[id]
@@ -228,7 +228,7 @@ func (rh *runtimeHelpers) AwaitSecrets(req *pb.AwaitSecretsRequest, _ uint64) (*
 			return nil, fmt.Errorf("could not find call with id: %d", id)
 		}
 
-		response.Responses[id] = &pb.SecretResponses{
+		response.Responses[id] = &sdk.SecretResponses{
 			Responses: resp,
 		}
 	}
@@ -236,4 +236,4 @@ func (rh *runtimeHelpers) AwaitSecrets(req *pb.AwaitSecretsRequest, _ uint64) (*
 	return response, nil
 }
 
-func (rh *runtimeHelpers) SwitchModes(_ pb.Mode) {}
+func (rh *runtimeHelpers) SwitchModes(_ sdk.Mode) {}

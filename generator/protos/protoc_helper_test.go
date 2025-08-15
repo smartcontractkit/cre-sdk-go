@@ -3,7 +3,7 @@ package protos_test
 import (
 	"testing"
 
-	"github.com/smartcontractkit/chainlink-common/pkg/values/installer/pkg"
+	"github.com/smartcontractkit/chainlink-protos/cre/go/installer/pkg"
 	"github.com/smartcontractkit/cre-sdk-go/generator/protos"
 	"github.com/stretchr/testify/assert"
 )
