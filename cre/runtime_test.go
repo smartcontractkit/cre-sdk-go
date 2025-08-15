@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"math/rand"
 	"testing"
+	"time"
 
 	"github.com/smartcontractkit/chainlink-common/pkg/values"
 	valuespb "github.com/smartcontractkit/chainlink-common/pkg/values/pb"
@@ -85,6 +86,10 @@ func (m mockNodeRuntime) Rand() (*rand.Rand, error) {
 	panic("unused in tests")
 }
 
+func (m mockNodeRuntime) Now() (time.Time, error) {
+	panic("unused in tests")
+}
+
 func (m mockNodeRuntime) CallCapability(_ *pb.CapabilityRequest) Promise[*pb.CapabilityResponse] {
 	panic("unused in tests")
 }
@@ -110,6 +115,10 @@ func (m *mockRuntime) GetSecret(_ *SecretRequest) Promise[*Secret] {
 }
 
 func (m *mockRuntime) Rand() (*rand.Rand, error) {
+	panic("unused in tests")
+}
+
+func (m *mockRuntime) Now() (time.Time, error) {
 	panic("unused in tests")
 }
 

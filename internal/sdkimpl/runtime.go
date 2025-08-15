@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	"math/rand"
+	"time"
 
 	"github.com/smartcontractkit/chainlink-common/pkg/values"
 	valuespb "github.com/smartcontractkit/chainlink-common/pkg/values/pb"
@@ -21,6 +22,8 @@ type RuntimeHelpers interface {
 
 	SwitchModes(mode pb.Mode)
 	GetSource(mode pb.Mode) rand.Source
+
+	Now() time.Time
 }
 
 type RuntimeBase struct {
@@ -104,6 +107,10 @@ func (r *RuntimeBase) Rand() (*rand.Rand, error) {
 	}
 
 	return rand.New(r), nil
+}
+
+func (r *RuntimeBase) Now() time.Time {
+	return r.RuntimeHelpers.Now()
 }
 
 func (d *Runtime) GenerateReport(request *pb.ReportRequest) cre.Promise[*cre.Report] {

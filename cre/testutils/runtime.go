@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"math/rand"
 	"testing"
+	"time"
 
 	valuespb "github.com/smartcontractkit/chainlink-common/pkg/values/pb"
 	"github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
@@ -237,3 +238,7 @@ func (rh *runtimeHelpers) AwaitSecrets(req *pb.AwaitSecretsRequest, _ uint64) (*
 }
 
 func (rh *runtimeHelpers) SwitchModes(_ pb.Mode) {}
+
+func (rh *runtimeHelpers) Now() time.Time {
+	return time.Time{}
+}
