@@ -86,7 +86,7 @@ func (m mockNodeRuntime) Rand() (*rand.Rand, error) {
 	panic("unused in tests")
 }
 
-func (m mockNodeRuntime) Now() (time.Time, error) {
+func (m mockNodeRuntime) Now() time.Time {
 	panic("unused in tests")
 }
 
@@ -118,7 +118,7 @@ func (m *mockRuntime) Rand() (*rand.Rand, error) {
 	panic("unused in tests")
 }
 
-func (m *mockRuntime) Now() (time.Time, error) {
+func (m *mockRuntime) Now() time.Time {
 	panic("unused in tests")
 }
 
