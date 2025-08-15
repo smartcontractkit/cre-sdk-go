@@ -1,20 +1,19 @@
 module github.com/smartcontractkit/cre-sdk-go/capabilities/blockchain/evm
 
-go 1.24.4
+go 1.24.5
 
 require (
 	github.com/ethereum/go-ethereum v1.16.1
-	github.com/smartcontractkit/chainlink-common/pkg/values v0.0.0-20250806152407-159881c7589c
-	github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb v0.0.0-20250806155403-1d805e639a0f
-	github.com/smartcontractkit/cre-sdk-go v0.4.1-0.20250807065631-d6b50ae199ab
+	github.com/smartcontractkit/chainlink-protos/cre/go v0.0.0-20250815141632-9fdef84ea5d8
+	github.com/smartcontractkit/cre-sdk-go v0.5.1-0.20250815160239-48d9b4debad7
 	github.com/stretchr/testify v1.10.0
-	google.golang.org/protobuf v1.36.6
+	google.golang.org/protobuf v1.36.7
 )
 
 require (
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.0.1 // indirect
-	github.com/go-viper/mapstructure/v2 v2.3.0 // indirect
+	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
 	github.com/holiman/uint256 v1.3.2 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/shopspring/decimal v1.4.0 // indirect
