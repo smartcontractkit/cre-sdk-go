@@ -24,6 +24,7 @@ type runtimeInternals interface {
 	awaitSecrets(awaitRequest unsafe.Pointer, awaitRequestLen int32, responseBuffer unsafe.Pointer, maxResponseLen int32) int64
 	switchModes(mode int32)
 	getSeed(mode int32) int64
+	now(response unsafe.Pointer) int32
 }
 
 func newRuntime(internals runtimeInternals, mode sdk.Mode) sdkimpl.RuntimeBase {
@@ -170,7 +171,7 @@ func (r *runtimeHelper) SwitchModes(mode sdk.Mode) {
 
 func (r *runtimeHelper) Now() time.Time {
 	var buf [8]byte // host writes UnixNano as little-endian uint64
-	rc := now(unsafe.Pointer(&buf[0]))
+	rc := r.now(unsafe.Pointer(&buf[0]))
 	if rc != ErrnoSuccess {
 		panic(fmt.Errorf("failed to fetch time from host: now() returned errno %d", rc))
 	}
