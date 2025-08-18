@@ -19,9 +19,6 @@ func awaitSecrets(req unsafe.Pointer, reqLen int32, responseBuffer unsafe.Pointe
 //go:wasmimport env random_seed
 func getSeed(mode int32) int64
 
-//go:wasmimport env now
-func now(response unsafe.Pointer) int32
-
 type runtimeInternalsImpl struct{}
 
 var _ runtimeInternals = runtimeInternalsImpl{}
