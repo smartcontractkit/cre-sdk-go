@@ -6,7 +6,7 @@ import (
 
 // This would be part of the generated code
 
-func DynamicLogTrigger() cre.DynamicTrigger[*FilterLogsRequest, *Log, *Log, *DynamicLogTriggerRef] {
+func DynamicLogTrigger() cre.DynamicTrigger[*Log, *Log, *DynamicLogTriggerRef] {
 	return &dynamicLogTrigger{}
 }
 
