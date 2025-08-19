@@ -17,7 +17,7 @@ func Handler[C any, M proto.Message, T any, O any](trigger Trigger[M, T], callba
 	return handler(trigger, callback)
 }
 
-func DynamicHandler[C any, M proto.Message, H, T, O, R any](trigger DynamicTrigger[M, T, H], callback func(config C, runtime Runtime, payload T) (O, error)) (ExecutionHandler[C, Runtime], R) {
+func DynamicHandler[C any, M proto.Message, T, H, O any](trigger DynamicTrigger[M, T, H], callback func(config C, runtime Runtime, payload T) (O, error)) (ExecutionHandler[C, Runtime], H) {
 	// TODO use a special capability like "dynamic@1.0.0" to indicate that this is a dynamic handler
 	panic("not implemented")
 }

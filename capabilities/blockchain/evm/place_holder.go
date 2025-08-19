@@ -2,11 +2,24 @@ package evm
 
 import (
 	"github.com/smartcontractkit/cre-sdk-go/cre"
+	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 // This would be part of the generated code
 
-func DynamicLogTrigger() cre.DynamicTrigger[*Log, *Log, *DynamicLogTriggerRef] {
+// This would be a proto message, I'm just lazy
+
+type LogAndChain struct {
+	ChainSelector uint64
+	Log           *Log
+}
+
+func (l LogAndChain) ProtoReflect() protoreflect.Message {
+	//TODO implement me
+	panic("implement me")
+}
+
+func DynamicLogTrigger() cre.DynamicTrigger[*LogAndChain, *LogAndChain, *DynamicLogTriggerRef] {
 	return &dynamicLogTrigger{}
 }
 
@@ -22,7 +35,7 @@ func (d dynamicLogTrigger) Ref(id string) *DynamicLogTriggerRef {
 
 }
 
-func (d dynamicLogTrigger) Adapt(m *Log) (*Log, error) {
+func (d dynamicLogTrigger) Adapt(m *LogAndChain) (*LogAndChain, error) {
 	return m, nil
 }
 
