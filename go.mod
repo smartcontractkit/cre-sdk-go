@@ -4,7 +4,7 @@ go 1.24.5
 
 require (
 	github.com/shopspring/decimal v1.4.0
-	github.com/smartcontractkit/chainlink-protos/cre/go v0.0.0-20250815182425-f8fca0955840
+	github.com/smartcontractkit/chainlink-protos/cre/go v0.0.0-20250819150450-95ef563f6e6d
 	github.com/stretchr/testify v1.10.0
 	google.golang.org/protobuf v1.36.7
 )
