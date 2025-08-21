@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"log/slog"
-	"time"
 
 	"github.com/smartcontractkit/cre-sdk-go/cre"
 	"github.com/smartcontractkit/cre-sdk-go/cre/wasm"
@@ -33,7 +32,7 @@ type resultType struct {
 }
 
 func changeModes(config []byte, rt cre.Runtime, _ *basictrigger.Outputs) (string, error) {
-	ignoreTimeCall()
+	ignoreTimeCall(rt)
 	dinput := &basicaction.Inputs{InputThing: true}
 	doutput, err := (&basicaction.BasicAction{}).PerformAction(rt, dinput).Await()
 	if err != nil {
@@ -48,7 +47,7 @@ func changeModes(config []byte, rt cre.Runtime, _ *basictrigger.Outputs) (string
 		cre.ConsensusAggregationFromTags[*resultType]().WithDefault(defaultValue),
 	).Await()
 
-	ignoreTimeCall()
+	ignoreTimeCall(rt)
 	if err != nil {
 		return "", err
 	}
@@ -56,7 +55,7 @@ func changeModes(config []byte, rt cre.Runtime, _ *basictrigger.Outputs) (string
 }
 
 func nodeMode(_ []byte, nrt cre.NodeRuntime) (*resultType, error) {
-	ignoreTimeCall()
+	ignoreTimeCall(nrt)
 	ninput := &nodeaction.NodeInputs{InputThing: true}
 	result, err := (&nodeaction.BasicAction{}).PerformAction(nrt, ninput).Await()
 	if err != nil {
@@ -67,6 +66,6 @@ func nodeMode(_ []byte, nrt cre.NodeRuntime) (*resultType, error) {
 }
 
 // ignoreTimeCall makes a time now call and forces the compiler not to optimize it away.
-func ignoreTimeCall() {
-	fmt.Println(time.Now())
+func ignoreTimeCall(rt cre.RuntimeBase) {
+	fmt.Println(rt.Now())
 }

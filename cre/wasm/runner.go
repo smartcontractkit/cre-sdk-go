@@ -21,6 +21,7 @@ type runnerInternals interface {
 	sendResponse(response unsafe.Pointer, responseLen int32) int32
 	versionV2()
 	switchModes(mode int32)
+	now(response unsafe.Pointer) int32
 	exit()
 }
 

@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"math/rand"
 	"reflect"
+	"time"
 
 	"github.com/smartcontractkit/chainlink-protos/cre/go/sdk"
 	"github.com/smartcontractkit/chainlink-protos/cre/go/values"
@@ -18,6 +19,7 @@ type RuntimeBase interface {
 	// CallCapability is meant to be called by generated code
 	CallCapability(request *sdk.CapabilityRequest) Promise[*sdk.CapabilityResponse]
 	Rand() (*rand.Rand, error)
+	Now() time.Time
 	Logger() *slog.Logger
 }
 

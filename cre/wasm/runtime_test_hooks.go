@@ -220,6 +220,10 @@ func readHostMessage(response []byte, msg string, isError bool) int64 {
 
 func (r *runtimeInternalsTestHook) switchModes(_ int32) {}
 
+func (r *runtimeInternalsTestHook) now(_ unsafe.Pointer) int32 {
+	return 0
+}
+
 func (r *runtimeInternalsTestHook) getSeed(mode int32) int64 {
 	switch mode {
 	case int32(sdkpb.Mode_MODE_DON):
