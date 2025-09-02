@@ -16,6 +16,9 @@ func versionV2()
 //go:wasmimport env switch_modes
 func switchModes(mode int32)
 
+//go:wasmimport env now
+func now(response unsafe.Pointer) int32
+
 func NewRunner[C Config](parse func(configBytes []byte) (C, error)) cre.Runner[C] {
 	return newRunner[C](parse, runnerInternalsImpl{}, runtimeInternalsImpl{})
 }
@@ -42,6 +45,10 @@ func (r runnerInternalsImpl) versionV2() {
 
 func (r runnerInternalsImpl) switchModes(mode int32) {
 	switchModes(mode)
+}
+
+func (r runnerInternalsImpl) now(response unsafe.Pointer) int32 {
+	return now(response)
 }
 
 func (r runnerInternalsImpl) exit() {

@@ -32,6 +32,10 @@ func (r *runnerInternalsTestHook) switchModes(mode int32) {
 	r.modeSwitched = true
 }
 
+func (r *runnerInternalsTestHook) now(_ unsafe.Pointer) int32 {
+	return 0
+}
+
 func (r *runnerInternalsTestHook) exit() {
 	// Unlike the WASM, tests continue to execute
 }

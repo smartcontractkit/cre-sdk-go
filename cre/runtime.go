@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"math/rand"
 	"reflect"
+	"time"
 
 	"github.com/smartcontractkit/chainlink-protos/cre/go/sdk"
 	"github.com/smartcontractkit/chainlink-protos/cre/go/values"
@@ -21,6 +22,7 @@ type RuntimeBase interface {
 	// Add and remove trigger would be added here with a new message.
 
 	Rand() (*rand.Rand, error)
+	Now() time.Time
 	Logger() *slog.Logger
 }
 

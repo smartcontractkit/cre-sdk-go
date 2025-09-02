@@ -46,3 +46,7 @@ func (r runtimeInternalsImpl) switchModes(mode int32) {
 func (r runtimeInternalsImpl) getSeed(mode int32) int64 {
 	return getSeed(mode)
 }
+
+func (r runtimeInternalsImpl) now(response unsafe.Pointer) int32 {
+	return now(response)
+}
