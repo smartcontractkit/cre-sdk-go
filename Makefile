@@ -31,7 +31,10 @@ clean:
 clean-generate: clean generate
 
 .PHONY: test
-test: gomods
+test: unit_test standard_tests
+
+.PHONY: unit_test
+unit_test: gomods
 	gomods -s proto_vendor -go test ./...
 
 CRE_BRANCH ?= main
@@ -62,3 +65,25 @@ update-capabilities:
 		echo ""; \
 		echo "✅ All SDK updates completed successfully."; \
 	fi
+
+
+# Override if you wish to test against a branch.
+# Alternatively, you can override the directory in chainlink-common to point to this repository
+COMMON_VERSION ?= cre-std-tests@0.4.0
+MODULE := github.com/smartcontractkit/chainlink-common
+
+# Override on Windows if you aren't using a Unix-like shell:
+#   make standard_tests MKDIR_P=mkdir
+MKDIR_P ?= mkdir -p
+
+.PHONY: standard_tests
+standard_tests:
+	@echo "Downloading standard test version $(COMMON_VERSION)"
+	@$(MKDIR_P) .tools
+	@go mod download -json $(MODULE)@$(COMMON_VERSION) >/dev/null
+	@mod_dir=$$(go list -m -f '{{.Dir}}' $(MODULE)@$(COMMON_VERSION)); \
+	abs_dir=$$(cd .tools && pwd); \
+	echo "Building standard tests"; \
+	( cd $$mod_dir/pkg/workflows/wasm/host && go test -c -o $$abs_dir/host.test . ); \
+	echo "Running standard tests"; \
+	$$abs_dir/host.test -test.v -test.run ^TestStandard -path=standard_tests
