@@ -78,6 +78,55 @@ func TestConsensusAggregationFromTags(t *testing.T) {
 		t.Run("time", func(t *testing.T) { testMedianField[time.Time](t) })
 	})
 
+	t.Run("private fields are ignored", func(t *testing.T) {
+		expected := &sdk.ConsensusDescriptor{
+			Descriptor_: &sdk.ConsensusDescriptor_FieldsMap{
+				FieldsMap: &sdk.FieldsMap{
+					Fields: map[string]*sdk.ConsensusDescriptor{
+						"Val": {
+							Descriptor_: &sdk.ConsensusDescriptor_Aggregation{
+								Aggregation: sdk.AggregationType_AGGREGATION_TYPE_IDENTICAL,
+							},
+						},
+					},
+				},
+			},
+		}
+
+		t.Run("implicit ignore", func(t *testing.T) {
+			type S struct {
+				Val      string `consensus_aggregation:"identical"`
+				privateV string
+			}
+
+			desc := cre.ConsensusAggregationFromTags[S]()
+			require.NoError(t, desc.Err())
+			assert.True(t, proto.Equal(expected, desc.Descriptor()))
+		})
+
+		t.Run("explicit ignore", func(t *testing.T) {
+			type S struct {
+				Val      string `consensus_aggregation:"identical"`
+				privateV string `consensus_aggregation:"ignore"`
+			}
+
+			desc := cre.ConsensusAggregationFromTags[S]()
+			require.NoError(t, desc.Err())
+			assert.True(t, proto.Equal(expected, desc.Descriptor()))
+		})
+	})
+
+	t.Run("private fields error if they are tagged but not ignored", func(t *testing.T) {
+		type S struct {
+			Val      string `consensus_aggregation:"identical"`
+			privateV string `consensus_aggregation:"identical"`
+		}
+
+		desc := cre.ConsensusAggregationFromTags[S]()
+		// unexported field privateV with consensus tag on type S accessed via
+		require.ErrorContains(t, desc.Err(), "unexported field privateV with consensus tag on type S")
+	})
+
 	t.Run("valid identical", func(t *testing.T) {
 		type S struct {
 			Val   string    `consensus_aggregation:"identical"`

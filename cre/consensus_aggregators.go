@@ -82,10 +82,18 @@ func parseConsensusTag(t reflect.Type, path string) (*sdk.ConsensusDescriptor, e
 		field := t.Field(i)
 		tag := field.Tag.Get("consensus_aggregation")
 		if tag == "" {
-			return nil, fmt.Errorf("missing consensus tag on type %s accessed via %s", t.Name(), path+field.Name)
+			if field.IsExported() {
+				return nil, fmt.Errorf("missing consensus tag on type %s accessed via %s", t.Name(), path+field.Name)
+			}
+
+			continue
 		}
 		if tag == "ignore" {
 			continue
+		}
+
+		if !field.IsExported() {
+			return nil, fmt.Errorf("unexported field %s with consensus tag on type %s accessed via %s", field.Name, t.Name(), path)
 		}
 
 		serializedName := field.Name
