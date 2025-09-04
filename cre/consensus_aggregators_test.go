@@ -27,6 +27,17 @@ func TestConsensusIdenticalAggregation(t *testing.T) {
 		assert.Equal(t, descriptor.Descriptor().GetAggregation(), sdk.AggregationType_AGGREGATION_TYPE_IDENTICAL)
 	})
 
+	t.Run("Ignores private fields", func(t *testing.T) {
+		type S struct {
+			Val      string
+			privateV chan int
+		}
+
+		descriptor := cre.ConsensusIdenticalAggregation[S]()
+		require.NoError(t, descriptor.Err())
+		assert.Equal(t, descriptor.Descriptor().GetAggregation(), sdk.AggregationType_AGGREGATION_TYPE_IDENTICAL)
+	})
+
 	t.Run("invalid types", func(t *testing.T) {
 		descriptor := cre.ConsensusIdenticalAggregation[chan int]()
 		require.Error(t, descriptor.Err())

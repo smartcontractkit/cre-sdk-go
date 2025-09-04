@@ -184,7 +184,8 @@ func isIdenticalType(t reflect.Type) bool {
 		return t.Key().Kind() == reflect.String && isIdenticalType(t.Elem())
 	case reflect.Struct:
 		for i := 0; i < t.NumField(); i++ {
-			if !isIdenticalType(t.Field(i).Type) {
+			field := t.Field(i)
+			if field.IsExported() && !isIdenticalType(field.Type) {
 				return false
 			}
 		}
