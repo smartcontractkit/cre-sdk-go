@@ -29,11 +29,14 @@ func (c *Client) SendReport(runtime cre.NodeRuntime, input *ReportRequest) cre.P
 	return c.SendRequest(runtime, reportRequestToRequest(input))
 }
 
+// Id of the node is a uint32 stored in 4 bytes.
+const nodeIdLen = 4
+
 func reportRequestToRequest(in *ReportRequest) *Request {
 	report := in.Report.X_GeneratedCodeOnly_Unwrap()
 	sigLen := 0
 	if len(report.Sigs) != 0 {
-		sigLen = len(report.Sigs) * (len(report.Sigs[0].Signature) + 4)
+		sigLen = len(report.Sigs) * (len(report.Sigs[0].Signature) + nodeIdLen)
 	}
 	body := make([]byte, len(report.RawReport)+len(report.ReportContext)+sigLen)
 	copy(body, report.RawReport)
