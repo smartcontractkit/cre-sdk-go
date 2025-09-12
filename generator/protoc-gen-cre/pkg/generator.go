@@ -7,7 +7,7 @@ import (
 
 	"github.com/iancoleman/strcase"
 	"github.com/smartcontractkit/chainlink-common/pkg/capabilities/v2/protoc/pkg"
-	"github.com/smartcontractkit/chainlink-common/pkg/workflows/sdk/v2/pb"
+	"github.com/smartcontractkit/chainlink-protos/cre/go/sdk"
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
@@ -27,7 +27,7 @@ var wrapReportTemplate string
 //go:embed templates/mock.go.tmpl
 var mockTemplate string
 
-var reportResponseType = (&pb.ReportResponse{}).ProtoReflect().Descriptor().FullName()
+var reportResponseType = (&sdk.ReportResponse{}).ProtoReflect().Descriptor().FullName()
 var reportIdent = protogen.GoIdent{
 	GoName:       "Report",
 	GoImportPath: "github.com/smartcontractkit/cre-sdk-go/cre",
