@@ -20,21 +20,25 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-func NewRuntime() cre.Runtime {
-	return &sdkimpl.Runtime{RuntimeBase: newRuntime(sdk.Mode_MODE_DON)}
+const CreMainnet = "http://localhost:8090/"
+
+func NewRuntime(url string) cre.Runtime {
+	return &sdkimpl.Runtime{RuntimeBase: newRuntime(sdk.Mode_MODE_DON, url)}
 }
 
-func newRuntime(mode sdk.Mode) sdkimpl.RuntimeBase {
+func newRuntime(mode sdk.Mode, url string) sdkimpl.RuntimeBase {
 	return sdkimpl.RuntimeBase{
 		Mode:           mode,
-		RuntimeHelpers: &runtimeHelper{idMap: map[int32]string{}, secrets: map[int32]*sdk.SecretResponses{}},
+		RuntimeHelpers: &runtimeHelper{url: url, idMap: map[int32]string{}, secrets: map[int32]*sdk.SecretResponses{}},
 		Lggr:           slog.Default(),
 	}
 }
 
 type runtimeHelper struct {
+	url     string
 	idMap   map[int32]string
 	secrets map[int32]*sdk.SecretResponses
+	mode    sdk.Mode
 }
 
 var _ sdkimpl.RuntimeHelpers = (*runtimeHelper)(nil)
@@ -60,7 +64,7 @@ func (r *runtimeHelper) Call(request *sdk.CapabilityRequest) error {
 	if err != nil {
 		return err
 	}
-	res, err := httpPost("call", string(reqJ))
+	res, err := httpPost(r.url+"call", string(reqJ))
 	if err != nil {
 		return err
 	}
@@ -80,7 +84,7 @@ func (r *runtimeHelper) Await(request *sdk.AwaitCapabilitiesRequest, _ uint64) (
 	}
 
 	idStrs := strings.Join(ids, ",")
-	body, err := httpPost("await", idStrs)
+	body, err := httpPost(r.url+"await", idStrs)
 	if err != nil {
 		return nil, err
 	}
@@ -158,7 +162,9 @@ func (r *runtimeHelper) AwaitSecrets(request *sdk.AwaitSecretsRequest, _ uint64)
 	return response, nil
 }
 
-func (r *runtimeHelper) SwitchModes(_ sdk.Mode) {}
+func (r *runtimeHelper) SwitchModes(mode sdk.Mode) {
+	r.mode = mode
+}
 
 func (r *runtimeHelper) GetSource(_ sdk.Mode) rand.Source {
 	return rand.NewSource(time.Now().UnixNano())
@@ -168,9 +174,12 @@ func (r *runtimeHelper) Now() time.Time {
 	return time.Now()
 }
 
-func httpPost(suffix string, body string) ([]byte, error) {
+func httpPost(url, body string) ([]byte, error) {
 	client := http.Client{Timeout: time.Minute * 5}
-	resp, err := client.Post("http://localhost:8090/"+suffix, "application/json", strings.NewReader(body))
+	// TODO put the URL in the constructor
+	// The constructor would also need to set up some fakes, so maybe creclient is in its own go.mod?
+
+	resp, err := client.Post(url, "application/json", strings.NewReader(body))
 	if err != nil {
 		return nil, err
 	}
