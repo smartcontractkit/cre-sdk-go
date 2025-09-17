@@ -20,30 +20,45 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-const CreMainnet = "http://localhost:8090/"
+const CreMainnet = "http://localhost:8090/"               // This is replaced with our creUrl
+const DefaultLocalCapabilityUrl = "http://localhost:8091" // this is replaced with the default that the node Capability handler runs on
 
-func NewRuntime(url string) cre.Runtime {
-	return &sdkimpl.Runtime{RuntimeBase: newRuntime(sdk.Mode_MODE_DON, url)}
+func NewRuntime(creUrl, localCapabilityUrl string) cre.Runtime {
+	return &sdkimpl.Runtime{RuntimeBase: newRuntime(sdk.Mode_MODE_DON, creUrl, localCapabilityUrl)}
 }
 
-func newRuntime(mode sdk.Mode, url string) sdkimpl.RuntimeBase {
+func newRuntime(mode sdk.Mode, creUrl, localCapabilityUrl string) sdkimpl.RuntimeBase {
 	return sdkimpl.RuntimeBase{
-		Mode:           mode,
-		RuntimeHelpers: &runtimeHelper{url: url, idMap: map[int32]string{}, secrets: map[int32]*sdk.SecretResponses{}},
-		Lggr:           slog.Default(),
+		Mode: mode,
+		RuntimeHelpers: &runtimeHelper{
+			creUrl:             creUrl,
+			localCapabilityUrl: localCapabilityUrl,
+			idMap:              map[int32]string{},
+			secrets:            map[int32]*sdk.SecretResponses{},
+			localIds:           map[int32]bool{},
+		},
+		Lggr: slog.Default(),
 	}
 }
 
 type runtimeHelper struct {
-	url     string
-	idMap   map[int32]string
-	secrets map[int32]*sdk.SecretResponses
-	mode    sdk.Mode
+	creUrl             string
+	localCapabilityUrl string
+	idMap              map[int32]string
+	localIds           map[int32]bool
+	secrets            map[int32]*sdk.SecretResponses
+	mode               sdk.Mode
 }
 
 var _ sdkimpl.RuntimeHelpers = (*runtimeHelper)(nil)
 
 func (r *runtimeHelper) Call(request *sdk.CapabilityRequest) error {
+	url := r.creUrl
+	if r.mode == sdk.Mode_MODE_NODE {
+		r.localIds[request.CallbackId] = true
+		url = r.localCapabilityUrl
+	}
+
 	anyBody, err := proto.Marshal(request.Payload)
 	if err != nil {
 		return err
@@ -64,7 +79,7 @@ func (r *runtimeHelper) Call(request *sdk.CapabilityRequest) error {
 	if err != nil {
 		return err
 	}
-	res, err := httpPost(r.url+"call", string(reqJ))
+	res, err := httpPost(url+"call", string(reqJ))
 	if err != nil {
 		return err
 	}
@@ -74,6 +89,36 @@ func (r *runtimeHelper) Call(request *sdk.CapabilityRequest) error {
 }
 
 func (r *runtimeHelper) Await(request *sdk.AwaitCapabilitiesRequest, _ uint64) (*sdk.AwaitCapabilitiesResponse, error) {
+	localRequest := &sdk.AwaitCapabilitiesRequest{}
+	remoteRequest := &sdk.AwaitCapabilitiesRequest{}
+
+	for _, id := range request.Ids {
+		if r.localIds[id] {
+			localRequest.Ids = append(localRequest.Ids, id)
+			delete(r.localIds, id)
+		} else {
+			remoteRequest.Ids = append(remoteRequest.Ids, id)
+		}
+	}
+
+	responses, err := r.await(remoteRequest, r.creUrl)
+	if err != nil {
+		return nil, err
+	}
+
+	localResponses, err := r.await(localRequest, r.localCapabilityUrl)
+	if err != nil {
+		return nil, err
+	}
+
+	for id, response := range localResponses.Responses {
+		responses.Responses[id] = response
+	}
+
+	return responses, nil
+}
+
+func (r *runtimeHelper) await(request *sdk.AwaitCapabilitiesRequest, url string) (*sdk.AwaitCapabilitiesResponse, error) {
 	ids := make([]string, len(request.Ids))
 	for i, cid := range request.Ids {
 		rid, ok := r.idMap[cid]
@@ -84,7 +129,7 @@ func (r *runtimeHelper) Await(request *sdk.AwaitCapabilitiesRequest, _ uint64) (
 	}
 
 	idStrs := strings.Join(ids, ",")
-	body, err := httpPost(r.url+"await", idStrs)
+	body, err := httpPost(url+"await", idStrs)
 	if err != nil {
 		return nil, err
 	}
@@ -176,9 +221,6 @@ func (r *runtimeHelper) Now() time.Time {
 
 func httpPost(url, body string) ([]byte, error) {
 	client := http.Client{Timeout: time.Minute * 5}
-	// TODO put the URL in the constructor
-	// The constructor would also need to set up some fakes, so maybe creclient is in its own go.mod?
-
 	resp, err := client.Post(url, "application/json", strings.NewReader(body))
 	if err != nil {
 		return nil, err
