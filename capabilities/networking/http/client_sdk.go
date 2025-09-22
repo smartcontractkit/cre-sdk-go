@@ -4,14 +4,15 @@ import (
 	"encoding/binary"
 
 	"github.com/smartcontractkit/cre-sdk-go/cre"
+	"google.golang.org/protobuf/types/known/durationpb"
 )
 
 type ReportRequest struct {
-	Url       string
-	Method    string
-	Headers   map[string]string
-	Report    *cre.Report
-	TimeoutMs int32
+	Url     string
+	Method  string
+	Headers map[string]string
+	Report  *cre.Report
+	Timeout *durationpb.Duration
 
 	// CacheSettings is more limited than on a Request, as reports may contain different sets of signatures on different nodes, leading to a cache miss.
 	CacheSettings *CacheSettings
@@ -53,7 +54,7 @@ func reportRequestToRequest(in *ReportRequest) *Request {
 		Method:        in.Method,
 		Headers:       in.Headers,
 		Body:          body,
-		TimeoutMs:     in.TimeoutMs,
+		Timeout:       in.Timeout,
 		CacheSettings: in.CacheSettings,
 	}
 }

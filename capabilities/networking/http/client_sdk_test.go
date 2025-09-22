@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/smartcontractkit/chainlink-protos/cre/go/sdk"
 	"github.com/smartcontractkit/cre-sdk-go/capabilities/networking/http"
@@ -14,6 +15,7 @@ import (
 	"github.com/smartcontractkit/cre-sdk-go/cre/testutils"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/durationpb"
 )
 
 var anyResponse = &http.Response{
@@ -109,11 +111,11 @@ func assertReport(t *testing.T, input *http.Request) (*http.Response, error) {
 		t.Errorf("Expected body %v, got %v", expectedBody, input.Body)
 	}
 
-	if input.TimeoutMs != int32(54321) {
-		t.Errorf("Expected timeout %d, got %d", int32(54321), input.TimeoutMs)
+	if input.Timeout.AsDuration() != time.Duration(54321) {
+		t.Errorf("Expected timeout %v, got %v", durationpb.New(time.Duration(54321)), input.Timeout)
 	}
-	expectedCacheSettings := &http.CacheSettings{MaxAgeMs: 60000, ReadFromCache: true}
-	if !reflect.DeepEqual(input.CacheSettings, expectedCacheSettings) {
+	expectedCacheSettings := &http.CacheSettings{MaxAge: durationpb.New(time.Duration(600000)), Store: true}
+	if !proto.Equal(input.CacheSettings, expectedCacheSettings) {
 		t.Errorf("Expected cache settings %v, got %v", expectedCacheSettings, input.CacheSettings)
 	}
 	return anyResponse, nil
@@ -125,7 +127,7 @@ func makeRequest(report *cre.Report) *http.ReportRequest {
 		Method:        "POST",
 		Headers:       map[string]string{"Content-Type": "application/json"},
 		Report:        report,
-		TimeoutMs:     54321,
-		CacheSettings: &http.CacheSettings{MaxAgeMs: 60000, ReadFromCache: true},
+		Timeout:       durationpb.New(time.Duration(54321)),
+		CacheSettings: &http.CacheSettings{MaxAge: durationpb.New(time.Duration(600000)), Store: true},
 	}
 }
