@@ -30,6 +30,8 @@ flowchart LR
 	click cre-sdk-go/capabilities/blockchain/evm href "https://github.com/smartcontractkit/cre-sdk-go"
 	cre-sdk-go/capabilities/networking/confidentialhttp --> cre-sdk-go
 	click cre-sdk-go/capabilities/networking/confidentialhttp href "https://github.com/smartcontractkit/cre-sdk-go"
+	cre-sdk-go/capabilities/networking/http --> cre-sdk-go
+	click cre-sdk-go/capabilities/networking/http href "https://github.com/smartcontractkit/cre-sdk-go"
 	cre-sdk-go/capabilities/scheduler/cron --> cre-sdk-go
 	click cre-sdk-go/capabilities/scheduler/cron href "https://github.com/smartcontractkit/cre-sdk-go"
 	cre-sdk-go/generator/protoc-gen-cre --> chainlink-common
@@ -59,6 +61,7 @@ flowchart LR
 		 cre-sdk-go
 		 cre-sdk-go/capabilities/blockchain/evm
 		 cre-sdk-go/capabilities/networking/confidentialhttp
+		 cre-sdk-go/capabilities/networking/http
 		 cre-sdk-go/capabilities/scheduler/cron
 		 cre-sdk-go/generator/protoc-gen-cre
 	end
