@@ -122,6 +122,10 @@ type Runtime struct {
 }
 
 func (d *Runtime) GetSecret(req *sdk.SecretRequest) cre.Promise[*sdk.Secret] {
+	if d.modeErr != nil {
+		return cre.PromiseFromResult[*sdk.Secret](nil, d.modeErr)
+	}
+
 	d.nextCallId++
 
 	sr := &sdk.GetSecretsRequest{
