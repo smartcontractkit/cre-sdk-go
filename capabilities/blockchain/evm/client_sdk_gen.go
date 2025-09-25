@@ -12,7 +12,6 @@ import (
 
 	sdkpb "github.com/smartcontractkit/chainlink-protos/cre/go/sdk"
 	"github.com/smartcontractkit/cre-sdk-go/cre"
-	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type Client struct {
@@ -205,62 +204,6 @@ func (c *Client) HeaderByNumber(runtime cre.Runtime, input *HeaderByNumberReques
 			return nil, errors.New(payload.Error)
 		case *sdkpb.CapabilityResponse_Payload:
 			output := &HeaderByNumberReply{}
-			err = payload.Payload.UnmarshalTo(output)
-			return output, err
-		default:
-			return nil, errors.New("unexpected response type")
-		}
-	})
-
-	return capCallResponse
-
-}
-
-func (c *Client) RegisterLogTracking(runtime cre.Runtime, input *RegisterLogTrackingRequest) cre.Promise[*emptypb.Empty] {
-	wrapped := &anypb.Any{}
-	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
-	if err != nil {
-		return cre.PromiseFromResult[*emptypb.Empty](nil, err)
-	}
-
-	capCallResponse := cre.Then(runtime.CallCapability(&sdkpb.CapabilityRequest{
-		Id:      "evm" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
-		Payload: wrapped,
-		Method:  "RegisterLogTracking",
-	}), func(i *sdkpb.CapabilityResponse) (*emptypb.Empty, error) {
-		switch payload := i.Response.(type) {
-		case *sdkpb.CapabilityResponse_Error:
-			return nil, errors.New(payload.Error)
-		case *sdkpb.CapabilityResponse_Payload:
-			output := &emptypb.Empty{}
-			err = payload.Payload.UnmarshalTo(output)
-			return output, err
-		default:
-			return nil, errors.New("unexpected response type")
-		}
-	})
-
-	return capCallResponse
-
-}
-
-func (c *Client) UnregisterLogTracking(runtime cre.Runtime, input *UnregisterLogTrackingRequest) cre.Promise[*emptypb.Empty] {
-	wrapped := &anypb.Any{}
-	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
-	if err != nil {
-		return cre.PromiseFromResult[*emptypb.Empty](nil, err)
-	}
-
-	capCallResponse := cre.Then(runtime.CallCapability(&sdkpb.CapabilityRequest{
-		Id:      "evm" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
-		Payload: wrapped,
-		Method:  "UnregisterLogTracking",
-	}), func(i *sdkpb.CapabilityResponse) (*emptypb.Empty, error) {
-		switch payload := i.Response.(type) {
-		case *sdkpb.CapabilityResponse_Error:
-			return nil, errors.New(payload.Error)
-		case *sdkpb.CapabilityResponse_Payload:
-			output := &emptypb.Empty{}
 			err = payload.Payload.UnmarshalTo(output)
 			return output, err
 		default:

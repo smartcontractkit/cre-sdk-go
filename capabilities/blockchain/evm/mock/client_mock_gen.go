@@ -12,8 +12,6 @@ import (
 
 	"github.com/smartcontractkit/cre-sdk-go/capabilities/blockchain/evm"
 
-	"google.golang.org/protobuf/types/known/emptypb"
-
 	sdkpb "github.com/smartcontractkit/chainlink-protos/cre/go/sdk"
 	"github.com/smartcontractkit/cre-sdk-go/cre/testutils/registry"
 )
@@ -53,12 +51,6 @@ type ClientCapability struct {
 	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
 
 	HeaderByNumber func(ctx context.Context, input *evm.HeaderByNumberRequest) (*evm.HeaderByNumberReply, error)
-	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
-
-	RegisterLogTracking func(ctx context.Context, input *evm.RegisterLogTrackingRequest) (*emptypb.Empty, error)
-	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
-
-	UnregisterLogTracking func(ctx context.Context, input *evm.UnregisterLogTrackingRequest) (*emptypb.Empty, error)
 	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
 
 	WriteReport func(ctx context.Context, input *evm.WriteReportRequest) (*evm.WriteReportReply, error)
@@ -211,50 +203,6 @@ func (c *ClientCapability) Invoke(ctx context.Context, request *sdkpb.Capability
 			break
 		}
 		resp, err := c.HeaderByNumber(ctx, input)
-		if err != nil {
-			capResp.Response = &sdkpb.CapabilityResponse_Error{Error: err.Error()}
-		} else {
-			payload, err := anypb.New(resp)
-			if err == nil {
-				capResp.Response = &sdkpb.CapabilityResponse_Payload{Payload: payload}
-			} else {
-				capResp.Response = &sdkpb.CapabilityResponse_Error{Error: err.Error()}
-			}
-		}
-	case "RegisterLogTracking":
-		input := &evm.RegisterLogTrackingRequest{}
-		if err := request.Payload.UnmarshalTo(input); err != nil {
-			capResp.Response = &sdkpb.CapabilityResponse_Error{Error: err.Error()}
-			break
-		}
-
-		if c.RegisterLogTracking == nil {
-			capResp.Response = &sdkpb.CapabilityResponse_Error{Error: "no stub provided for RegisterLogTracking"}
-			break
-		}
-		resp, err := c.RegisterLogTracking(ctx, input)
-		if err != nil {
-			capResp.Response = &sdkpb.CapabilityResponse_Error{Error: err.Error()}
-		} else {
-			payload, err := anypb.New(resp)
-			if err == nil {
-				capResp.Response = &sdkpb.CapabilityResponse_Payload{Payload: payload}
-			} else {
-				capResp.Response = &sdkpb.CapabilityResponse_Error{Error: err.Error()}
-			}
-		}
-	case "UnregisterLogTracking":
-		input := &evm.UnregisterLogTrackingRequest{}
-		if err := request.Payload.UnmarshalTo(input); err != nil {
-			capResp.Response = &sdkpb.CapabilityResponse_Error{Error: err.Error()}
-			break
-		}
-
-		if c.UnregisterLogTracking == nil {
-			capResp.Response = &sdkpb.CapabilityResponse_Error{Error: "no stub provided for UnregisterLogTracking"}
-			break
-		}
-		resp, err := c.UnregisterLogTracking(ctx, input)
 		if err != nil {
 			capResp.Response = &sdkpb.CapabilityResponse_Error{Error: err.Error()}
 		} else {
