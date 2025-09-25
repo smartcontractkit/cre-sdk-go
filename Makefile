@@ -69,7 +69,7 @@ update-capabilities:
 
 # Override if you wish to test against a branch.
 # Alternatively, you can override the directory in chainlink-common to point to this repository
-COMMON_VERSION ?= cre-std-tests@0.4.0
+COMMON_VERSION ?= cre-std-tests@0.5.0
 MODULE := github.com/smartcontractkit/chainlink-common
 
 # Override on Windows if you aren't using a Unix-like shell:
