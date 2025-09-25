@@ -19,7 +19,7 @@ func main() {
 			Category:      "internal",
 			Pkg:           "consensus",
 			MajorVersion:  1,
-			PreReleaseTag: "alpha",
+			PreReleaseTag: "beta",
 			Files:         []string{"consensus.proto"},
 		},
 		{

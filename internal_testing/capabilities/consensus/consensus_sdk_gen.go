@@ -26,7 +26,7 @@ func (c *Consensus) Simple(runtime cre.Runtime, input *sdk.SimpleConsensusInputs
 	}
 
 	capCallResponse := cre.Then(runtime.CallCapability(&sdkpb.CapabilityRequest{
-		Id:      "consensus@1.0.0-alpha",
+		Id:      "consensus@1.0.0",
 		Payload: wrapped,
 		Method:  "Simple",
 	}), func(i *sdkpb.CapabilityResponse) (*pb.Value, error) {
@@ -54,7 +54,7 @@ func (c *Consensus) Report(runtime cre.Runtime, input *sdk.ReportRequest) cre.Pr
 	}
 
 	capCallResponse := cre.Then(runtime.CallCapability(&sdkpb.CapabilityRequest{
-		Id:      "consensus@1.0.0-alpha",
+		Id:      "consensus@1.0.0",
 		Payload: wrapped,
 		Method:  "Report",
 	}), func(i *sdkpb.CapabilityResponse) (*sdk.ReportResponse, error) {

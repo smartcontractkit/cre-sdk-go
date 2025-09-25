@@ -91,5 +91,5 @@ func (c *ConsensusCapability) Invoke(ctx context.Context, request *sdkpb.Capabil
 }
 
 func (c *ConsensusCapability) ID() string {
-	return "consensus@1.0.0-alpha"
+	return "consensus@1.0.0"
 }
