@@ -10,7 +10,7 @@ import (
 //go:wasmimport env send_response
 func sendResponse(response unsafe.Pointer, responseLen int32) int32
 
-//go:wasmimport env version_v2
+//go:wasmimport env version_v2_go
 func versionV2()
 
 //go:wasmimport env switch_modes
