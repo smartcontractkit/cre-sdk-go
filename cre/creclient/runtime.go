@@ -31,6 +31,7 @@ func newRuntime(mode sdk.Mode, creUrl, localCapabilityUrl string) sdkimpl.Runtim
 	return sdkimpl.RuntimeBase{
 		Mode: mode,
 		RuntimeHelpers: &runtimeHelper{
+			mode:               mode,
 			creUrl:             creUrl,
 			localCapabilityUrl: localCapabilityUrl,
 			idMap:              map[int32]string{},
