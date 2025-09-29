@@ -14,12 +14,12 @@ import (
 // NumericType represents types that can be used numerically for consensus aggregation.
 // It includes all go primitive numeric types, big.Int, decimal.Decimal, and time.Time.
 type NumericType interface {
-	int | int8 | int16 | int32 | int64 | uint | uint8 | uint16 | uint32 | uint64 | float32 | float64 | *big.Int | decimal.Decimal | time.Time
+	~int | ~int8 | ~int16 | ~int32 | ~int64 | ~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 | ~float32 | ~float64 | ~*big.Int | decimal.Decimal | time.Time
 }
 
 // Primitive represents any `NumericType`, string, or bool.
 type Primitive interface {
-	NumericType | string | bool
+	NumericType | ~string | ~bool
 }
 
 // ConsensusMedianAggregation takes a median of all node observations.

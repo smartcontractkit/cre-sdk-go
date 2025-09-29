@@ -20,8 +20,8 @@ import (
 )
 
 type Namespace string
-type Id string
-type Secrets map[Namespace]map[Id]string
+type ID string
+type Secrets map[Namespace]map[ID]string
 
 // NewRuntime creates a new TestRuntime for use in tests.
 // A nil Secrets map is treated as an empty map, but entries cannot be added later.
@@ -216,7 +216,7 @@ func (rh *runtimeHelpers) GetSecrets(req *sdk.GetSecretsRequest, _ uint64) error
 		ns, ok := rh.secrets[Namespace(secret.Namespace)]
 		var sec string
 		if ok {
-			sec, ok = ns[Id(secret.Id)]
+			sec, ok = ns[ID(secret.Id)]
 		}
 		if !ok {
 			resp = append(resp, &sdk.SecretResponse{
