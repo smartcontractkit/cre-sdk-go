@@ -45,24 +45,24 @@ var anyReportResponse = &sdk.ReportResponse{
 }
 
 func TestClient_SendReport(t *testing.T) {
-	testSendReport(t, func(rt cre.Runtime, report *cre.Report) (*http.Response, error) {
+	testSendReport(t, func(rt cre.Runtime, report cre.Report) (*http.Response, error) {
 		return cre.RunInNodeMode("", rt, func(_ string, nrt cre.NodeRuntime) (*http.Response, error) {
 			client := &http.Client{}
-			return client.SendReport(nrt, makeRequest(report)).Await()
+			return client.SendReport(nrt, report, reportToRequest).Await()
 		}, cre.ConsensusIdenticalAggregation[*http.Response]()).Await()
 	})
 }
 
 func TestSendRequester_SendReport(t *testing.T) {
-	testSendReport(t, func(rt cre.Runtime, report *cre.Report) (*http.Response, error) {
+	testSendReport(t, func(rt cre.Runtime, report cre.Report) (*http.Response, error) {
 		client := &http.Client{}
 		return http.SendRequest("", rt, client, func(_ string, _ *slog.Logger, sendRequester *http.SendRequester) (*http.Response, error) {
-			return sendRequester.SendReport(makeRequest(report)).Await()
+			return sendRequester.SendReport(report, reportToRequest).Await()
 		}, cre.ConsensusIdenticalAggregation[*http.Response]()).Await()
 	})
 }
 
-func testSendReport(t *testing.T, sendReport func(rt cre.Runtime, report *cre.Report) (*http.Response, error)) {
+func testSendReport(t *testing.T, sendReport func(rt cre.Runtime, report cre.Report) (*http.Response, error)) {
 	report, err := cre.X_GeneratedCodeOnly_WrapReport(anyReportResponse)
 	require.NoError(t, err)
 
@@ -75,9 +75,28 @@ func testSendReport(t *testing.T, sendReport func(rt cre.Runtime, report *cre.Re
 
 	rt := testutils.NewRuntime(t, map[string]string{})
 
-	response, err := sendReport(rt, report)
+	response, err := sendReport(rt, *report)
 	require.NoError(t, err)
 	require.True(t, proto.Equal(anyResponse, response))
+}
+
+func reportToRequest(reportResponse *sdk.ReportResponse) (*http.Request, error) {
+	var body []byte
+	body = append(body, reportResponse.RawReport...)
+	body = append(body, reportResponse.ReportContext...)
+	for _, sig := range reportResponse.Sigs {
+		body = append(body, sig.Signature...)
+		body = binary.LittleEndian.AppendUint32(body, sig.SignerId)
+	}
+
+	return &http.Request{
+		Url:           "https://example.com/api/report",
+		Method:        "POST",
+		Headers:       map[string]string{"Content-Type": "application/json"},
+		Body:          body,
+		Timeout:       durationpb.New(time.Duration(54321)),
+		CacheSettings: &http.CacheSettings{MaxAge: durationpb.New(time.Duration(600000)), Store: true},
+	}, nil
 }
 
 func assertReport(t *testing.T, input *http.Request) (*http.Response, error) {
@@ -119,15 +138,4 @@ func assertReport(t *testing.T, input *http.Request) (*http.Response, error) {
 		t.Errorf("Expected cache settings %v, got %v", expectedCacheSettings, input.CacheSettings)
 	}
 	return anyResponse, nil
-}
-
-func makeRequest(report *cre.Report) *http.ReportRequest {
-	return &http.ReportRequest{
-		Url:           "https://example.com/api/report",
-		Method:        "POST",
-		Headers:       map[string]string{"Content-Type": "application/json"},
-		Report:        report,
-		Timeout:       durationpb.New(time.Duration(54321)),
-		CacheSettings: &http.CacheSettings{MaxAge: durationpb.New(time.Duration(600000)), Store: true},
-	}
 }
