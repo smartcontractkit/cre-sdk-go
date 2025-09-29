@@ -102,21 +102,29 @@ func (r *runtimeHelper) Await(request *sdk.AwaitCapabilitiesRequest, _ uint64) (
 		}
 	}
 
-	responses, err := r.await(remoteRequest, r.creUrl)
-	if err != nil {
-		return nil, err
+	allResponses := make(map[int32]*sdk.CapabilityResponse, len(request.Ids))
+
+	if len(remoteRequest.Ids) != 0 {
+		responses, err := r.await(remoteRequest, r.creUrl)
+		if err != nil {
+			return nil, err
+		}
+
+		allResponses = responses.Responses
 	}
 
-	localResponses, err := r.await(localRequest, r.localCapabilityUrl)
-	if err != nil {
-		return nil, err
+	if len(localRequest.Ids) != 0 {
+		localResponses, err := r.await(localRequest, r.localCapabilityUrl)
+		if err != nil {
+			return nil, err
+		}
+
+		for id, response := range localResponses.Responses {
+			allResponses[id] = response
+		}
 	}
 
-	for id, response := range localResponses.Responses {
-		responses.Responses[id] = response
-	}
-
-	return responses, nil
+	return &sdk.AwaitCapabilitiesResponse{Responses: allResponses}, nil
 }
 
 func (r *runtimeHelper) await(request *sdk.AwaitCapabilitiesRequest, url string) (*sdk.AwaitCapabilitiesResponse, error) {
