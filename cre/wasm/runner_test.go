@@ -7,7 +7,7 @@ import (
 
 	"github.com/smartcontractkit/chainlink-protos/cre/go/sdk"
 	"github.com/smartcontractkit/chainlink-protos/cre/go/values"
-	"github.com/smartcontractkit/cre-sdk-go/cre/testutils"
+	testworkflow "github.com/smartcontractkit/cre-sdk-go/internal/test_workflow"
 	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basictrigger"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -24,7 +24,7 @@ var (
 	anyMaxResponseSize = uint64(2048)
 
 	defaultBasicTrigger = basictrigger.Trigger(&basictrigger.Config{})
-	triggerIndex        = int(0)
+	triggerIndex        = 0
 	capID               = defaultBasicTrigger.CapabilityID()
 
 	subscribeRequest = &sdk.ExecuteRequest{
@@ -39,7 +39,7 @@ var (
 		Request: &sdk.ExecuteRequest_Trigger{
 			Trigger: &sdk.Trigger{
 				Id:      uint64(triggerIndex),
-				Payload: mustAny(testutils.TestWorkflowTrigger()),
+				Payload: mustAny(testworkflow.TestWorkflowTrigger()),
 			},
 		},
 	}
@@ -60,7 +60,7 @@ func TestRunner_GetSecrets_PassesMaxResponseSize(t *testing.T) {
 
 		return cre.Workflow[string]{
 			cre.Handler(
-				basictrigger.Trigger(testutils.TestWorkflowTriggerConfig()),
+				basictrigger.Trigger(testworkflow.TestWorkflowTriggerConfig()),
 				func(string, cre.Runtime, *basictrigger.Outputs) (int, error) {
 					return 0, nil
 				}),
@@ -74,7 +74,7 @@ func TestRunner_Run(t *testing.T) {
 		dr.Run(func(string, *slog.Logger, cre.SecretsProvider) (cre.Workflow[string], error) {
 			return cre.Workflow[string]{
 				cre.Handler(
-					basictrigger.Trigger(testutils.TestWorkflowTriggerConfig()),
+					basictrigger.Trigger(testworkflow.TestWorkflowTriggerConfig()),
 					func(string, cre.Runtime, *basictrigger.Outputs) (int, error) {
 						require.Fail(t, "Must not be called during registration to tiggers")
 						return 0, nil
@@ -95,16 +95,16 @@ func TestRunner_Run(t *testing.T) {
 			assert.Equal(t, "Trigger", subscription.Method)
 			payload := &basictrigger.Config{}
 			require.NoError(t, subscription.Payload.UnmarshalTo(payload))
-			assert.True(t, proto.Equal(testutils.TestWorkflowTriggerConfig(), payload))
+			assert.True(t, proto.Equal(testworkflow.TestWorkflowTriggerConfig(), payload))
 		default:
 			assert.Fail(t, "unexpected result type", result)
 		}
 	})
 
 	t.Run("makes callback with correct runner", func(t *testing.T) {
-		testutils.SetupExpectedCalls(t)
+		testworkflow.SetupExpectedCalls(t)
 		dr := getTestRunner(t, anyExecuteRequest)
-		testutils.RunTestWorkflow(dr)
+		testworkflow.RunTestWorkflow(dr)
 
 		actual := &sdk.ExecutionResult{}
 		sentResponse := dr.(runnerWrapper[string]).baseRunner.(*runner[string, cre.Runtime]).runnerInternals.(*runnerInternalsTestHook).sentResponse
@@ -116,7 +116,7 @@ func TestRunner_Run(t *testing.T) {
 			require.NoError(t, err)
 			returnedValue, err := v.Unwrap()
 			require.NoError(t, err)
-			assert.Equal(t, testutils.TestWorkflowExpectedResult(), returnedValue)
+			assert.Equal(t, testworkflow.TestWorkflowExpectedResult(), returnedValue)
 		default:
 			assert.Fail(t, "unexpected result type", result)
 		}
@@ -129,13 +129,13 @@ func TestRunner_Run(t *testing.T) {
 			Request: &sdk.ExecuteRequest_Trigger{
 				Trigger: &sdk.Trigger{
 					Id:      uint64(triggerIndex + 1),
-					Payload: mustAny(testutils.TestWorkflowTrigger()),
+					Payload: mustAny(testworkflow.TestWorkflowTrigger()),
 				},
 			},
 		}
-		testutils.SetupExpectedCalls(t)
+		testworkflow.SetupExpectedCalls(t)
 		dr := getTestRunner(t, secondTriggerReq)
-		testutils.RunIdenticalTriggersWorkflow(dr)
+		testworkflow.RunIdenticalTriggersWorkflow(dr)
 
 		actual := &sdk.ExecutionResult{}
 		sentResponse := dr.(runnerWrapper[string]).baseRunner.(*runner[string, cre.Runtime]).runnerInternals.(*runnerInternalsTestHook).sentResponse
@@ -147,7 +147,7 @@ func TestRunner_Run(t *testing.T) {
 			require.NoError(t, err)
 			returnedValue, err := v.Unwrap()
 			require.NoError(t, err)
-			assert.Equal(t, testutils.TestWorkflowExpectedResult()+"true", returnedValue)
+			assert.Equal(t, testworkflow.TestWorkflowExpectedResult()+"true", returnedValue)
 		default:
 			assert.Fail(t, "unexpected result type", result)
 		}

@@ -19,7 +19,14 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-func NewRuntime(tb testing.TB, secrets map[string]string) *TestRuntime {
+type Namespace string
+type Id string
+type Secrets map[Namespace]map[Id]string
+
+// NewRuntime creates a new TestRuntime for use in tests.
+// A nil Secrets map is treated as an empty map, but entries cannot be added later.
+// The secrets map is used directly by the TestRuntime; changes to entries will be reflected in subsequent calls to GetSecret.
+func NewRuntime(tb testing.TB, secrets Secrets) *TestRuntime {
 	defaultConsensus, err := consensusmock.NewConsensusCapability(tb)
 
 	// Do not override if the user provided their own consensus method
@@ -29,7 +36,7 @@ func NewRuntime(tb testing.TB, secrets map[string]string) *TestRuntime {
 	}
 
 	if secrets == nil {
-		secrets = map[string]string{}
+		secrets = Secrets{}
 	}
 
 	tw := &testWriter{}
@@ -47,6 +54,8 @@ func NewRuntime(tb testing.TB, secrets map[string]string) *TestRuntime {
 	}
 }
 
+// TestRuntime is a Runtime implementation meant for use in unit tests.
+// Note that it should always be constructed via NewRuntime.
 type TestRuntime struct {
 	sdkimpl.Runtime
 	testWriter *testWriter
@@ -54,6 +63,7 @@ type TestRuntime struct {
 
 var _ cre.Runtime = (*TestRuntime)(nil)
 
+// GetLogs returns a copy of all logs written to the TestRuntime's logger.
 func (t *TestRuntime) GetLogs() [][]byte {
 	logs := make([][]byte, len(t.testWriter.logs))
 	for i, log := range t.testWriter.logs {
@@ -63,10 +73,14 @@ func (t *TestRuntime) GetLogs() [][]byte {
 	return logs
 }
 
+// SetRandomSource sets the random source used by the DON mode.
+// Note that once the first random is called, changes will have no effect.
 func (t *TestRuntime) SetRandomSource(source rand.Source) {
 	t.RuntimeHelpers.(*runtimeHelpers).donSrc = source
 }
 
+// SetNodeRandomSource sets the random source used by the Node mode.
+// Note that once the first random is called, changes will have no effect.
 func (t *TestRuntime) SetNodeRandomSource(source rand.Source) {
 	t.RuntimeHelpers.(*runtimeHelpers).nodeSrc = source
 }
@@ -124,15 +138,16 @@ func reportFromValue(result *valuespb.Value) *valuespb.Value {
 }
 
 type runtimeHelpers struct {
-	tb      testing.TB
-	calls   map[int32]chan *sdk.CapabilityResponse
-	donSrc  rand.Source
-	nodeSrc rand.Source
-
+	tb           testing.TB
+	calls        map[int32]chan *sdk.CapabilityResponse
+	donSrc       rand.Source
+	nodeSrc      rand.Source
 	secretsCalls map[int32][]*sdk.SecretResponse
-	secrets      map[string]string
+	secrets      Secrets
 }
 
+// GetSource is meant to be called by the SDK's internal's.
+// it returns a random source for the given mode.
 func (rh *runtimeHelpers) GetSource(mode sdk.Mode) rand.Source {
 	if mode == sdk.Mode_MODE_DON {
 		if rh.donSrc == nil {
@@ -147,6 +162,8 @@ func (rh *runtimeHelpers) GetSource(mode sdk.Mode) rand.Source {
 	return rh.nodeSrc
 }
 
+// Call is meant to be called by the SDK's internal's.
+// It calls a capability, returning an error if the capability cannot be found.
 func (rh *runtimeHelpers) Call(request *sdk.CapabilityRequest) error {
 	reg := registry.GetRegistry(rh.tb)
 	capability, err := reg.GetCapability(request.Id)
@@ -162,6 +179,8 @@ func (rh *runtimeHelpers) Call(request *sdk.CapabilityRequest) error {
 	return nil
 }
 
+// Await is meant to be called by the SDK's internal's.
+// It waits for the responses to the given callback IDs, returning an error if any of the
 func (rh *runtimeHelpers) Await(request *sdk.AwaitCapabilitiesRequest, maxResponseSize uint64) (*sdk.AwaitCapabilitiesResponse, error) {
 	response := &sdk.AwaitCapabilitiesResponse{Responses: map[int32]*sdk.CapabilityResponse{}}
 
@@ -188,11 +207,17 @@ func (rh *runtimeHelpers) Await(request *sdk.AwaitCapabilitiesRequest, maxRespon
 	return response, errors.Join(errs...)
 }
 
+// GetSecrets is meant to be called by the SDK's internal's.
+// It retrieves secrets based on the provided request, returning an error if any secret cannot be found
 func (rh *runtimeHelpers) GetSecrets(req *sdk.GetSecretsRequest, _ uint64) error {
 	var resp []*sdk.SecretResponse
 	for _, secret := range req.Requests {
-		key := secret.Namespace + "/" + secret.Id
-		sec, ok := rh.secrets[key]
+		key := secret.Namespace
+		ns, ok := rh.secrets[Namespace(secret.Namespace)]
+		var sec string
+		if ok {
+			sec, ok = ns[Id(secret.Id)]
+		}
 		if !ok {
 			resp = append(resp, &sdk.SecretResponse{
 				Response: &sdk.SecretResponse_Error{
@@ -220,6 +245,8 @@ func (rh *runtimeHelpers) GetSecrets(req *sdk.GetSecretsRequest, _ uint64) error
 	return nil
 }
 
+// AwaitSecrets is meant to be called by the SDK's internal's.
+// It waits for the responses to the given secret IDs, returning an error if any of the
 func (rh *runtimeHelpers) AwaitSecrets(req *sdk.AwaitSecretsRequest, _ uint64) (*sdk.AwaitSecretsResponse, error) {
 	response := &sdk.AwaitSecretsResponse{Responses: map[int32]*sdk.SecretResponses{}}
 

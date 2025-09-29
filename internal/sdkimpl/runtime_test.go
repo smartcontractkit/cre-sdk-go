@@ -157,7 +157,7 @@ func TestRuntime_CallCapability(t *testing.T) {
 
 func TestRuntime_Rand(t *testing.T) {
 	t.Run("random delegates", func(t *testing.T) {
-		runtime := testutils.NewRuntime(t, map[string]string{})
+		runtime := testutils.NewRuntime(t, nil)
 		runtime.SetRandomSource(rand.NewSource(1))
 		r, err := runtime.Rand()
 		require.NoError(t, err)
@@ -285,7 +285,7 @@ func TestDonRuntime_RunInNodeMode(t *testing.T) {
 }
 
 func testRuntime[T any](t *testing.T, testFn func(config string, rt cre.Runtime, _ *basictrigger.Outputs) (T, error)) (any, error) {
-	runtime := testutils.NewRuntime(t, map[string]string{})
+	runtime := testutils.NewRuntime(t, nil)
 	return testFn(anyEnvConfig, runtime, anyTrigger)
 }
 
