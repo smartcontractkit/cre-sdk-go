@@ -20,8 +20,8 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-const CreMainnet = "http://localhost:8090/"               // This is replaced with our creUrl
-const DefaultLocalCapabilityUrl = "http://localhost:8091" // this is replaced with the default that the node Capability handler runs on
+const CreMainnet = "http://localhost:8090/"                // This is replaced with our creUrl
+const DefaultLocalCapabilityUrl = "http://localhost:8091/" // this is replaced with the default that the node Capability handler runs on
 
 func NewRuntime(creUrl, localCapabilityUrl string) cre.Runtime {
 	return &sdkimpl.Runtime{RuntimeBase: newRuntime(sdk.Mode_MODE_DON, creUrl, localCapabilityUrl)}
