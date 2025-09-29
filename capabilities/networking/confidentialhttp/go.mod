@@ -4,7 +4,7 @@ go 1.24.5
 
 require (
 	github.com/smartcontractkit/chainlink-protos/cre/go v0.0.0-20250918131840-564fe2776a35
-	github.com/smartcontractkit/cre-sdk-go v0.7.1-0.20250925192308-af6b0b0f797c
+	github.com/smartcontractkit/cre-sdk-go v0.7.1-0.20250929155919-caba5f060b1d
 )
 
 require (
