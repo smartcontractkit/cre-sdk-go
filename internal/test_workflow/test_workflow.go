@@ -1,4 +1,4 @@
-package testutils
+package testworkflow
 
 import (
 	"log/slog"
@@ -8,6 +8,8 @@ import (
 	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basictrigger"
 )
 
+// RunTestWorkflow demonstrates a simple workflow that can be used in tests.
+// It is used internally by Chainlink to test the SDK itself and our host.
 func RunTestWorkflow(runner cre.Runner[string]) {
 	runner.Run(func(config string, _ *slog.Logger, _ cre.SecretsProvider) (cre.Workflow[string], error) {
 		return cre.Workflow[string]{
@@ -18,6 +20,8 @@ func RunTestWorkflow(runner cre.Runner[string]) {
 	})
 }
 
+// RunIdenticalTriggersWorkflow demonstrates a workflow with two identical triggers.
+// It is used internally by Chainlink to test the SDK itself and our host.
 func RunIdenticalTriggersWorkflow(runner cre.Runner[string]) {
 	runner.Run(func(string, *slog.Logger, cre.SecretsProvider) (cre.Workflow[string], error) {
 		return cre.Workflow[string]{

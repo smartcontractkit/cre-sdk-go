@@ -11,6 +11,7 @@ import (
 	"github.com/smartcontractkit/cre-sdk-go/cre"
 )
 
+// AddContractMock adds a callback function for a specific contract address to the provided ClientCapability mock.
 func AddContractMock(
 	address common.Address,
 	clientMock *ClientCapability,

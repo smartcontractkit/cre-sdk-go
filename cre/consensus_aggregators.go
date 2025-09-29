@@ -11,18 +11,25 @@ import (
 	"github.com/smartcontractkit/chainlink-protos/cre/go/sdk"
 )
 
+// NumericType represents types that can be used numerically for consensus aggregation.
+// It includes all go primitive numeric types, big.Int, decimal.Decimal, and time.Time.
 type NumericType interface {
-	int | int8 | int16 | int32 | int64 | uint | uint8 | uint16 | uint32 | uint64 | float32 | float64 | *big.Int | decimal.Decimal
+	~int | ~int8 | ~int16 | ~int32 | ~int64 | ~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 | ~float32 | ~float64 | ~*big.Int | decimal.Decimal | time.Time
 }
 
+// Primitive represents any `NumericType`, string, or bool.
 type Primitive interface {
-	NumericType | string | bool
+	NumericType | ~string | ~bool
 }
 
+// ConsensusMedianAggregation takes a median of all node observations.
+// The median is Byzantine fault-tolerant and is guaranteed to be within the range of valid observations.
 func ConsensusMedianAggregation[T NumericType]() ConsensusAggregation[T] {
 	return &consensusDescriptor[T]{Descriptor_: &sdk.ConsensusDescriptor_Aggregation{Aggregation: sdk.AggregationType_AGGREGATION_TYPE_MEDIAN}}
 }
 
+// ConsensusIdenticalAggregation is used when responses from each node are expected to be identical.
+// The aggregation tolerates up to F faulty nodes returning errors or different values.
 func ConsensusIdenticalAggregation[T any]() ConsensusAggregation[T] {
 	var t T
 	if isIdenticalType(reflect.TypeOf(t)) {
@@ -32,6 +39,8 @@ func ConsensusIdenticalAggregation[T any]() ConsensusAggregation[T] {
 	return &consensusDescriptorError[T]{Error: fmt.Errorf("%T is not a valid type for identical consensus", t)}
 }
 
+// ConsensusCommonPrefixAggregation uses the longest common prefix across nodes.
+// The aggregation tolerates up to F faulty nodes returning errors or different values for each element.
 func ConsensusCommonPrefixAggregation[T any]() func() (ConsensusAggregation[[]T], error) {
 	return func() (ConsensusAggregation[[]T], error) {
 		var t []T
@@ -43,6 +52,8 @@ func ConsensusCommonPrefixAggregation[T any]() func() (ConsensusAggregation[[]T]
 	}
 }
 
+// ConsensusCommonSuffixAggregation uses the longest common suffix across nodes.
+// The aggregation tolerates up to F faulty nodes returning errors or different values for each element.
 func ConsensusCommonSuffixAggregation[T any]() func() (ConsensusAggregation[[]T], error) {
 	return func() (ConsensusAggregation[[]T], error) {
 		var t []T
@@ -54,6 +65,15 @@ func ConsensusCommonSuffixAggregation[T any]() func() (ConsensusAggregation[[]T]
 	}
 }
 
+// ConsensusAggregationFromTags works with structs using the `consensus_aggregation` tag to define how to aggregate each field.
+// It supports the following tags:
+// - `median`: for numeric types, it will take the median in the same manner as `ConsensusMedianAggregation` does for numeric types, but for a field on a struct.
+// - `identical`: for primitive types, it will check if all values are identical in the same manner as `ConsensusIdenticalAggregation` does for primitive types, but for a field on a struct.
+// - `common_prefix`: for slices or arrays of primitive types, it will take the longest common prefix in the same manner as `ConsensusCommonPrefixAggregation` does for slices or arrays.
+// - `common_suffix`: for slices or arrays of primitive types, it will take the longest common suffix in the same manner as `ConsensusCommonSuffixAggregation` does for slices or arrays.
+// - `nested`: for nested structs, it will recursively parse the struct and aggregate its fields using the same rules as above.
+// - `ignore`: to ignore a field in the struct.
+// If a field is not tagged or is not a valid type for the tag, it will return an error.
 func ConsensusAggregationFromTags[T any]() ConsensusAggregation[T] {
 	var zero T
 	t := reflect.TypeOf(zero)
