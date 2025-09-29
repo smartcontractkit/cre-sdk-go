@@ -5,7 +5,8 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-// ExecutionHandler is meant to be used internally by the SDK to define workflows.
+// ExecutionHandler defines a coupling of a Trigger and a callback function to be used by the SDK.
+// The methods on the handler are meant to be used internally by the Runtime.
 type ExecutionHandler[C, R any] interface {
 	CapabilityID() string
 	Method() string
@@ -13,6 +14,8 @@ type ExecutionHandler[C, R any] interface {
 	Callback() func(config C, runtime R, payload *anypb.Any) (any, error)
 }
 
+// Handler creates a coupling of a Trigger and a callback function to be used by the SDK.
+// The coupling ensures that when the Trigger is invoked, the callback function is called with the appropriate parameters.
 func Handler[C any, M proto.Message, T any, O any](trigger Trigger[M, T], callback func(config C, runtime Runtime, payload T) (O, error)) ExecutionHandler[C, Runtime] {
 	return handler(trigger, callback)
 }

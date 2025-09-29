@@ -14,39 +14,72 @@ import (
 type SecretRequest = sdk.SecretRequest
 type Secret = sdk.Secret
 
-// RuntimeBase is not thread safe and must not be used concurrently.
+// RuntimeBase provides the basic functionality of a CRE runtime.
+// It is not thread safe and must not be used concurrently.
 type RuntimeBase interface {
 	// CallCapability is meant to be called by generated code
 	CallCapability(request *sdk.CapabilityRequest) Promise[*sdk.CapabilityResponse]
+
+	// Rand provides access to a random number generator for the mode the runtime operates in.
+	// Attempting to use the returned generator outside the correct scope will panic.
 	Rand() (*rand.Rand, error)
+
+	// Now provides the current time, with the mechanism for doing so based on the current mode.
 	Now() time.Time
+
+	// Logger provides a logger that can be used to log messages.
 	Logger() *slog.Logger
 }
 
+// SecretsProvider provides access to secrets.
 type SecretsProvider interface {
+	// GetSecret retrieves a secret by its request.
 	GetSecret(*SecretRequest) Promise[*Secret]
 }
 
-// NodeRuntime is not thread safe and must not be used concurrently.
+// NodeRuntime provides access to Node capabilities
+// It is not thread safe and must not be used concurrently.
 type NodeRuntime interface {
 	RuntimeBase
+
+	// IsNodeRuntime is a placeholder to differentiate NodeRuntime.
 	IsNodeRuntime()
 }
 
-// Runtime is not thread safe and must not be used concurrently.
+// Runtime provides access to DON capabilities and allows NodeRuntime use with consensus.
+// It is not thread safe and must not be used concurrently.
 type Runtime interface {
 	RuntimeBase
 
 	// RunInNodeMode is meant to be used by the helper method RunInNodeMode
 	RunInNodeMode(fn func(nodeRuntime NodeRuntime) *sdk.SimpleConsensusInputs) Promise[values.Value]
+
+	// GenerateReport is used to generate a report for a given ReportRequest.
 	GenerateReport(*ReportRequest) Promise[*Report]
 	SecretsProvider
 }
 
+// ConsensusAggregation is an interface that informs consensus how to aggregate values.
+// Workflow author do not need to implement this interface directly; instead the helper functions
+// below can be used to create instances of this interface:
+// - ConsensusMedianAggregation
+// - ConsensusIdenticalAggregation
+// - ConsensusCommonPrefixAggregation
+// - ConsensusCommonSuffixAggregation
+// - ConsensusAggregationFromTags
+// By using this interface with capability SDKs or RunInNodeMode, you are assured that all aggregated values are Byzantine fault-tolerant.
 type ConsensusAggregation[T any] interface {
+	// Descriptor is meant to be used by the Runtime
 	Descriptor() *sdk.ConsensusDescriptor
+
+	// Default returns the default value or nil when there is no default value
 	Default() *T
+
+	// Err is meant to be used by the Runtime
 	Err() error
+
+	// WithDefault returns a new ConsensusAggregation with the given default value
+	// If consensus cannot be reached, the default value will be used if it is not nil instead of returning an error.
 	WithDefault(t T) ConsensusAggregation[T]
 }
 
