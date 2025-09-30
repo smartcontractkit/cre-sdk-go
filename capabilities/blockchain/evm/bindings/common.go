@@ -71,3 +71,8 @@ func PadTopics(topics []*evm.TopicValues) []*evm.TopicValues {
 
 	return topics
 }
+
+type DecodedLog[T any] struct {
+	*evm.Log
+	Data T
+}
