@@ -76,3 +76,12 @@ type DecodedLog[T any] struct {
 	*evm.Log
 	Data T
 }
+
+func isDynTopicType(t abi.Type) bool {
+	switch t.T {
+	case abi.TupleTy, abi.StringTy, abi.BytesTy, abi.SliceTy, abi.ArrayTy:
+		return true
+	default:
+		return false
+	}
+}
