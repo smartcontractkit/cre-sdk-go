@@ -7,25 +7,18 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/rpc"
 
 	"github.com/smartcontractkit/chainlink-protos/cre/go/values/pb"
 	"github.com/smartcontractkit/cre-sdk-go/capabilities/blockchain/evm"
 )
 
-// var (
-// 	EarliestBlockNumber  = pb.NewBigIntFromInt(big.NewInt(rpc.EarliestBlockNumber.Int64()))
-// 	SafeBlockNumber      = pb.NewBigIntFromInt(big.NewInt(rpc.SafeBlockNumber.Int64()))
-// 	FinalizedBlockNumber = pb.NewBigIntFromInt(big.NewInt(rpc.FinalizedBlockNumber.Int64()))
-// 	LatestBlockNumber    = pb.NewBigIntFromInt(big.NewInt(rpc.LatestBlockNumber.Int64()))
-// 	PendingBlockNumber   = pb.NewBigIntFromInt(big.NewInt(rpc.PendingBlockNumber.Int64()))
-// )
-
 var (
-	EarliestBlockNumber  = pb.NewBigIntFromInt(big.NewInt(-5))
-	SafeBlockNumber      = pb.NewBigIntFromInt(big.NewInt(-4))
-	FinalizedBlockNumber = pb.NewBigIntFromInt(big.NewInt(-3))
-	LatestBlockNumber    = pb.NewBigIntFromInt(big.NewInt(-2))
-	PendingBlockNumber   = pb.NewBigIntFromInt(big.NewInt(-1))
+	EarliestBlockNumber  = pb.NewBigIntFromInt(big.NewInt(rpc.EarliestBlockNumber.Int64()))
+	SafeBlockNumber      = pb.NewBigIntFromInt(big.NewInt(rpc.SafeBlockNumber.Int64()))
+	FinalizedBlockNumber = pb.NewBigIntFromInt(big.NewInt(rpc.FinalizedBlockNumber.Int64()))
+	LatestBlockNumber    = pb.NewBigIntFromInt(big.NewInt(rpc.LatestBlockNumber.Int64()))
+	PendingBlockNumber   = pb.NewBigIntFromInt(big.NewInt(rpc.PendingBlockNumber.Int64()))
 )
 
 type ContractInitOptions struct {
