@@ -1,12 +1,12 @@
 module github.com/smartcontractkit/cre-sdk-go/generator/protoc-gen-cre
 
-go 1.24.5
+go 1.25.3
 
 require (
 	github.com/iancoleman/strcase v0.3.0
-	github.com/smartcontractkit/chainlink-common v0.9.5-0.20250912150129-4e42c90b532e
-	github.com/smartcontractkit/chainlink-protos/cre/go v0.0.0-20250911124514-5874cc6d62b2
-	google.golang.org/protobuf v1.36.7
+	github.com/smartcontractkit/chainlink-common v0.9.6-0.20251022160007-d6110172508f
+	github.com/smartcontractkit/chainlink-protos/cre/go v0.0.0-20251021010742-3f8d3dba17d8
+	google.golang.org/protobuf v1.36.8
 )
 
 require (
