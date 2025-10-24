@@ -326,10 +326,6 @@ const BinanceSmartChainMainnetOpbnb1 = 465944652040885897
 
 const BinanceSmartChainTestnetOpbnb1 = 13274425992935471758
 
-const BinanceSmartChainMainnet = 11344663589394136015
-
-const BinanceSmartChainTestnet = 13264668187771770619
-
 const EthereumMainnet = 5009297550715157269
 
 const EthereumMainnetArbitrum1 = 4949039107694359620
@@ -358,10 +354,6 @@ func ChainSelectorFromName(name string) (uint64, error) {
 		return BinanceSmartChainMainnetOpbnb1, nil
 	case "binance_smart_chain-testnet-opbnb-1":
 		return BinanceSmartChainTestnetOpbnb1, nil
-	case "binance_smart_chain-mainnet":
-		return BinanceSmartChainMainnet, nil
-	case "binance_smart_chain-testnet":
-		return BinanceSmartChainTestnet, nil
 	case "ethereum-mainnet":
 		return EthereumMainnet, nil
 	case "ethereum-mainnet-arbitrum-1":
