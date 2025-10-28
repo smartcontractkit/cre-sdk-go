@@ -6,6 +6,7 @@ import (
 	"reflect"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/rpc"
 
@@ -79,6 +80,30 @@ func PadTopics(topics []*evm.TopicValues) []*evm.TopicValues {
 		})
 	}
 
+	return topics
+}
+
+func PrepareTopics(rawTopics [][]common.Hash, eventID []byte) []*evm.TopicValues {
+	topics := make([]*evm.TopicValues, len(rawTopics)+1)
+	topics[0] = &evm.TopicValues{
+		Values: [][]byte{eventID},
+	}
+	for i, hashList := range rawTopics {
+		bs := [][]byte{}
+		for _, h := range hashList {
+			// don't include empty bytes if hashed value is 0x0
+			if reflect.ValueOf(h).IsZero() {
+				continue
+			} else {
+				bs = append(bs, h.Bytes())
+			}
+		}
+		if len(bs) == 0 {
+			topics[i+1] = &evm.TopicValues{}
+		} else {
+			topics[i+1] = &evm.TopicValues{Values: bs}
+		}
+	}
 	return topics
 }
 
