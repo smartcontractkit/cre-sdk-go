@@ -84,9 +84,11 @@ func ConsensusAggregationFromTags[T any]() ConsensusAggregation[T] {
 	return (*consensusDescriptor[T])(descriptor)
 }
 
-var bigIntType = reflect.TypeOf((*big.Int)(nil))
-var timeType = reflect.TypeOf(time.Time{})
-var decimalType = reflect.TypeOf(decimal.Decimal{})
+var (
+	bigIntType  = reflect.TypeOf((*big.Int)(nil))
+	timeType    = reflect.TypeOf(time.Time{})
+	decimalType = reflect.TypeOf(decimal.Decimal{})
+)
 
 func parseConsensusTag(t reflect.Type, path string) (*sdk.ConsensusDescriptor, error) {
 	if t.Kind() == reflect.Pointer {
@@ -131,7 +133,7 @@ func parseConsensusTag(t reflect.Type, path string) (*sdk.ConsensusDescriptor, e
 			for innerFieldName, innerDescriptor := range inner.GetFieldsMap().Fields {
 				descriptors[innerFieldName] = innerDescriptor
 			}
-			break
+			continue
 		}
 
 		tpe := field.Type
