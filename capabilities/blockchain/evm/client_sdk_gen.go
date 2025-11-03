@@ -328,17 +328,19 @@ const BinanceSmartChainTestnetOpbnb1 = 13274425992935471758
 
 const EthereumMainnet = 5009297550715157269
 
-const EthereumMainnetArbitrum1 = 4949039107694359620
-
-const EthereumMainnetOptimism1 = 3734403246176062136
-
 const EthereumTestnetSepolia = 16015286601757825753
+
+const EthereumMainnetArbitrum1 = 4949039107694359620
 
 const EthereumTestnetSepoliaArbitrum1 = 3478487238524512106
 
-const EthereumTestnetSepoliaBase1 = 10344971235874465080
+const EthereumMainnetOptimism1 = 3734403246176062136
 
 const EthereumTestnetSepoliaOptimism1 = 5224473277236331295
+
+const EthereumMainnetBase1 = 15971525489660198786
+
+const EthereumTestnetSepoliaBase1 = 10344971235874465080
 
 const PolygonMainnet = 4051577828743386545
 
@@ -356,18 +358,20 @@ func ChainSelectorFromName(name string) (uint64, error) {
 		return BinanceSmartChainTestnetOpbnb1, nil
 	case "ethereum-mainnet":
 		return EthereumMainnet, nil
-	case "ethereum-mainnet-arbitrum-1":
-		return EthereumMainnetArbitrum1, nil
-	case "ethereum-mainnet-optimism-1":
-		return EthereumMainnetOptimism1, nil
 	case "ethereum-testnet-sepolia":
 		return EthereumTestnetSepolia, nil
+	case "ethereum-mainnet-arbitrum-1":
+		return EthereumMainnetArbitrum1, nil
 	case "ethereum-testnet-sepolia-arbitrum-1":
 		return EthereumTestnetSepoliaArbitrum1, nil
-	case "ethereum-testnet-sepolia-base-1":
-		return EthereumTestnetSepoliaBase1, nil
+	case "ethereum-mainnet-optimism-1":
+		return EthereumMainnetOptimism1, nil
 	case "ethereum-testnet-sepolia-optimism-1":
 		return EthereumTestnetSepoliaOptimism1, nil
+	case "ethereum-mainnet-base-1":
+		return EthereumMainnetBase1, nil
+	case "ethereum-testnet-sepolia-base-1":
+		return EthereumTestnetSepoliaBase1, nil
 	case "polygon-mainnet":
 		return PolygonMainnet, nil
 	case "polygon-testnet-amoy":
