@@ -301,6 +301,7 @@ func TestConsensusAggregationFromTags(t *testing.T) {
 		type MapstructureFields struct {
 			Val  string `consensus_aggregation:"identical" mapstructure:"renamed_val"`
 			Val2 Inner  `consensus_aggregation:"identical" mapstructure:",squash"`
+			Val3 int    `consensus_aggregation:"identical" mapstructure:"another_val"`
 		}
 
 		desc := cre.ConsensusAggregationFromTags[*MapstructureFields]()
@@ -316,6 +317,11 @@ func TestConsensusAggregationFromTags(t *testing.T) {
 							},
 						},
 						"renamed_val_inner": {
+							Descriptor_: &sdk.ConsensusDescriptor_Aggregation{
+								Aggregation: sdk.AggregationType_AGGREGATION_TYPE_IDENTICAL,
+							},
+						},
+						"another_val": {
 							Descriptor_: &sdk.ConsensusDescriptor_Aggregation{
 								Aggregation: sdk.AggregationType_AGGREGATION_TYPE_IDENTICAL,
 							},
