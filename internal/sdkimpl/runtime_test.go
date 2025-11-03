@@ -155,6 +155,35 @@ func TestRuntime_CallCapability(t *testing.T) {
 	})
 }
 
+func TestRuntime_GetSecret(t *testing.T) {
+	t.Run("runs async", func(t *testing.T) {
+		test := func(_ string, rt cre.Runtime, _ *basictrigger.Outputs) (string, error) {
+			p1 := rt.GetSecret(&sdk.SecretRequest{Id: "secret1"})
+
+			p2 := rt.GetSecret(&sdk.SecretRequest{Id: "secret2"})
+
+			result1, err := p1.Await()
+			assert.Equal(t, "value1", result1.Value)
+			require.NoError(t, err)
+
+			result2, err := p2.Await()
+			assert.Equal(t, "value2", result2.Value)
+			require.NoError(t, err)
+			return "", nil
+		}
+
+		runtime := testutils.NewRuntime(t, map[testutils.Namespace]map[testutils.ID]string{
+			"": {
+				"secret1": "value1",
+				"secret2": "value2",
+			},
+		})
+		_, err := test(anyEnvConfig, runtime, anyTrigger)
+		require.NoError(t, err)
+	})
+
+}
+
 func TestRuntime_Rand(t *testing.T) {
 	t.Run("random delegates", func(t *testing.T) {
 		runtime := testutils.NewRuntime(t, nil)
