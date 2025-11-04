@@ -128,6 +128,7 @@ func (d *Runtime) GetSecret(req *sdk.SecretRequest) cre.Promise[*sdk.Secret] {
 	}
 
 	d.nextCallId++
+	myId := d.nextCallId
 
 	sr := &sdk.GetSecretsRequest{
 		Requests:   []*sdk.SecretRequest{req},
@@ -141,14 +142,14 @@ func (d *Runtime) GetSecret(req *sdk.SecretRequest) cre.Promise[*sdk.Secret] {
 
 	return cre.NewBasicPromise(func() (*sdk.Secret, error) {
 		awaitRequest := &sdk.AwaitSecretsRequest{
-			Ids: []int32{d.nextCallId},
+			Ids: []int32{myId},
 		}
 		awaitResponse, err := d.AwaitSecrets(awaitRequest, d.MaxResponseSize)
 		if err != nil {
 			return nil, err
 		}
 
-		resp, ok := awaitResponse.Responses[d.nextCallId]
+		resp, ok := awaitResponse.Responses[myId]
 		if !ok {
 			return nil, fmt.Errorf("cannot find response for %d", d.nextCallId)
 		}
