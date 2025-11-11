@@ -1,12 +1,12 @@
 module github.com/smartcontractkit/cre-sdk-go
 
-go 1.24.5
+go 1.25.3
 
 require (
 	github.com/shopspring/decimal v1.4.0
-	github.com/smartcontractkit/chainlink-protos/cre/go v0.0.0-20250911124514-5874cc6d62b2
-	github.com/stretchr/testify v1.10.0
-	google.golang.org/protobuf v1.36.7
+	github.com/smartcontractkit/chainlink-protos/cre/go v0.0.0-20251021010742-3f8d3dba17d8
+	github.com/stretchr/testify v1.11.1
+	google.golang.org/protobuf v1.36.8
 )
 
 require (
