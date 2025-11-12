@@ -73,7 +73,7 @@ func testSendReport(t *testing.T, sendReport func(rt cre.Runtime, report cre.Rep
 		return assertReport(t, input)
 	}
 
-	rt := testutils.NewRuntime(t, map[string]string{})
+	rt := testutils.NewRuntime(t, testutils.Secrets{})
 
 	response, err := sendReport(rt, *report)
 	require.NoError(t, err)
