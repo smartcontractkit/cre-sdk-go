@@ -28,14 +28,14 @@ func NewClientCapability(t testing.TB) (*ClientCapability, error) {
 type ClientCapability struct {
 	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
 
-	SendRequests func(ctx context.Context, input *confidentialhttp.Input) (*confidentialhttp.Output, error)
+	SendRequests func(ctx context.Context, input *confidentialhttp.EnclaveActionInput) (*confidentialhttp.HTTPEnclaveResponseData, error)
 }
 
 func (c *ClientCapability) Invoke(ctx context.Context, request *sdkpb.CapabilityRequest) *sdkpb.CapabilityResponse {
 	capResp := &sdkpb.CapabilityResponse{}
 	switch request.Method {
 	case "SendRequests":
-		input := &confidentialhttp.Input{}
+		input := &confidentialhttp.EnclaveActionInput{}
 		if err := request.Payload.UnmarshalTo(input); err != nil {
 			capResp.Response = &sdkpb.CapabilityResponse_Error{Error: err.Error()}
 			break
@@ -64,5 +64,5 @@ func (c *ClientCapability) Invoke(ctx context.Context, request *sdkpb.Capability
 }
 
 func (c *ClientCapability) ID() string {
-	return "confidential-http-actions@1.0.0-alpha"
+	return "confidential-http@1.0.0-alpha"
 }
