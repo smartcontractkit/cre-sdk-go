@@ -22,7 +22,7 @@ type SendRequestser struct {
 	nodeRuntime cre.NodeRuntime
 }
 
-func (c *SendRequestser) SendRequests(input *Input) cre.Promise[*Output] {
+func (c *SendRequestser) SendRequests(input *EnclaveActionInput) cre.Promise[*HTTPEnclaveResponseData] {
 	return c.client.SendRequests(c.nodeRuntime, input)
 }
 
@@ -41,23 +41,23 @@ func SendRequests[C, T any](
 	return cre.RunInNodeMode(config, runtime, wrapped, ca)
 }
 
-func (c *Client) SendRequests(runtime cre.NodeRuntime, input *Input) cre.Promise[*Output] {
+func (c *Client) SendRequests(runtime cre.NodeRuntime, input *EnclaveActionInput) cre.Promise[*HTTPEnclaveResponseData] {
 	wrapped := &anypb.Any{}
 	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
-		return cre.PromiseFromResult[*Output](nil, err)
+		return cre.PromiseFromResult[*HTTPEnclaveResponseData](nil, err)
 	}
 
 	capCallResponse := cre.Then(runtime.CallCapability(&sdkpb.CapabilityRequest{
-		Id:      "confidential-http-actions@1.0.0-alpha",
+		Id:      "confidential-http@1.0.0-alpha",
 		Payload: wrapped,
 		Method:  "SendRequests",
-	}), func(i *sdkpb.CapabilityResponse) (*Output, error) {
+	}), func(i *sdkpb.CapabilityResponse) (*HTTPEnclaveResponseData, error) {
 		switch payload := i.Response.(type) {
 		case *sdkpb.CapabilityResponse_Error:
 			return nil, errors.New(payload.Error)
 		case *sdkpb.CapabilityResponse_Payload:
-			output := &Output{}
+			output := &HTTPEnclaveResponseData{}
 			err = payload.Payload.UnmarshalTo(output)
 			return output, err
 		default:
