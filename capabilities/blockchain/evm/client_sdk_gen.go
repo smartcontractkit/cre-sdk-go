@@ -346,6 +346,8 @@ const PolygonMainnet = 4051577828743386545
 
 const PolygonTestnetAmoy = 16281711391670634445
 
+const PrivateTestnetAndesite = 6915682381028791124
+
 func ChainSelectorFromName(name string) (uint64, error) {
 	switch name {
 	case "avalanche-mainnet":
@@ -376,6 +378,8 @@ func ChainSelectorFromName(name string) (uint64, error) {
 		return PolygonMainnet, nil
 	case "polygon-testnet-amoy":
 		return PolygonTestnetAmoy, nil
+	case "private-testnet-andesite":
+		return PrivateTestnetAndesite, nil
 	default:
 		return 0, errors.New("unknown ChainSelector" + name)
 	}
