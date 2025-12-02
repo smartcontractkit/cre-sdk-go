@@ -7,6 +7,7 @@ require (
 	github.com/smartcontractkit/chainlink-protos/cre/go v0.0.0-20251202154221-30236deecda8
 	github.com/smartcontractkit/cre-sdk-go v1.0.1-0.20251111122439-00032d582c18
 	github.com/stretchr/testify v1.11.1
+	google.golang.org/protobuf v1.36.8
 )
 
 require (
@@ -26,6 +27,5 @@ require (
 	github.com/tklauser/numcpus v0.6.1 // indirect
 	golang.org/x/crypto v0.36.0 // indirect
 	golang.org/x/sys v0.36.0 // indirect
-	google.golang.org/protobuf v1.36.8 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
