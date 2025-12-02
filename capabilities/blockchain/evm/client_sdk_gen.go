@@ -334,6 +334,8 @@ const EthereumMainnetBase1 = 15971525489660198786
 
 const EthereumMainnetOptimism1 = 3734403246176062136
 
+const EthereumMainnetZksync1 = 1562403441176082196
+
 const EthereumTestnetSepolia = 16015286601757825753
 
 const EthereumTestnetSepoliaArbitrum1 = 3478487238524512106
@@ -341,6 +343,8 @@ const EthereumTestnetSepoliaArbitrum1 = 3478487238524512106
 const EthereumTestnetSepoliaBase1 = 10344971235874465080
 
 const EthereumTestnetSepoliaOptimism1 = 5224473277236331295
+
+const EthereumTestnetSepoliaZksync1 = 6898391096552792247
 
 const PolygonMainnet = 4051577828743386545
 
@@ -366,6 +370,8 @@ func ChainSelectorFromName(name string) (uint64, error) {
 		return EthereumMainnetBase1, nil
 	case "ethereum-mainnet-optimism-1":
 		return EthereumMainnetOptimism1, nil
+	case "ethereum-mainnet-zksync-1":
+		return EthereumMainnetZksync1, nil
 	case "ethereum-testnet-sepolia":
 		return EthereumTestnetSepolia, nil
 	case "ethereum-testnet-sepolia-arbitrum-1":
@@ -374,6 +380,8 @@ func ChainSelectorFromName(name string) (uint64, error) {
 		return EthereumTestnetSepoliaBase1, nil
 	case "ethereum-testnet-sepolia-optimism-1":
 		return EthereumTestnetSepoliaOptimism1, nil
+	case "ethereum-testnet-sepolia-zksync-1":
+		return EthereumTestnetSepoliaZksync1, nil
 	case "polygon-mainnet":
 		return PolygonMainnet, nil
 	case "polygon-testnet-amoy":

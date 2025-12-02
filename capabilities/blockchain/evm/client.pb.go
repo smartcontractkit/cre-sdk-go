@@ -1791,7 +1791,7 @@ const file_capabilities_blockchain_evm_v1alpha_client_proto_rawDesc = "" +
 	"\bTxStatus\x12\x13\n" +
 	"\x0fTX_STATUS_FATAL\x10\x00\x12\x16\n" +
 	"\x12TX_STATUS_REVERTED\x10\x01\x12\x15\n" +
-	"\x11TX_STATUS_SUCCESS\x10\x022\xbf\x0e\n" +
+	"\x11TX_STATUS_SUCCESS\x10\x022\x95\x0f\n" +
 	"\x06Client\x12\x80\x01\n" +
 	"\fCallContract\x128.capabilities.blockchain.evm.v1alpha.CallContractRequest\x1a6.capabilities.blockchain.evm.v1alpha.CallContractReply\x12z\n" +
 	"\n" +
@@ -1803,8 +1803,8 @@ const file_capabilities_blockchain_evm_v1alpha_client_proto_rawDesc = "" +
 	"\x0eHeaderByNumber\x12:.capabilities.blockchain.evm.v1alpha.HeaderByNumberRequest\x1a8.capabilities.blockchain.evm.v1alpha.HeaderByNumberReply\x12v\n" +
 	"\n" +
 	"LogTrigger\x12<.capabilities.blockchain.evm.v1alpha.FilterLogTriggerRequest\x1a(.capabilities.blockchain.evm.v1alpha.Log0\x01\x12}\n" +
-	"\vWriteReport\x127.capabilities.blockchain.evm.v1alpha.WriteReportRequest\x1a5.capabilities.blockchain.evm.v1alpha.WriteReportReply\x1a\x84\x05\x82\xb5\x18\xff\x04\b\x01\x12\tevm@1.0.0\x1a\xef\x04\n" +
-	"\rChainSelector\x12\xdd\x04\x12\xda\x04\n" +
+	"\vWriteReport\x127.capabilities.blockchain.evm.v1alpha.WriteReportRequest\x1a5.capabilities.blockchain.evm.v1alpha.WriteReportReply\x1a\xda\x05\x82\xb5\x18\xd5\x05\b\x01\x12\tevm@1.0.0\x1a\xc5\x05\n" +
+	"\rChainSelector\x12\xb3\x05\x12\xb0\x05\n" +
 	"\x1d\n" +
 	"\x11avalanche-mainnet\x10\xd5\xe7\x8a\xc0\xe1\u0558\xa4Y\n" +
 	"#\n" +
@@ -1822,6 +1822,8 @@ const file_capabilities_blockchain_evm_v1alpha_client_proto_rawDesc = "" +
 	"'\n" +
 	"\x1bethereum-mainnet-optimism-1\x10\xb8\x95\x8f\xc3\xf7\xfe\xd0\xe93\n" +
 	"%\n" +
+	"\x19ethereum-mainnet-zksync-1\x10\x94\xee\x97\xd9\xed\xb4\xb1\xd7\x15\n" +
+	"%\n" +
 	"\x18ethereum-testnet-sepolia\x10ٵ\xe4\xce\xfc\xc9\xee\xa0\xde\x01\n" +
 	"/\n" +
 	"#ethereum-testnet-sepolia-arbitrum-1\x10\xea\xce\xee\xff궄\xa30\n" +
@@ -1829,6 +1831,8 @@ const file_capabilities_blockchain_evm_v1alpha_client_proto_rawDesc = "" +
 	"\x1fethereum-testnet-sepolia-base-1\x10\xb8ʹ\xef\xf6\x90\xaeȏ\x01\n" +
 	"/\n" +
 	"#ethereum-testnet-sepolia-optimism-1\x10\x9f\x86š\xbe\xd8\xc3\xc0H\n" +
+	"-\n" +
+	"!ethereum-testnet-sepolia-zksync-1\x10\xb7\xc1\xfc\xfd\xf2Ā\xde_\n" +
 	"\x1b\n" +
 	"\x0fpolygon-mainnet\x10\xb1\xab\xe4\U0001a486\x9d8\n" +
 	"!\n" +
