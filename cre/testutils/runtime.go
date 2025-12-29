@@ -47,7 +47,7 @@ func NewRuntime(tb testing.TB, secrets Secrets) *TestRuntime {
 			RuntimeBase: sdkimpl.RuntimeBase{
 				Mode:            sdk.Mode_MODE_DON,
 				MaxResponseSize: cre.DefaultMaxResponseSizeBytes,
-				RuntimeHelpers:  &runtimeHelpers{tb: tb, calls: map[int32]chan *sdk.CapabilityResponse{}, secretsCalls: map[int32][]*sdk.SecretResponse{}, secrets: secrets},
+				RuntimeHelpers:  &runtimeHelpers{tb: tb, calls: map[int32]chan *sdk.CapabilityResponse{}, secretsCalls: map[int32][]*sdk.SecretResponse{}, secrets: secrets, timeProvider: time.Now},
 				Lggr:            slog.New(slog.NewTextHandler(tw, &slog.HandlerOptions{})),
 			},
 		},
@@ -83,6 +83,11 @@ func (t *TestRuntime) SetRandomSource(source rand.Source) {
 // Note that once the first random is called, changes will have no effect.
 func (t *TestRuntime) SetNodeRandomSource(source rand.Source) {
 	t.RuntimeHelpers.(*runtimeHelpers).nodeSrc = source
+}
+
+// SetTimeProvider sets the time provider that will be used when Now is called on the Runtime
+func (t *TestRuntime) SetTimeProvider(timeProvider func() time.Time) {
+	t.RuntimeHelpers.(*runtimeHelpers).timeProvider = timeProvider
 }
 
 func defaultSimpleConsensus(_ context.Context, input *sdk.SimpleConsensusInputs) (*valuespb.Value, error) {
@@ -144,6 +149,7 @@ type runtimeHelpers struct {
 	nodeSrc      rand.Source
 	secretsCalls map[int32][]*sdk.SecretResponse
 	secrets      Secrets
+	timeProvider func() time.Time
 }
 
 // GetSource is meant to be called by the SDK's internal's.
@@ -267,5 +273,5 @@ func (rh *runtimeHelpers) AwaitSecrets(req *sdk.AwaitSecretsRequest, _ uint64) (
 func (rh *runtimeHelpers) SwitchModes(_ sdk.Mode) {}
 
 func (rh *runtimeHelpers) Now() time.Time {
-	return time.Time{}
+	return rh.timeProvider()
 }
