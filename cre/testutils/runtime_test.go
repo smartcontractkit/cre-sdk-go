@@ -5,6 +5,7 @@ import (
 	"errors"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/smartcontractkit/chainlink-protos/cre/go/sdk"
 	"github.com/smartcontractkit/cre-sdk-go/cre"
@@ -128,4 +129,18 @@ func TestRuntime_CallsReportMethod(t *testing.T) {
 
 	assert.Equal(t, []byte("default_signature_1"), unwrapped.Sigs[0].Signature)
 	assert.Equal(t, []byte("default_signature_2"), unwrapped.Sigs[1].Signature)
+}
+
+func TestRuntime_Now(t *testing.T) {
+	rt := testutils.NewRuntime(t, nil)
+
+	before := time.Now()
+	rtNow := rt.Now()
+	after := time.Now()
+	assert.True(t, before.Before(rtNow))
+	assert.True(t, after.After(rtNow))
+
+	anyNow := time.Unix(1767029356, 1).UTC()
+	rt.SetTimeProvider(func() time.Time { return anyNow })
+	assert.Equal(t, anyNow, rt.Now())
 }
