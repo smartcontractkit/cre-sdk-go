@@ -1,0 +1,164 @@
+name: Bump Chainlink Protos
+
+on:
+  workflow_dispatch:
+    inputs:
+      protos_commit_hash:
+        description: 'Git commit hash from chainlink-protos repository'
+        required: true
+        type: string
+      chain_name:
+        description: 'Name of the chain being added (for commit message context)'
+        required: false
+        type: string
+        default: ''
+      cut_tags:
+        description: 'Create new version tags after bumping'
+        required: false
+        type: boolean
+        default: false
+      create_pr:
+        description: 'Create a PR instead of pushing directly to the current branch'
+        required: false
+        type: boolean
+        default: true
+
+jobs:
+  bump-protos:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    outputs:
+      evm_tag: ${{ steps.create-tags.outputs.evm_tag }}
+      sdk_tag: ${{ steps.create-tags.outputs.sdk_tag }}
+      branch_name: ${{ steps.branch.outputs.branch_name }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
+        with:
+          go-version-file: "go.mod"
+
+      - name: Create feature branch
+        id: branch
+        if: ${{ inputs.create_pr }}
+        run: |
+          BRANCH_NAME="chore/bump-protos-${{ inputs.protos_commit_hash }}"
+          if [ -n "${{ inputs.chain_name }}" ]; then
+            BRANCH_NAME="chore/add-${{ inputs.chain_name }}-chain"
+          fi
+          git checkout -b "$BRANCH_NAME"
+          echo "branch_name=$BRANCH_NAME" >> "$GITHUB_OUTPUT"
+
+      - name: Update chainlink-protos dependency
+        working-directory: capabilities/blockchain/evm
+        run: |
+          echo "Updating chainlink-protos to commit ${{ inputs.protos_commit_hash }}"
+          go get github.com/smartcontractkit/chainlink-protos/cre/go@${{ inputs.protos_commit_hash }}
+          go mod tidy
+
+      - name: Regenerate protobuf files
+        run: |
+          make clean-generate
+
+      - name: Validate build
+        run: |
+          echo "Validating Go build..."
+          go build ./...
+          echo "Build validation successful"
+
+      - name: Validate EVM capability build
+        working-directory: capabilities/blockchain/evm
+        run: |
+          echo "Validating EVM capability build..."
+          go build ./...
+          echo "EVM capability build validation successful"
+
+      - name: Commit changes
+        id: commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+          else
+            COMMIT_MSG="chore: bump chainlink-protos to ${{ inputs.protos_commit_hash }}"
+            if [ -n "${{ inputs.chain_name }}" ]; then
+              COMMIT_MSG="chore: add ${{ inputs.chain_name }} chain support
+
+Updates chainlink-protos to ${{ inputs.protos_commit_hash }}"
+            fi
+            git commit -m "$COMMIT_MSG"
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Push changes (direct)
+        if: ${{ !inputs.create_pr && steps.commit.outputs.has_changes == 'true' }}
+        run: |
+          git push
+
+      - name: Push changes (branch)
+        if: ${{ inputs.create_pr && steps.commit.outputs.has_changes == 'true' }}
+        run: |
+          git push -u origin "${{ steps.branch.outputs.branch_name }}"
+
+      - name: Create Pull Request
+        if: ${{ inputs.create_pr && steps.commit.outputs.has_changes == 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          PR_TITLE="chore: bump chainlink-protos to ${{ inputs.protos_commit_hash }}"
+          PR_BODY="Updates chainlink-protos dependency and regenerates protobuf files.
+
+          **Protos Commit:** \`${{ inputs.protos_commit_hash }}\`"
+          
+          if [ -n "${{ inputs.chain_name }}" ]; then
+            PR_TITLE="chore: add ${{ inputs.chain_name }} chain support"
+            PR_BODY="Adds support for ${{ inputs.chain_name }} chain.
+
+          **Protos Commit:** \`${{ inputs.protos_commit_hash }}\`
+          **Chain:** ${{ inputs.chain_name }}"
+          fi
+          
+          gh pr create \
+            --title "$PR_TITLE" \
+            --body "$PR_BODY" \
+            --base "${{ github.ref_name }}"
+
+      - name: Preview version tags
+        id: preview-tags
+        if: ${{ inputs.cut_tags }}
+        run: |
+          OUTPUT=$(go run ./cre/tools/bumpversion --dry-run --output-json)
+          echo "$OUTPUT"
+          EVM_TAG=$(echo "$OUTPUT" | jq -r '.evm_tag')
+          SDK_TAG=$(echo "$OUTPUT" | jq -r '.sdk_tag')
+          echo "evm_tag=$EVM_TAG" >> "$GITHUB_OUTPUT"
+          echo "sdk_tag=$SDK_TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Create version tags
+        id: create-tags
+        if: ${{ inputs.cut_tags && !inputs.create_pr }}
+        run: |
+          OUTPUT=$(go run ./cre/tools/bumpversion --push --output-json)
+          echo "$OUTPUT"
+          EVM_TAG=$(echo "$OUTPUT" | jq -r '.evm_tag')
+          SDK_TAG=$(echo "$OUTPUT" | jq -r '.sdk_tag')
+          echo "evm_tag=$EVM_TAG" >> "$GITHUB_OUTPUT"
+          echo "sdk_tag=$SDK_TAG" >> "$GITHUB_OUTPUT"
+          echo "::notice::Created EVM tag: $EVM_TAG"
+          echo "::notice::Created SDK tag: $SDK_TAG"
+
+      - name: Tag creation skipped (PR mode)
+        if: ${{ inputs.cut_tags && inputs.create_pr }}
+        run: |
+          echo "::warning::Tag creation skipped because create_pr is enabled. Merge the PR first, then run the workflow again with cut_tags=true and create_pr=false to create tags."
+          echo "Planned EVM tag: ${{ steps.preview-tags.outputs.evm_tag }}"
+          echo "Planned SDK tag: ${{ steps.preview-tags.outputs.sdk_tag }}"
