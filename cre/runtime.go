@@ -182,6 +182,7 @@ func RunInNodeMode[C, T any](
 			if err != nil {
 				return &sdk.SimpleConsensusInputs{Observation: &sdk.SimpleConsensusInputs_Error{Error: err.Error()}}
 			}
+			clearIgnoredFields(defaultValue, descriptor)
 		}
 
 		returnValue := &sdk.SimpleConsensusInputs{
@@ -201,6 +202,7 @@ func RunInNodeMode[C, T any](
 			return returnValue
 		}
 
+		clearIgnoredFields(wrapped, descriptor)
 		returnValue.Observation = &sdk.SimpleConsensusInputs_Value{Value: values.Proto(wrapped)}
 		return returnValue
 	}
@@ -220,4 +222,32 @@ func RunInNodeMode[C, T any](
 		}
 		return t, err
 	})
+}
+
+func clearIgnoredFields(value values.Value, descriptor *sdk.ConsensusDescriptor) {
+	if descriptor == nil || value == nil {
+		return
+	}
+	desc := descriptor.GetFieldsMap()
+	if desc == nil {
+		return
+	}
+
+	if vm, ok := value.(*values.Map); ok {
+		if vm == nil || vm.Underlying == nil {
+			return
+		}
+		for k, v := range vm.Underlying {
+			nested, ok := desc.Fields[k]
+			if !ok {
+				delete(vm.Underlying, k)
+				continue
+			}
+
+			nfm := nested.GetFieldsMap()
+			if nfm != nil {
+				clearIgnoredFields(v, nested)
+			}
+		}
+	}
 }

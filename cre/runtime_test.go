@@ -79,6 +79,63 @@ func TestRunInNodeMode_ErrorWrappingDefault(t *testing.T) {
 	assert.Contains(t, err.Error(), "could not wrap into value:")
 }
 
+func TestRunInNodeMode_ClearsIgnoredFields(t *testing.T) {
+	type NestedStruct struct {
+		NestedIncluded string `consensus_aggregation:"identical"`
+		NestedIgnored  string `consensus_aggregation:"ignore"`
+	}
+
+	type TestStruct struct {
+		IncludedField string       `consensus_aggregation:"identical"`
+		IgnoredField  string       `consensus_aggregation:"ignore"`
+		Nested        NestedStruct `consensus_aggregation:"nested"`
+	}
+
+	runtime := &mockRuntime{}
+
+	defaultVal := TestStruct{
+		IncludedField: "default_included",
+		IgnoredField:  "default_ignored",
+		Nested: NestedStruct{
+			NestedIncluded: "default_nested_included",
+			NestedIgnored:  "default_nested_ignored",
+		},
+	}
+
+	responseVal := TestStruct{
+		IncludedField: "response_included",
+		IgnoredField:  "response_ignored",
+		Nested: NestedStruct{
+			NestedIncluded: "response_nested_included",
+			NestedIgnored:  "response_nested_ignored",
+		},
+	}
+
+	p := RunInNodeMode("", runtime, func(_ string, nr NodeRuntime) (TestStruct, error) {
+		return responseVal, nil
+	}, ConsensusAggregationFromTags[TestStruct]().WithDefault(defaultVal))
+
+	val, err := p.Await()
+	require.NoError(t, err)
+
+	assert.Equal(t, "response_included", val.IncludedField)
+	assert.Equal(t, "", val.IgnoredField)
+	assert.Equal(t, "response_nested_included", val.Nested.NestedIncluded)
+	assert.Equal(t, "", val.Nested.NestedIgnored)
+
+	p = RunInNodeMode("", runtime, func(_ string, nr NodeRuntime) (TestStruct, error) {
+		return TestStruct{}, errors.New("error")
+	}, ConsensusAggregationFromTags[TestStruct]().WithDefault(defaultVal))
+
+	val, err = p.Await()
+	require.NoError(t, err)
+
+	assert.Equal(t, "default_included", val.IncludedField)
+	assert.Equal(t, "", val.IgnoredField)
+	assert.Equal(t, "default_nested_included", val.Nested.NestedIncluded)
+	assert.Equal(t, "", val.Nested.NestedIgnored)
+}
+
 // mockNodeRuntime implements NodeRuntime for testing.
 type mockNodeRuntime struct{}
 
