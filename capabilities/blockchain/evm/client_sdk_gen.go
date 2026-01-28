@@ -318,6 +318,10 @@ func (c *Client) WriteReport(runtime cre.Runtime, input *WriteCreReportRequest) 
 
 }
 
+const ApechainTestnetCurtis = 9900119385908781505
+
+const ArcTestnet = 3034092155422581607
+
 const AvalancheMainnet = 6433500567565415381
 
 const AvalancheTestnetFuji = 14767482510784806043
@@ -342,9 +346,23 @@ const EthereumTestnetSepoliaArbitrum1 = 3478487238524512106
 
 const EthereumTestnetSepoliaBase1 = 10344971235874465080
 
+const EthereumTestnetSepoliaLinea1 = 5719461335882077547
+
 const EthereumTestnetSepoliaOptimism1 = 5224473277236331295
 
+const EthereumTestnetSepoliaWorldchain1 = 5299555114858065850
+
 const EthereumTestnetSepoliaZksync1 = 6898391096552792247
+
+const EtherlinkTestnet = 1910019406958449359
+
+const HyperliquidTestnet = 4286062357653186312
+
+const InkTestnetSepolia = 9763904284804119144
+
+const JovayTestnet = 945045181441419236
+
+const PlasmaTestnet = 3967220077692964309
 
 const PolygonMainnet = 4051577828743386545
 
@@ -352,8 +370,14 @@ const PolygonTestnetAmoy = 16281711391670634445
 
 const PrivateTestnetAndesite = 6915682381028791124
 
+const TempoTestnet = 3963528237232804922
+
 func ChainSelectorFromName(name string) (uint64, error) {
 	switch name {
+	case "apechain-testnet-curtis":
+		return ApechainTestnetCurtis, nil
+	case "arc-testnet":
+		return ArcTestnet, nil
 	case "avalanche-mainnet":
 		return AvalancheMainnet, nil
 	case "avalanche-testnet-fuji":
@@ -378,16 +402,32 @@ func ChainSelectorFromName(name string) (uint64, error) {
 		return EthereumTestnetSepoliaArbitrum1, nil
 	case "ethereum-testnet-sepolia-base-1":
 		return EthereumTestnetSepoliaBase1, nil
+	case "ethereum-testnet-sepolia-linea-1":
+		return EthereumTestnetSepoliaLinea1, nil
 	case "ethereum-testnet-sepolia-optimism-1":
 		return EthereumTestnetSepoliaOptimism1, nil
+	case "ethereum-testnet-sepolia-worldchain-1":
+		return EthereumTestnetSepoliaWorldchain1, nil
 	case "ethereum-testnet-sepolia-zksync-1":
 		return EthereumTestnetSepoliaZksync1, nil
+	case "etherlink-testnet":
+		return EtherlinkTestnet, nil
+	case "hyperliquid-testnet":
+		return HyperliquidTestnet, nil
+	case "ink-testnet-sepolia":
+		return InkTestnetSepolia, nil
+	case "jovay-testnet":
+		return JovayTestnet, nil
+	case "plasma-testnet":
+		return PlasmaTestnet, nil
 	case "polygon-mainnet":
 		return PolygonMainnet, nil
 	case "polygon-testnet-amoy":
 		return PolygonTestnetAmoy, nil
 	case "private-testnet-andesite":
 		return PrivateTestnetAndesite, nil
+	case "tempo-testnet":
+		return TempoTestnet, nil
 	default:
 		return 0, errors.New("unknown ChainSelector" + name)
 	}
