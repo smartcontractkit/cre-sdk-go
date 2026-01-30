@@ -326,9 +326,9 @@ const AvalancheMainnet = 6433500567565415381
 
 const AvalancheTestnetFuji = 14767482510784806043
 
-const BinanceSmartChainMainnetOpbnb1 = 465944652040885897
+const BinanceSmartChainMainnet = 11344663589394136015
 
-const BinanceSmartChainTestnetOpbnb1 = 13274425992935471758
+const BinanceSmartChainTestnet = 13264668187771770619
 
 const EthereumMainnet = 5009297550715157269
 
@@ -354,8 +354,6 @@ const EthereumTestnetSepoliaWorldchain1 = 5299555114858065850
 
 const EthereumTestnetSepoliaZksync1 = 6898391096552792247
 
-const EtherlinkTestnet = 1910019406958449359
-
 const HyperliquidTestnet = 4286062357653186312
 
 const InkTestnetSepolia = 9763904284804119144
@@ -370,8 +368,6 @@ const PolygonTestnetAmoy = 16281711391670634445
 
 const PrivateTestnetAndesite = 6915682381028791124
 
-const TempoTestnet = 3963528237232804922
-
 func ChainSelectorFromName(name string) (uint64, error) {
 	switch name {
 	case "apechain-testnet-curtis":
@@ -382,10 +378,10 @@ func ChainSelectorFromName(name string) (uint64, error) {
 		return AvalancheMainnet, nil
 	case "avalanche-testnet-fuji":
 		return AvalancheTestnetFuji, nil
-	case "binance_smart_chain-mainnet-opbnb-1":
-		return BinanceSmartChainMainnetOpbnb1, nil
-	case "binance_smart_chain-testnet-opbnb-1":
-		return BinanceSmartChainTestnetOpbnb1, nil
+	case "binance_smart_chain-mainnet":
+		return BinanceSmartChainMainnet, nil
+	case "binance_smart_chain-testnet":
+		return BinanceSmartChainTestnet, nil
 	case "ethereum-mainnet":
 		return EthereumMainnet, nil
 	case "ethereum-mainnet-arbitrum-1":
@@ -410,8 +406,6 @@ func ChainSelectorFromName(name string) (uint64, error) {
 		return EthereumTestnetSepoliaWorldchain1, nil
 	case "ethereum-testnet-sepolia-zksync-1":
 		return EthereumTestnetSepoliaZksync1, nil
-	case "etherlink-testnet":
-		return EtherlinkTestnet, nil
 	case "hyperliquid-testnet":
 		return HyperliquidTestnet, nil
 	case "ink-testnet-sepolia":
@@ -426,8 +420,6 @@ func ChainSelectorFromName(name string) (uint64, error) {
 		return PolygonTestnetAmoy, nil
 	case "private-testnet-andesite":
 		return PrivateTestnetAndesite, nil
-	case "tempo-testnet":
-		return TempoTestnet, nil
 	default:
 		return 0, errors.New("unknown ChainSelector" + name)
 	}
