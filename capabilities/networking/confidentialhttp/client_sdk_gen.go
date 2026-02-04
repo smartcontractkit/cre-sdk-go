@@ -17,11 +17,66 @@ type Client struct {
 	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 allow defaults for capabilities
 }
 
+type SendRequester struct {
+	client      *Client
+	nodeRuntime cre.NodeRuntime
+}
+
+// SendRequest SendRequest is the new RPC method using the updated types.
+func (c *SendRequester) SendRequest(input *ConfidentialHTTPRequest) cre.Promise[*HTTPResponse] {
+	return c.client.SendRequest(c.nodeRuntime, input)
+}
+
+// SendRequest Allows usage of `SendRequester` with Byzantine fault tolerance.
+func SendRequest[C, T any](
+	config C,
+	runtime cre.Runtime,
+	client *Client,
+	fn func(config C, logger *slog.Logger, sendRequester *SendRequester) (T, error),
+	ca cre.ConsensusAggregation[T]) cre.Promise[T] {
+	wrapped := func(config C, nodeRuntime cre.NodeRuntime) (T, error) {
+		sendRequester := SendRequester{client: client, nodeRuntime: nodeRuntime}
+		return fn(config, runtime.Logger(), &sendRequester)
+	}
+
+	return cre.RunInNodeMode(config, runtime, wrapped, ca)
+}
+
+// SendRequest SendRequest is the new RPC method using the updated types.
+func (c *Client) SendRequest(runtime cre.NodeRuntime, input *ConfidentialHTTPRequest) cre.Promise[*HTTPResponse] {
+	wrapped := &anypb.Any{}
+	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
+	if err != nil {
+		return cre.PromiseFromResult[*HTTPResponse](nil, err)
+	}
+
+	capCallResponse := cre.Then(runtime.CallCapability(&sdkpb.CapabilityRequest{
+		Id:      "confidential-http@1.0.0-alpha",
+		Payload: wrapped,
+		Method:  "SendRequest",
+	}), func(i *sdkpb.CapabilityResponse) (*HTTPResponse, error) {
+		switch payload := i.Response.(type) {
+		case *sdkpb.CapabilityResponse_Error:
+			return nil, errors.New(payload.Error)
+		case *sdkpb.CapabilityResponse_Payload:
+			output := &HTTPResponse{}
+			err = payload.Payload.UnmarshalTo(output)
+			return output, err
+		default:
+			return nil, errors.New("unexpected response type")
+		}
+	})
+
+	return capCallResponse
+
+}
+
 type SendRequestser struct {
 	client      *Client
 	nodeRuntime cre.NodeRuntime
 }
 
+// SendRequests Deprecated: Use SendRequest instead.
 func (c *SendRequestser) SendRequests(input *EnclaveActionInput) cre.Promise[*HTTPEnclaveResponseData] {
 	return c.client.SendRequests(c.nodeRuntime, input)
 }
@@ -41,6 +96,7 @@ func SendRequests[C, T any](
 	return cre.RunInNodeMode(config, runtime, wrapped, ca)
 }
 
+// SendRequests Deprecated: Use SendRequest instead.
 func (c *Client) SendRequests(runtime cre.NodeRuntime, input *EnclaveActionInput) cre.Promise[*HTTPEnclaveResponseData] {
 	wrapped := &anypb.Any{}
 	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})

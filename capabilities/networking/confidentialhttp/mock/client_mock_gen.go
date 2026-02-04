@@ -27,13 +27,38 @@ func NewClientCapability(t testing.TB) (*ClientCapability, error) {
 
 type ClientCapability struct {
 	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
-
+	//SendRequestCapability SendRequest is the new RPC method using the updated types.
+	SendRequest func(ctx context.Context, input *confidentialhttp.ConfidentialHTTPRequest) (*confidentialhttp.HTTPResponse, error)
+	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
+	//SendRequestsCapability Deprecated: Use SendRequest instead.
 	SendRequests func(ctx context.Context, input *confidentialhttp.EnclaveActionInput) (*confidentialhttp.HTTPEnclaveResponseData, error)
 }
 
 func (c *ClientCapability) Invoke(ctx context.Context, request *sdkpb.CapabilityRequest) *sdkpb.CapabilityResponse {
 	capResp := &sdkpb.CapabilityResponse{}
 	switch request.Method {
+	case "SendRequest":
+		input := &confidentialhttp.ConfidentialHTTPRequest{}
+		if err := request.Payload.UnmarshalTo(input); err != nil {
+			capResp.Response = &sdkpb.CapabilityResponse_Error{Error: err.Error()}
+			break
+		}
+
+		if c.SendRequest == nil {
+			capResp.Response = &sdkpb.CapabilityResponse_Error{Error: "no stub provided for SendRequest"}
+			break
+		}
+		resp, err := c.SendRequest(ctx, input)
+		if err != nil {
+			capResp.Response = &sdkpb.CapabilityResponse_Error{Error: err.Error()}
+		} else {
+			payload, err := anypb.New(resp)
+			if err == nil {
+				capResp.Response = &sdkpb.CapabilityResponse_Payload{Payload: payload}
+			} else {
+				capResp.Response = &sdkpb.CapabilityResponse_Error{Error: err.Error()}
+			}
+		}
 	case "SendRequests":
 		input := &confidentialhttp.EnclaveActionInput{}
 		if err := request.Payload.UnmarshalTo(input); err != nil {
