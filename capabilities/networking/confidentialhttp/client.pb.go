@@ -84,7 +84,7 @@ func (x *SecretIdentifier) GetOwner() string {
 }
 
 // Header represents a single HTTP header as a name-value pair.
-// Using a message instead of a map ensures deterministic ordering for request hashing.
+// Using repeated messages instead of a map allows duplicate header names (e.g., multiple Set-Cookie headers).
 type Header struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
@@ -137,60 +137,6 @@ func (x *Header) GetValue() string {
 	return ""
 }
 
-// TemplatePublicValue represents a single template variable as a name-value pair.
-// Using a message instead of a map ensures deterministic ordering for request hashing.
-type TemplatePublicValue struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	Value         string                 `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *TemplatePublicValue) Reset() {
-	*x = TemplatePublicValue{}
-	mi := &file_capabilities_networking_confidentialhttp_v1alpha_client_proto_msgTypes[2]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *TemplatePublicValue) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*TemplatePublicValue) ProtoMessage() {}
-
-func (x *TemplatePublicValue) ProtoReflect() protoreflect.Message {
-	mi := &file_capabilities_networking_confidentialhttp_v1alpha_client_proto_msgTypes[2]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use TemplatePublicValue.ProtoReflect.Descriptor instead.
-func (*TemplatePublicValue) Descriptor() ([]byte, []int) {
-	return file_capabilities_networking_confidentialhttp_v1alpha_client_proto_rawDescGZIP(), []int{2}
-}
-
-func (x *TemplatePublicValue) GetName() string {
-	if x != nil {
-		return x.Name
-	}
-	return ""
-}
-
-func (x *TemplatePublicValue) GetValue() string {
-	if x != nil {
-		return x.Value
-	}
-	return ""
-}
-
 // HTTPRequest contains the HTTP fields used to make a request from the enclave.
 type HTTPRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
@@ -206,9 +152,9 @@ type HTTPRequest struct {
 	//	*HTTPRequest_BodyBytes
 	Body isHTTPRequest_Body `protobuf_oneof:"body"`
 	// headers are the request headers as name-value pairs.
-	Headers []*Header `protobuf:"bytes,4,rep,name=headers,proto3" json:"headers,omitempty"`
+	Headers map[string]string `protobuf:"bytes,4,rep,name=headers,proto3" json:"headers,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	// template_public_values are public values used to fill in request body and header templates.
-	TemplatePublicValues []*TemplatePublicValue `protobuf:"bytes,5,rep,name=template_public_values,json=templatePublicValues,proto3" json:"template_public_values,omitempty"`
+	TemplatePublicValues map[string]string `protobuf:"bytes,5,rep,name=template_public_values,json=templatePublicValues,proto3" json:"template_public_values,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	// custom_root_ca_cert_pem is an optional custom root CA certificate (PEM format)
 	// for verifying the external server's TLS certificate.
 	CustomRootCaCertPem []byte `protobuf:"bytes,6,opt,name=custom_root_ca_cert_pem,json=customRootCaCertPem,proto3" json:"custom_root_ca_cert_pem,omitempty"`
@@ -220,7 +166,7 @@ type HTTPRequest struct {
 
 func (x *HTTPRequest) Reset() {
 	*x = HTTPRequest{}
-	mi := &file_capabilities_networking_confidentialhttp_v1alpha_client_proto_msgTypes[3]
+	mi := &file_capabilities_networking_confidentialhttp_v1alpha_client_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -232,7 +178,7 @@ func (x *HTTPRequest) String() string {
 func (*HTTPRequest) ProtoMessage() {}
 
 func (x *HTTPRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_capabilities_networking_confidentialhttp_v1alpha_client_proto_msgTypes[3]
+	mi := &file_capabilities_networking_confidentialhttp_v1alpha_client_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -245,7 +191,7 @@ func (x *HTTPRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HTTPRequest.ProtoReflect.Descriptor instead.
 func (*HTTPRequest) Descriptor() ([]byte, []int) {
-	return file_capabilities_networking_confidentialhttp_v1alpha_client_proto_rawDescGZIP(), []int{3}
+	return file_capabilities_networking_confidentialhttp_v1alpha_client_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *HTTPRequest) GetUrl() string {
@@ -287,14 +233,14 @@ func (x *HTTPRequest) GetBodyBytes() []byte {
 	return nil
 }
 
-func (x *HTTPRequest) GetHeaders() []*Header {
+func (x *HTTPRequest) GetHeaders() map[string]string {
 	if x != nil {
 		return x.Headers
 	}
 	return nil
 }
 
-func (x *HTTPRequest) GetTemplatePublicValues() []*TemplatePublicValue {
+func (x *HTTPRequest) GetTemplatePublicValues() map[string]string {
 	if x != nil {
 		return x.TemplatePublicValues
 	}
@@ -346,7 +292,7 @@ type HTTPResponse struct {
 
 func (x *HTTPResponse) Reset() {
 	*x = HTTPResponse{}
-	mi := &file_capabilities_networking_confidentialhttp_v1alpha_client_proto_msgTypes[4]
+	mi := &file_capabilities_networking_confidentialhttp_v1alpha_client_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -358,7 +304,7 @@ func (x *HTTPResponse) String() string {
 func (*HTTPResponse) ProtoMessage() {}
 
 func (x *HTTPResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_capabilities_networking_confidentialhttp_v1alpha_client_proto_msgTypes[4]
+	mi := &file_capabilities_networking_confidentialhttp_v1alpha_client_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -371,7 +317,7 @@ func (x *HTTPResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HTTPResponse.ProtoReflect.Descriptor instead.
 func (*HTTPResponse) Descriptor() ([]byte, []int) {
-	return file_capabilities_networking_confidentialhttp_v1alpha_client_proto_rawDescGZIP(), []int{4}
+	return file_capabilities_networking_confidentialhttp_v1alpha_client_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *HTTPResponse) GetStatusCode() uint32 {
@@ -407,7 +353,7 @@ type ConfidentialHTTPRequest struct {
 
 func (x *ConfidentialHTTPRequest) Reset() {
 	*x = ConfidentialHTTPRequest{}
-	mi := &file_capabilities_networking_confidentialhttp_v1alpha_client_proto_msgTypes[5]
+	mi := &file_capabilities_networking_confidentialhttp_v1alpha_client_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -419,7 +365,7 @@ func (x *ConfidentialHTTPRequest) String() string {
 func (*ConfidentialHTTPRequest) ProtoMessage() {}
 
 func (x *ConfidentialHTTPRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_capabilities_networking_confidentialhttp_v1alpha_client_proto_msgTypes[5]
+	mi := &file_capabilities_networking_confidentialhttp_v1alpha_client_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -432,7 +378,7 @@ func (x *ConfidentialHTTPRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ConfidentialHTTPRequest.ProtoReflect.Descriptor instead.
 func (*ConfidentialHTTPRequest) Descriptor() ([]byte, []int) {
-	return file_capabilities_networking_confidentialhttp_v1alpha_client_proto_rawDescGZIP(), []int{5}
+	return file_capabilities_networking_confidentialhttp_v1alpha_client_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *ConfidentialHTTPRequest) GetVaultDonSecrets() []*SecretIdentifier {
@@ -449,297 +395,6 @@ func (x *ConfidentialHTTPRequest) GetRequest() *HTTPRequest {
 	return nil
 }
 
-// Deprecated: Use HTTPRequest instead.
-//
-// Deprecated: Marked as deprecated in capabilities/networking/confidentialhttp/v1alpha/client.proto.
-type Request struct {
-	state                protoimpl.MessageState `protogen:"open.v1"`
-	Url                  string                 `protobuf:"bytes,1,opt,name=url,proto3" json:"url,omitempty"`
-	Method               string                 `protobuf:"bytes,2,opt,name=method,proto3" json:"method,omitempty"`
-	Body                 string                 `protobuf:"bytes,3,opt,name=body,proto3" json:"body,omitempty"`
-	Headers              []string               `protobuf:"bytes,4,rep,name=headers,proto3" json:"headers,omitempty"`
-	PublicTemplateValues map[string]string      `protobuf:"bytes,5,rep,name=public_template_values,json=publicTemplateValues,proto3" json:"public_template_values,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	CustomCertBundle     []byte                 `protobuf:"bytes,6,opt,name=custom_cert_bundle,json=customCertBundle,proto3" json:"custom_cert_bundle,omitempty"`
-	unknownFields        protoimpl.UnknownFields
-	sizeCache            protoimpl.SizeCache
-}
-
-func (x *Request) Reset() {
-	*x = Request{}
-	mi := &file_capabilities_networking_confidentialhttp_v1alpha_client_proto_msgTypes[6]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *Request) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*Request) ProtoMessage() {}
-
-func (x *Request) ProtoReflect() protoreflect.Message {
-	mi := &file_capabilities_networking_confidentialhttp_v1alpha_client_proto_msgTypes[6]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use Request.ProtoReflect.Descriptor instead.
-func (*Request) Descriptor() ([]byte, []int) {
-	return file_capabilities_networking_confidentialhttp_v1alpha_client_proto_rawDescGZIP(), []int{6}
-}
-
-func (x *Request) GetUrl() string {
-	if x != nil {
-		return x.Url
-	}
-	return ""
-}
-
-func (x *Request) GetMethod() string {
-	if x != nil {
-		return x.Method
-	}
-	return ""
-}
-
-func (x *Request) GetBody() string {
-	if x != nil {
-		return x.Body
-	}
-	return ""
-}
-
-func (x *Request) GetHeaders() []string {
-	if x != nil {
-		return x.Headers
-	}
-	return nil
-}
-
-func (x *Request) GetPublicTemplateValues() map[string]string {
-	if x != nil {
-		return x.PublicTemplateValues
-	}
-	return nil
-}
-
-func (x *Request) GetCustomCertBundle() []byte {
-	if x != nil {
-		return x.CustomCertBundle
-	}
-	return nil
-}
-
-// Deprecated: Use HTTPResponse instead.
-//
-// Deprecated: Marked as deprecated in capabilities/networking/confidentialhttp/v1alpha/client.proto.
-type ResponseTemplate struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	StatusCode    int64                  `protobuf:"varint,1,opt,name=status_code,json=statusCode,proto3" json:"status_code,omitempty"`
-	Body          []byte                 `protobuf:"bytes,2,opt,name=body,proto3" json:"body,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ResponseTemplate) Reset() {
-	*x = ResponseTemplate{}
-	mi := &file_capabilities_networking_confidentialhttp_v1alpha_client_proto_msgTypes[7]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ResponseTemplate) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ResponseTemplate) ProtoMessage() {}
-
-func (x *ResponseTemplate) ProtoReflect() protoreflect.Message {
-	mi := &file_capabilities_networking_confidentialhttp_v1alpha_client_proto_msgTypes[7]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ResponseTemplate.ProtoReflect.Descriptor instead.
-func (*ResponseTemplate) Descriptor() ([]byte, []int) {
-	return file_capabilities_networking_confidentialhttp_v1alpha_client_proto_rawDescGZIP(), []int{7}
-}
-
-func (x *ResponseTemplate) GetStatusCode() int64 {
-	if x != nil {
-		return x.StatusCode
-	}
-	return 0
-}
-
-func (x *ResponseTemplate) GetBody() []byte {
-	if x != nil {
-		return x.Body
-	}
-	return nil
-}
-
-// Deprecated: Use ConfidentialHTTPRequest instead.
-//
-// Deprecated: Marked as deprecated in capabilities/networking/confidentialhttp/v1alpha/client.proto.
-type HTTPEnclaveRequestData struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Requests      []*Request             `protobuf:"bytes,1,rep,name=requests,proto3" json:"requests,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *HTTPEnclaveRequestData) Reset() {
-	*x = HTTPEnclaveRequestData{}
-	mi := &file_capabilities_networking_confidentialhttp_v1alpha_client_proto_msgTypes[8]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *HTTPEnclaveRequestData) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*HTTPEnclaveRequestData) ProtoMessage() {}
-
-func (x *HTTPEnclaveRequestData) ProtoReflect() protoreflect.Message {
-	mi := &file_capabilities_networking_confidentialhttp_v1alpha_client_proto_msgTypes[8]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use HTTPEnclaveRequestData.ProtoReflect.Descriptor instead.
-func (*HTTPEnclaveRequestData) Descriptor() ([]byte, []int) {
-	return file_capabilities_networking_confidentialhttp_v1alpha_client_proto_rawDescGZIP(), []int{8}
-}
-
-func (x *HTTPEnclaveRequestData) GetRequests() []*Request {
-	if x != nil {
-		return x.Requests
-	}
-	return nil
-}
-
-// Deprecated: Use ConfidentialHTTPRequest instead.
-//
-// Deprecated: Marked as deprecated in capabilities/networking/confidentialhttp/v1alpha/client.proto.
-type EnclaveActionInput struct {
-	state           protoimpl.MessageState  `protogen:"open.v1"`
-	VaultDonSecrets []*SecretIdentifier     `protobuf:"bytes,1,rep,name=vault_don_secrets,json=vaultDonSecrets,proto3" json:"vault_don_secrets,omitempty"`
-	Input           *HTTPEnclaveRequestData `protobuf:"bytes,2,opt,name=input,proto3" json:"input,omitempty"`
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
-}
-
-func (x *EnclaveActionInput) Reset() {
-	*x = EnclaveActionInput{}
-	mi := &file_capabilities_networking_confidentialhttp_v1alpha_client_proto_msgTypes[9]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *EnclaveActionInput) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*EnclaveActionInput) ProtoMessage() {}
-
-func (x *EnclaveActionInput) ProtoReflect() protoreflect.Message {
-	mi := &file_capabilities_networking_confidentialhttp_v1alpha_client_proto_msgTypes[9]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use EnclaveActionInput.ProtoReflect.Descriptor instead.
-func (*EnclaveActionInput) Descriptor() ([]byte, []int) {
-	return file_capabilities_networking_confidentialhttp_v1alpha_client_proto_rawDescGZIP(), []int{9}
-}
-
-func (x *EnclaveActionInput) GetVaultDonSecrets() []*SecretIdentifier {
-	if x != nil {
-		return x.VaultDonSecrets
-	}
-	return nil
-}
-
-func (x *EnclaveActionInput) GetInput() *HTTPEnclaveRequestData {
-	if x != nil {
-		return x.Input
-	}
-	return nil
-}
-
-// Deprecated: Use HTTPResponse instead.
-//
-// Deprecated: Marked as deprecated in capabilities/networking/confidentialhttp/v1alpha/client.proto.
-type HTTPEnclaveResponseData struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Responses     []*ResponseTemplate    `protobuf:"bytes,1,rep,name=responses,proto3" json:"responses,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *HTTPEnclaveResponseData) Reset() {
-	*x = HTTPEnclaveResponseData{}
-	mi := &file_capabilities_networking_confidentialhttp_v1alpha_client_proto_msgTypes[10]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *HTTPEnclaveResponseData) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*HTTPEnclaveResponseData) ProtoMessage() {}
-
-func (x *HTTPEnclaveResponseData) ProtoReflect() protoreflect.Message {
-	mi := &file_capabilities_networking_confidentialhttp_v1alpha_client_proto_msgTypes[10]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use HTTPEnclaveResponseData.ProtoReflect.Descriptor instead.
-func (*HTTPEnclaveResponseData) Descriptor() ([]byte, []int) {
-	return file_capabilities_networking_confidentialhttp_v1alpha_client_proto_rawDescGZIP(), []int{10}
-}
-
-func (x *HTTPEnclaveResponseData) GetResponses() []*ResponseTemplate {
-	if x != nil {
-		return x.Responses
-	}
-	return nil
-}
-
 var File_capabilities_networking_confidentialhttp_v1alpha_client_proto protoreflect.FileDescriptor
 
 const file_capabilities_networking_confidentialhttp_v1alpha_client_proto_rawDesc = "" +
@@ -752,21 +407,24 @@ const file_capabilities_networking_confidentialhttp_v1alpha_client_proto_rawDesc
 	"\x06_owner\"2\n" +
 	"\x06Header\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value\"?\n" +
-	"\x13TemplatePublicValue\x12\x12\n" +
-	"\x04name\x18\x01 \x01(\tR\x04name\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value\"\xbf\x03\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value\"\xe9\x04\n" +
 	"\vHTTPRequest\x12\x10\n" +
 	"\x03url\x18\x01 \x01(\tR\x03url\x12\x16\n" +
 	"\x06method\x18\x02 \x01(\tR\x06method\x12!\n" +
 	"\vbody_string\x18\x03 \x01(\tH\x00R\n" +
 	"bodyString\x12\x1f\n" +
 	"\n" +
-	"body_bytes\x18\b \x01(\fH\x00R\tbodyBytes\x12R\n" +
-	"\aheaders\x18\x04 \x03(\v28.capabilities.networking.confidentialhttp.v1alpha.HeaderR\aheaders\x12{\n" +
-	"\x16template_public_values\x18\x05 \x03(\v2E.capabilities.networking.confidentialhttp.v1alpha.TemplatePublicValueR\x14templatePublicValues\x124\n" +
+	"body_bytes\x18\b \x01(\fH\x00R\tbodyBytes\x12d\n" +
+	"\aheaders\x18\x04 \x03(\v2J.capabilities.networking.confidentialhttp.v1alpha.HTTPRequest.HeadersEntryR\aheaders\x12\x8d\x01\n" +
+	"\x16template_public_values\x18\x05 \x03(\v2W.capabilities.networking.confidentialhttp.v1alpha.HTTPRequest.TemplatePublicValuesEntryR\x14templatePublicValues\x124\n" +
 	"\x17custom_root_ca_cert_pem\x18\x06 \x01(\fR\x13customRootCaCertPem\x123\n" +
-	"\atimeout\x18\a \x01(\v2\x19.google.protobuf.DurationR\atimeoutB\x06\n" +
+	"\atimeout\x18\a \x01(\v2\x19.google.protobuf.DurationR\atimeout\x1a:\n" +
+	"\fHeadersEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\x1aG\n" +
+	"\x19TemplatePublicValuesEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01B\x06\n" +
 	"\x04body\"\x97\x01\n" +
 	"\fHTTPResponse\x12\x1f\n" +
 	"\vstatus_code\x18\x01 \x01(\rR\n" +
@@ -775,31 +433,9 @@ const file_capabilities_networking_confidentialhttp_v1alpha_client_proto_rawDesc
 	"\aheaders\x18\x03 \x03(\v28.capabilities.networking.confidentialhttp.v1alpha.HeaderR\aheaders\"\xe2\x01\n" +
 	"\x17ConfidentialHTTPRequest\x12n\n" +
 	"\x11vault_don_secrets\x18\x01 \x03(\v2B.capabilities.networking.confidentialhttp.v1alpha.SecretIdentifierR\x0fvaultDonSecrets\x12W\n" +
-	"\arequest\x18\x02 \x01(\v2=.capabilities.networking.confidentialhttp.v1alpha.HTTPRequestR\arequest\"\xe8\x02\n" +
-	"\aRequest\x12\x10\n" +
-	"\x03url\x18\x01 \x01(\tR\x03url\x12\x16\n" +
-	"\x06method\x18\x02 \x01(\tR\x06method\x12\x12\n" +
-	"\x04body\x18\x03 \x01(\tR\x04body\x12\x18\n" +
-	"\aheaders\x18\x04 \x03(\tR\aheaders\x12\x89\x01\n" +
-	"\x16public_template_values\x18\x05 \x03(\v2S.capabilities.networking.confidentialhttp.v1alpha.Request.PublicTemplateValuesEntryR\x14publicTemplateValues\x12,\n" +
-	"\x12custom_cert_bundle\x18\x06 \x01(\fR\x10customCertBundle\x1aG\n" +
-	"\x19PublicTemplateValuesEntry\x12\x10\n" +
-	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01:\x02\x18\x01\"K\n" +
-	"\x10ResponseTemplate\x12\x1f\n" +
-	"\vstatus_code\x18\x01 \x01(\x03R\n" +
-	"statusCode\x12\x12\n" +
-	"\x04body\x18\x02 \x01(\fR\x04body:\x02\x18\x01\"s\n" +
-	"\x16HTTPEnclaveRequestData\x12U\n" +
-	"\brequests\x18\x01 \x03(\v29.capabilities.networking.confidentialhttp.v1alpha.RequestR\brequests:\x02\x18\x01\"\xe8\x01\n" +
-	"\x12EnclaveActionInput\x12n\n" +
-	"\x11vault_don_secrets\x18\x01 \x03(\v2B.capabilities.networking.confidentialhttp.v1alpha.SecretIdentifierR\x0fvaultDonSecrets\x12^\n" +
-	"\x05input\x18\x02 \x01(\v2H.capabilities.networking.confidentialhttp.v1alpha.HTTPEnclaveRequestDataR\x05input:\x02\x18\x01\"\x7f\n" +
-	"\x17HTTPEnclaveResponseData\x12`\n" +
-	"\tresponses\x18\x01 \x03(\v2B.capabilities.networking.confidentialhttp.v1alpha.ResponseTemplateR\tresponses:\x02\x18\x012\xf1\x02\n" +
+	"\arequest\x18\x02 \x01(\v2=.capabilities.networking.confidentialhttp.v1alpha.HTTPRequestR\arequest2\xca\x01\n" +
 	"\x06Client\x12\x98\x01\n" +
-	"\vSendRequest\x12I.capabilities.networking.confidentialhttp.v1alpha.ConfidentialHTTPRequest\x1a>.capabilities.networking.confidentialhttp.v1alpha.HTTPResponse\x12\xa4\x01\n" +
-	"\fSendRequests\x12D.capabilities.networking.confidentialhttp.v1alpha.EnclaveActionInput\x1aI.capabilities.networking.confidentialhttp.v1alpha.HTTPEnclaveResponseData\"\x03\x88\x02\x01\x1a%\x82\xb5\x18!\b\x02\x12\x1dconfidential-http@1.0.0-alphab\x06proto3"
+	"\vSendRequest\x12I.capabilities.networking.confidentialhttp.v1alpha.ConfidentialHTTPRequest\x1a>.capabilities.networking.confidentialhttp.v1alpha.HTTPResponse\x1a%\x82\xb5\x18!\b\x02\x12\x1dconfidential-http@1.0.0-alphab\x06proto3"
 
 var (
 	file_capabilities_networking_confidentialhttp_v1alpha_client_proto_rawDescOnce sync.Once
@@ -813,43 +449,31 @@ func file_capabilities_networking_confidentialhttp_v1alpha_client_proto_rawDescG
 	return file_capabilities_networking_confidentialhttp_v1alpha_client_proto_rawDescData
 }
 
-var file_capabilities_networking_confidentialhttp_v1alpha_client_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
+var file_capabilities_networking_confidentialhttp_v1alpha_client_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_capabilities_networking_confidentialhttp_v1alpha_client_proto_goTypes = []any{
 	(*SecretIdentifier)(nil),        // 0: capabilities.networking.confidentialhttp.v1alpha.SecretIdentifier
 	(*Header)(nil),                  // 1: capabilities.networking.confidentialhttp.v1alpha.Header
-	(*TemplatePublicValue)(nil),     // 2: capabilities.networking.confidentialhttp.v1alpha.TemplatePublicValue
-	(*HTTPRequest)(nil),             // 3: capabilities.networking.confidentialhttp.v1alpha.HTTPRequest
-	(*HTTPResponse)(nil),            // 4: capabilities.networking.confidentialhttp.v1alpha.HTTPResponse
-	(*ConfidentialHTTPRequest)(nil), // 5: capabilities.networking.confidentialhttp.v1alpha.ConfidentialHTTPRequest
-	(*Request)(nil),                 // 6: capabilities.networking.confidentialhttp.v1alpha.Request
-	(*ResponseTemplate)(nil),        // 7: capabilities.networking.confidentialhttp.v1alpha.ResponseTemplate
-	(*HTTPEnclaveRequestData)(nil),  // 8: capabilities.networking.confidentialhttp.v1alpha.HTTPEnclaveRequestData
-	(*EnclaveActionInput)(nil),      // 9: capabilities.networking.confidentialhttp.v1alpha.EnclaveActionInput
-	(*HTTPEnclaveResponseData)(nil), // 10: capabilities.networking.confidentialhttp.v1alpha.HTTPEnclaveResponseData
-	nil,                             // 11: capabilities.networking.confidentialhttp.v1alpha.Request.PublicTemplateValuesEntry
-	(*durationpb.Duration)(nil),     // 12: google.protobuf.Duration
+	(*HTTPRequest)(nil),             // 2: capabilities.networking.confidentialhttp.v1alpha.HTTPRequest
+	(*HTTPResponse)(nil),            // 3: capabilities.networking.confidentialhttp.v1alpha.HTTPResponse
+	(*ConfidentialHTTPRequest)(nil), // 4: capabilities.networking.confidentialhttp.v1alpha.ConfidentialHTTPRequest
+	nil,                             // 5: capabilities.networking.confidentialhttp.v1alpha.HTTPRequest.HeadersEntry
+	nil,                             // 6: capabilities.networking.confidentialhttp.v1alpha.HTTPRequest.TemplatePublicValuesEntry
+	(*durationpb.Duration)(nil),     // 7: google.protobuf.Duration
 }
 var file_capabilities_networking_confidentialhttp_v1alpha_client_proto_depIdxs = []int32{
-	1,  // 0: capabilities.networking.confidentialhttp.v1alpha.HTTPRequest.headers:type_name -> capabilities.networking.confidentialhttp.v1alpha.Header
-	2,  // 1: capabilities.networking.confidentialhttp.v1alpha.HTTPRequest.template_public_values:type_name -> capabilities.networking.confidentialhttp.v1alpha.TemplatePublicValue
-	12, // 2: capabilities.networking.confidentialhttp.v1alpha.HTTPRequest.timeout:type_name -> google.protobuf.Duration
-	1,  // 3: capabilities.networking.confidentialhttp.v1alpha.HTTPResponse.headers:type_name -> capabilities.networking.confidentialhttp.v1alpha.Header
-	0,  // 4: capabilities.networking.confidentialhttp.v1alpha.ConfidentialHTTPRequest.vault_don_secrets:type_name -> capabilities.networking.confidentialhttp.v1alpha.SecretIdentifier
-	3,  // 5: capabilities.networking.confidentialhttp.v1alpha.ConfidentialHTTPRequest.request:type_name -> capabilities.networking.confidentialhttp.v1alpha.HTTPRequest
-	11, // 6: capabilities.networking.confidentialhttp.v1alpha.Request.public_template_values:type_name -> capabilities.networking.confidentialhttp.v1alpha.Request.PublicTemplateValuesEntry
-	6,  // 7: capabilities.networking.confidentialhttp.v1alpha.HTTPEnclaveRequestData.requests:type_name -> capabilities.networking.confidentialhttp.v1alpha.Request
-	0,  // 8: capabilities.networking.confidentialhttp.v1alpha.EnclaveActionInput.vault_don_secrets:type_name -> capabilities.networking.confidentialhttp.v1alpha.SecretIdentifier
-	8,  // 9: capabilities.networking.confidentialhttp.v1alpha.EnclaveActionInput.input:type_name -> capabilities.networking.confidentialhttp.v1alpha.HTTPEnclaveRequestData
-	7,  // 10: capabilities.networking.confidentialhttp.v1alpha.HTTPEnclaveResponseData.responses:type_name -> capabilities.networking.confidentialhttp.v1alpha.ResponseTemplate
-	5,  // 11: capabilities.networking.confidentialhttp.v1alpha.Client.SendRequest:input_type -> capabilities.networking.confidentialhttp.v1alpha.ConfidentialHTTPRequest
-	9,  // 12: capabilities.networking.confidentialhttp.v1alpha.Client.SendRequests:input_type -> capabilities.networking.confidentialhttp.v1alpha.EnclaveActionInput
-	4,  // 13: capabilities.networking.confidentialhttp.v1alpha.Client.SendRequest:output_type -> capabilities.networking.confidentialhttp.v1alpha.HTTPResponse
-	10, // 14: capabilities.networking.confidentialhttp.v1alpha.Client.SendRequests:output_type -> capabilities.networking.confidentialhttp.v1alpha.HTTPEnclaveResponseData
-	13, // [13:15] is the sub-list for method output_type
-	11, // [11:13] is the sub-list for method input_type
-	11, // [11:11] is the sub-list for extension type_name
-	11, // [11:11] is the sub-list for extension extendee
-	0,  // [0:11] is the sub-list for field type_name
+	5, // 0: capabilities.networking.confidentialhttp.v1alpha.HTTPRequest.headers:type_name -> capabilities.networking.confidentialhttp.v1alpha.HTTPRequest.HeadersEntry
+	6, // 1: capabilities.networking.confidentialhttp.v1alpha.HTTPRequest.template_public_values:type_name -> capabilities.networking.confidentialhttp.v1alpha.HTTPRequest.TemplatePublicValuesEntry
+	7, // 2: capabilities.networking.confidentialhttp.v1alpha.HTTPRequest.timeout:type_name -> google.protobuf.Duration
+	1, // 3: capabilities.networking.confidentialhttp.v1alpha.HTTPResponse.headers:type_name -> capabilities.networking.confidentialhttp.v1alpha.Header
+	0, // 4: capabilities.networking.confidentialhttp.v1alpha.ConfidentialHTTPRequest.vault_don_secrets:type_name -> capabilities.networking.confidentialhttp.v1alpha.SecretIdentifier
+	2, // 5: capabilities.networking.confidentialhttp.v1alpha.ConfidentialHTTPRequest.request:type_name -> capabilities.networking.confidentialhttp.v1alpha.HTTPRequest
+	4, // 6: capabilities.networking.confidentialhttp.v1alpha.Client.SendRequest:input_type -> capabilities.networking.confidentialhttp.v1alpha.ConfidentialHTTPRequest
+	3, // 7: capabilities.networking.confidentialhttp.v1alpha.Client.SendRequest:output_type -> capabilities.networking.confidentialhttp.v1alpha.HTTPResponse
+	7, // [7:8] is the sub-list for method output_type
+	6, // [6:7] is the sub-list for method input_type
+	6, // [6:6] is the sub-list for extension type_name
+	6, // [6:6] is the sub-list for extension extendee
+	0, // [0:6] is the sub-list for field type_name
 }
 
 func init() { file_capabilities_networking_confidentialhttp_v1alpha_client_proto_init() }
@@ -858,7 +482,7 @@ func file_capabilities_networking_confidentialhttp_v1alpha_client_proto_init() {
 		return
 	}
 	file_capabilities_networking_confidentialhttp_v1alpha_client_proto_msgTypes[0].OneofWrappers = []any{}
-	file_capabilities_networking_confidentialhttp_v1alpha_client_proto_msgTypes[3].OneofWrappers = []any{
+	file_capabilities_networking_confidentialhttp_v1alpha_client_proto_msgTypes[2].OneofWrappers = []any{
 		(*HTTPRequest_BodyString)(nil),
 		(*HTTPRequest_BodyBytes)(nil),
 	}
@@ -868,7 +492,7 @@ func file_capabilities_networking_confidentialhttp_v1alpha_client_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_capabilities_networking_confidentialhttp_v1alpha_client_proto_rawDesc), len(file_capabilities_networking_confidentialhttp_v1alpha_client_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   12,
+			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
