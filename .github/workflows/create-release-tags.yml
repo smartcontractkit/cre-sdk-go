@@ -1,0 +1,190 @@
+# =============================================================================
+# Create Release Tags Workflow
+# =============================================================================
+#
+# This workflow creates git tags and GitHub Releases for the EVM capability
+# module and the SDK. It runs automatically when bump-chainlink-protos PRs
+# are merged, or can be triggered manually.
+#
+# TRIGGERS:
+#   - pull_request (closed): Runs when a PR with 'bump-chainlink-protos' label is merged
+#   - workflow_dispatch: Manual trigger via GitHub UI or gh CLI
+#   - repository_dispatch: Triggered by external workflows
+#
+# PARAMETERS:
+#   evm_cap_version (optional):
+#     Version tag for EVM capability (e.g., v1.0.0-beta.2).
+#     Creates tag and release: capabilities/blockchain/evm/<version>
+#     If empty, EVM tagging is skipped.
+#
+#   sdk_version (optional):
+#     Version tag for SDK (e.g., v1.1.2).
+#     Creates tag and release: <version> (e.g., v1.1.2)
+#     If empty, SDK tagging is skipped.
+#
+# VERSION SOURCES (in priority order):
+#   1. Manual inputs (workflow_dispatch) or client_payload (repository_dispatch)
+#   2. PR labels: 'evm:<version>' and 'sdk:<version>' (set by bump-chainlink-protos workflow)
+#
+# =============================================================================
+
+name: Create Release Tags
+
+on:
+  # Triggered when PRs are merged (filtered to bump-chainlink-protos label in job condition)
+  pull_request:
+    types: [closed]
+
+  # Manual trigger via GitHub UI or CLI
+  workflow_dispatch:
+    inputs:
+      evm_cap_version:
+        description: 'EVM capability tag (e.g., v1.0.0-beta.2). Leave empty to skip.'
+        required: false
+        type: string
+      sdk_version:
+        description: 'SDK version tag (e.g., v1.1.2). Leave empty to skip.'
+        required: false
+        type: string
+
+  # External trigger from other workflows
+  repository_dispatch:
+    types: [create-release-tags]
+
+jobs:
+  create-tags:
+    runs-on: ubuntu-latest
+    # Only run if: manual trigger OR (PR was merged AND has the bump-chainlink-protos label)
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'repository_dispatch' ||
+      (github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'bump-chainlink-protos'))
+    permissions:
+      contents: write
+    steps:
+      # Clone repo with full history to create and push tags
+      - name: Checkout
+        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      # Parse version info from inputs, dispatch payload, or PR labels
+      - name: Extract versions from labels or inputs
+        id: versions
+        env:
+          LABELS: ${{ toJson(github.event.pull_request.labels.*.name) }}
+        run: |
+          # Start with manual inputs / dispatch payload (highest priority)
+          EVM_VERSION="${{ inputs.evm_cap_version || github.event.client_payload.evm_cap_version || '' }}"
+          SDK_VERSION="${{ inputs.sdk_version || github.event.client_payload.sdk_version || '' }}"
+          
+          # If triggered by PR merge, extract versions from labels
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            echo "Extracting versions from PR labels..."
+            echo "Labels: $LABELS"
+            
+            # Extract evm:vX.X.X label
+            if [ -z "$EVM_VERSION" ]; then
+              EVM_VERSION=$(echo "$LABELS" | jq -r '.[] | select(startswith("evm:")) | sub("evm:"; "")' | head -n1)
+            fi
+            
+            # Extract sdk:vX.X.X label
+            if [ -z "$SDK_VERSION" ]; then
+              SDK_VERSION=$(echo "$LABELS" | jq -r '.[] | select(startswith("sdk:")) | sub("sdk:"; "")' | head -n1)
+            fi
+          fi
+          
+          echo "evm_cap_version=${EVM_VERSION}" >> $GITHUB_OUTPUT
+          echo "sdk_version=${SDK_VERSION}" >> $GITHUB_OUTPUT
+          
+          echo "EVM version: ${EVM_VERSION:-'(empty)'}"
+          echo "SDK version: ${SDK_VERSION:-'(empty)'}"
+
+      # Set up git identity for creating annotated tags
+      - name: Configure Git
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+
+      # Create and push EVM capability tag if it doesn't already exist
+      - name: Create EVM capability tag
+        if: steps.versions.outputs.evm_cap_version != ''
+        env:
+          EVM_VERSION: ${{ steps.versions.outputs.evm_cap_version }}
+        run: |
+          TAG="capabilities/blockchain/evm/${EVM_VERSION}"
+          if git rev-parse "${TAG}" >/dev/null 2>&1; then
+            echo "Tag ${TAG} already exists, skipping tag creation"
+          else
+            echo "Creating tag: ${TAG}"
+            git tag -a "${TAG}" -m "Release ${TAG}"
+            git push origin "${TAG}"
+          fi
+
+      # Create GitHub Release for EVM capability (creates release even if tag existed)
+      - name: Create EVM capability release
+        if: steps.versions.outputs.evm_cap_version != ''
+        uses: softprops/action-gh-release@c95fe1489396fe8a9eb87c0abf8aa5b2ef267fda # v2.2.1
+        with:
+          tag_name: capabilities/blockchain/evm/${{ steps.versions.outputs.evm_cap_version }}
+          name: EVM Capability ${{ steps.versions.outputs.evm_cap_version }}
+          body: |
+            Release of the EVM blockchain capability module.
+
+            **Tag:** `capabilities/blockchain/evm/${{ steps.versions.outputs.evm_cap_version }}`
+
+            To use this version:
+            ```
+            go get github.com/smartcontractkit/cre-sdk-go/capabilities/blockchain/evm@${{ steps.versions.outputs.evm_cap_version }}
+            ```
+          prerelease: ${{ contains(steps.versions.outputs.evm_cap_version, 'beta') || contains(steps.versions.outputs.evm_cap_version, 'alpha') }}
+
+      # Create and push SDK tag if it doesn't already exist
+      - name: Create SDK tag
+        if: steps.versions.outputs.sdk_version != ''
+        env:
+          SDK_VERSION: ${{ steps.versions.outputs.sdk_version }}
+        run: |
+          TAG="${SDK_VERSION}"
+          if git rev-parse "${TAG}" >/dev/null 2>&1; then
+            echo "Tag ${TAG} already exists, skipping tag creation"
+          else
+            echo "Creating tag: ${TAG}"
+            git tag -a "${TAG}" -m "Release ${TAG}"
+            git push origin "${TAG}"
+          fi
+
+      # Create GitHub Release for SDK (creates release even if tag existed)
+      - name: Create SDK release
+        if: steps.versions.outputs.sdk_version != ''
+        uses: softprops/action-gh-release@c95fe1489396fe8a9eb87c0abf8aa5b2ef267fda # v2.2.1
+        with:
+          tag_name: ${{ steps.versions.outputs.sdk_version }}
+          name: SDK ${{ steps.versions.outputs.sdk_version }}
+          body: |
+            Release of the CRE SDK for Go.
+
+            **Tag:** `${{ steps.versions.outputs.sdk_version }}`
+
+            To use this version:
+            ```
+            go get github.com/smartcontractkit/cre-sdk-go@${{ steps.versions.outputs.sdk_version }}
+            ```
+          prerelease: ${{ contains(steps.versions.outputs.sdk_version, 'beta') || contains(steps.versions.outputs.sdk_version, 'alpha') }}
+
+      # Write a summary to the GitHub Actions UI for visibility
+      - name: Summary
+        run: |
+          echo "## Releases Created" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ -n "${{ steps.versions.outputs.evm_cap_version }}" ]; then
+            echo "- **EVM Capability:** \`capabilities/blockchain/evm/${{ steps.versions.outputs.evm_cap_version }}\`" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- EVM capability: skipped (not specified)" >> $GITHUB_STEP_SUMMARY
+          fi
+          if [ -n "${{ steps.versions.outputs.sdk_version }}" ]; then
+            echo "- **SDK:** \`${{ steps.versions.outputs.sdk_version }}\`" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- SDK: skipped (not specified)" >> $GITHUB_STEP_SUMMARY
+          fi
