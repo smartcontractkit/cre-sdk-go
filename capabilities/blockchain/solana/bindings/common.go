@@ -40,7 +40,7 @@ func (obj ForwarderReport) Marshal() ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func CalculateAccountHash(accs []*solana.AccountMeta) [32]byte {
+func CalculateAccountsHash(accs []*solana.AccountMeta) [32]byte {
 	var accounts = make([]byte, 0)
 	for _, acc := range accs {
 		accounts = append(accounts, acc.PublicKey[:]...)
