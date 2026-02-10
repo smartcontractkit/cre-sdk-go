@@ -3,6 +3,8 @@ module github.com/smartcontractkit/cre-sdk-go/capabilities/blockchain/solana
 go 1.25.3
 
 require (
+	github.com/gagliardetto/anchor-go v1.0.0
+	github.com/gagliardetto/binary v0.8.0
 	github.com/smartcontractkit/chainlink-protos/cre/go v0.0.0-20251124151448-0448aefdaab9
 	github.com/smartcontractkit/cre-sdk-go v1.0.0
 	google.golang.org/protobuf v1.36.7
@@ -10,8 +12,6 @@ require (
 
 require (
 	github.com/blendle/zapdriver v1.3.1 // indirect
-	github.com/gagliardetto/anchor-go v1.0.0 // indirect
-	github.com/gagliardetto/binary v0.8.0 // indirect
 	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
 	github.com/logrusorgru/aurora v2.0.3+incompatible // indirect
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
