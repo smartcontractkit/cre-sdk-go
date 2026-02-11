@@ -4,6 +4,7 @@ package confidentialhttp
 
 import (
 	"errors"
+	"log/slog"
 
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -16,7 +17,31 @@ type Client struct {
 	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 allow defaults for capabilities
 }
 
-func (c *Client) SendRequest(runtime cre.Runtime, input *ConfidentialHTTPRequest) cre.Promise[*HTTPResponse] {
+type SendRequester struct {
+	client      *Client
+	nodeRuntime cre.NodeRuntime
+}
+
+func (c *SendRequester) SendRequest(input *ConfidentialHTTPRequest) cre.Promise[*HTTPResponse] {
+	return c.client.SendRequest(c.nodeRuntime, input)
+}
+
+// SendRequest Allows usage of `SendRequester` with Byzantine fault tolerance.
+func SendRequest[C, T any](
+	config C,
+	runtime cre.Runtime,
+	client *Client,
+	fn func(config C, logger *slog.Logger, sendRequester *SendRequester) (T, error),
+	ca cre.ConsensusAggregation[T]) cre.Promise[T] {
+	wrapped := func(config C, nodeRuntime cre.NodeRuntime) (T, error) {
+		sendRequester := SendRequester{client: client, nodeRuntime: nodeRuntime}
+		return fn(config, runtime.Logger(), &sendRequester)
+	}
+
+	return cre.RunInNodeMode(config, runtime, wrapped, ca)
+}
+
+func (c *Client) SendRequest(runtime cre.NodeRuntime, input *ConfidentialHTTPRequest) cre.Promise[*HTTPResponse] {
 	wrapped := &anypb.Any{}
 	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {

@@ -4,8 +4,8 @@ go 1.25.3
 
 require (
 	github.com/iancoleman/strcase v0.3.0
-	github.com/smartcontractkit/chainlink-common v0.9.6-0.20260205192828-07bb5e1c6530
-	github.com/smartcontractkit/chainlink-protos/cre/go v0.0.0-20260205161649-dec5d793eea1
+	github.com/smartcontractkit/chainlink-common v0.9.8-0.20260211190436-599ba4108ca7
+	github.com/smartcontractkit/chainlink-protos/cre/go v0.0.0-20260210221717-2546aed27ebe
 	google.golang.org/protobuf v1.36.11
 )
 
