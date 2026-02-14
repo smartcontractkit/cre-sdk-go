@@ -151,13 +151,13 @@ func (d *consensusDescriptorError[T]) WithDefault(_ T) ConsensusAggregation[T] {
 	return d
 }
 
-var nodeModeCallInDonMode = errors.New("cannot use NodeRuntime outside RunInNodeMode")
+var nodeModeCallInDonMode = errors.New("cannot use NodeRuntime outside RunInNodeMode: you are calling a node-mode API (e.g., CallCapability, GetSecret) from DON-mode code. Node-mode APIs can only be called inside a runtime.RunInNodeMode() callback. Wrap your node-mode logic inside RunInNodeMode(func(nodeRuntime) { ... })")
 
 func NodeModeCallInDonMode() error {
 	return nodeModeCallInDonMode
 }
 
-var donModeCallInNodeMode = errors.New("cannot use Runtime inside RunInNodeMode")
+var donModeCallInNodeMode = errors.New("cannot use DON-mode API inside RunInNodeMode: you are calling a DON-mode API (e.g., GenerateReport, GetSecret) from inside a RunInNodeMode callback. DON-mode APIs aggregate results across all nodes and cannot be called from node-specific code. Move this call outside of RunInNodeMode()")
 
 func DonModeCallInNodeMode() error {
 	return donModeCallInNodeMode
