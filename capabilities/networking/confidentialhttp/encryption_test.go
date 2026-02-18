@@ -53,13 +53,13 @@ func TestDeriveEncryptionKey_CrossLanguageVector(t *testing.T) {
 	}
 }
 
-func TestNewEncryptedRequest(t *testing.T) {
+func TestNewRequestForEncryptedResponse(t *testing.T) {
 	req := &HTTPRequest{
 		Url:    "https://example.com",
 		Method: "GET",
 	}
 	owner := "0xDeaDBeeF"
-	cr := NewEncryptedRequest(req, owner)
+	cr := NewRequestForEncryptedResponse(req, owner)
 
 	if !cr.Request.EncryptOutput {
 		t.Fatal("EncryptOutput should be true")

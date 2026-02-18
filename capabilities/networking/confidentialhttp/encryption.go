@@ -35,9 +35,9 @@ func DeriveEncryptionKey(passphrase string) ([]byte, error) {
 	return key, nil
 }
 
-// NewEncryptedRequest wraps an HTTPRequest with EncryptOutput=true and the AES
+// NewRequestForEncryptedResponse wraps an HTTPRequest with EncryptOutput=true and the AES
 // key SecretIdentifier auto-injected. Owner is the workflow owner address.
-func NewEncryptedRequest(req *HTTPRequest, owner string) *ConfidentialHTTPRequest {
+func NewRequestForEncryptedResponse(req *HTTPRequest, owner string) *ConfidentialHTTPRequest {
 	req.EncryptOutput = true
 	return &ConfidentialHTTPRequest{
 		Request: req,
