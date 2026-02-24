@@ -28,24 +28,24 @@ func NewClientCapability(t testing.TB) (*ClientCapability, error) {
 type ClientCapability struct {
 	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
 
-	SendRequests func(ctx context.Context, input *confidentialhttp.EnclaveActionInput) (*confidentialhttp.HTTPEnclaveResponseData, error)
+	SendRequest func(ctx context.Context, input *confidentialhttp.ConfidentialHTTPRequest) (*confidentialhttp.HTTPResponse, error)
 }
 
 func (c *ClientCapability) Invoke(ctx context.Context, request *sdkpb.CapabilityRequest) *sdkpb.CapabilityResponse {
 	capResp := &sdkpb.CapabilityResponse{}
 	switch request.Method {
-	case "SendRequests":
-		input := &confidentialhttp.EnclaveActionInput{}
+	case "SendRequest":
+		input := &confidentialhttp.ConfidentialHTTPRequest{}
 		if err := request.Payload.UnmarshalTo(input); err != nil {
 			capResp.Response = &sdkpb.CapabilityResponse_Error{Error: err.Error()}
 			break
 		}
 
-		if c.SendRequests == nil {
-			capResp.Response = &sdkpb.CapabilityResponse_Error{Error: "no stub provided for SendRequests"}
+		if c.SendRequest == nil {
+			capResp.Response = &sdkpb.CapabilityResponse_Error{Error: "no stub provided for SendRequest"}
 			break
 		}
-		resp, err := c.SendRequests(ctx, input)
+		resp, err := c.SendRequest(ctx, input)
 		if err != nil {
 			capResp.Response = &sdkpb.CapabilityResponse_Error{Error: err.Error()}
 		} else {

@@ -338,6 +338,8 @@ const EthereumMainnetBase1 = 15971525489660198786
 
 const EthereumMainnetOptimism1 = 3734403246176062136
 
+const EthereumMainnetWorldchain1 = 2049429975587534727
+
 const EthereumMainnetZksync1 = 1562403441176082196
 
 const EthereumTestnetSepolia = 16015286601757825753
@@ -390,6 +392,8 @@ func ChainSelectorFromName(name string) (uint64, error) {
 		return EthereumMainnetBase1, nil
 	case "ethereum-mainnet-optimism-1":
 		return EthereumMainnetOptimism1, nil
+	case "ethereum-mainnet-worldchain-1":
+		return EthereumMainnetWorldchain1, nil
 	case "ethereum-mainnet-zksync-1":
 		return EthereumMainnetZksync1, nil
 	case "ethereum-testnet-sepolia":
