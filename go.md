@@ -16,6 +16,8 @@ flowchart LR
 	click chainlink-common href "https://github.com/smartcontractkit/chainlink-common"
 	chainlink-common/pkg/chipingress
 	click chainlink-common/pkg/chipingress href "https://github.com/smartcontractkit/chainlink-common"
+	chainlink-protos
+	click chainlink-protos href "https://github.com/smartcontractkit/chainlink-protos"
 	chainlink-protos/billing/go
 	click chainlink-protos/billing/go href "https://github.com/smartcontractkit/chainlink-protos"
 	chainlink-protos/cre/go --> chain-selectors
@@ -26,6 +28,7 @@ flowchart LR
 	click chainlink-protos/storage-service href "https://github.com/smartcontractkit/chainlink-protos"
 	chainlink-protos/workflows/go
 	click chainlink-protos/workflows/go href "https://github.com/smartcontractkit/chainlink-protos"
+	cre-sdk-go --> chainlink-protos
 	cre-sdk-go --> chainlink-protos/cre/go
 	click cre-sdk-go href "https://github.com/smartcontractkit/cre-sdk-go"
 	cre-sdk-go/capabilities/blockchain/evm --> cre-sdk-go
@@ -54,6 +57,7 @@ flowchart LR
 	click chainlink-common-repo href "https://github.com/smartcontractkit/chainlink-common"
 
 	subgraph chainlink-protos-repo[chainlink-protos]
+		 chainlink-protos
 		 chainlink-protos/billing/go
 		 chainlink-protos/cre/go
 		 chainlink-protos/linking-service/go
