@@ -340,6 +340,8 @@ const EthereumMainnetOptimism1 = 3734403246176062136
 
 const EthereumMainnetWorldchain1 = 2049429975587534727
 
+const EthereumMainnetXlayer1 = 3016212468291539606
+
 const EthereumMainnetZksync1 = 1562403441176082196
 
 const EthereumTestnetSepolia = 16015286601757825753
@@ -360,7 +362,11 @@ const HyperliquidTestnet = 4286062357653186312
 
 const InkTestnetSepolia = 9763904284804119144
 
+const JovayMainnet = 1523760397290643893
+
 const JovayTestnet = 945045181441419236
+
+const PharosMainnet = 7801139999541420232
 
 const PlasmaTestnet = 3967220077692964309
 
@@ -394,6 +400,8 @@ func ChainSelectorFromName(name string) (uint64, error) {
 		return EthereumMainnetOptimism1, nil
 	case "ethereum-mainnet-worldchain-1":
 		return EthereumMainnetWorldchain1, nil
+	case "ethereum-mainnet-xlayer-1":
+		return EthereumMainnetXlayer1, nil
 	case "ethereum-mainnet-zksync-1":
 		return EthereumMainnetZksync1, nil
 	case "ethereum-testnet-sepolia":
@@ -414,8 +422,12 @@ func ChainSelectorFromName(name string) (uint64, error) {
 		return HyperliquidTestnet, nil
 	case "ink-testnet-sepolia":
 		return InkTestnetSepolia, nil
+	case "jovay-mainnet":
+		return JovayMainnet, nil
 	case "jovay-testnet":
 		return JovayTestnet, nil
+	case "pharos-mainnet":
+		return PharosMainnet, nil
 	case "plasma-testnet":
 		return PlasmaTestnet, nil
 	case "polygon-mainnet":
