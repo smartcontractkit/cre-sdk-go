@@ -1791,7 +1791,7 @@ const file_capabilities_blockchain_evm_v1alpha_client_proto_rawDesc = "" +
 	"\bTxStatus\x12\x13\n" +
 	"\x0fTX_STATUS_FATAL\x10\x00\x12\x16\n" +
 	"\x12TX_STATUS_REVERTED\x10\x01\x12\x15\n" +
-	"\x11TX_STATUS_SUCCESS\x10\x022\xa9\x12\n" +
+	"\x11TX_STATUS_SUCCESS\x10\x022\xcf\x12\n" +
 	"\x06Client\x12\x80\x01\n" +
 	"\fCallContract\x128.capabilities.blockchain.evm.v1alpha.CallContractRequest\x1a6.capabilities.blockchain.evm.v1alpha.CallContractReply\x12z\n" +
 	"\n" +
@@ -1803,8 +1803,8 @@ const file_capabilities_blockchain_evm_v1alpha_client_proto_rawDesc = "" +
 	"\x0eHeaderByNumber\x12:.capabilities.blockchain.evm.v1alpha.HeaderByNumberRequest\x1a8.capabilities.blockchain.evm.v1alpha.HeaderByNumberReply\x12v\n" +
 	"\n" +
 	"LogTrigger\x12<.capabilities.blockchain.evm.v1alpha.FilterLogTriggerRequest\x1a(.capabilities.blockchain.evm.v1alpha.Log0\x01\x12}\n" +
-	"\vWriteReport\x127.capabilities.blockchain.evm.v1alpha.WriteReportRequest\x1a5.capabilities.blockchain.evm.v1alpha.WriteReportReply\x1a\xee\b\x82\xb5\x18\xe9\b\b\x01\x12\tevm@1.0.0\x1a\xd9\b\n" +
-	"\rChainSelector\x12\xc7\b\x12\xc4\b\n" +
+	"\vWriteReport\x127.capabilities.blockchain.evm.v1alpha.WriteReportRequest\x1a5.capabilities.blockchain.evm.v1alpha.WriteReportReply\x1a\x94\t\x82\xb5\x18\x8f\t\b\x01\x12\tevm@1.0.0\x1a\xff\b\n" +
+	"\rChainSelector\x12\xed\b\x12\xea\b\n" +
 	"$\n" +
 	"\x17apechain-testnet-curtis\x10\xc1ô\xf8\x8dĒ\xb2\x89\x01\n" +
 	"\x17\n" +
@@ -1853,6 +1853,8 @@ const file_capabilities_blockchain_evm_v1alpha_client_proto_rawDesc = "" +
 	"\rjovay-mainnet\x10\xb5\xc3Ě\xa1\x80ߒ\x15\n" +
 	"\x19\n" +
 	"\rjovay-testnet\x10\xe4ϊ\x84\u07b2ގ\r\n" +
+	"$\n" +
+	"\x17pharos-atlantic-testnet\x10̙\xed\xe0μ\xaf\xb4\xdf\x01\n" +
 	"\x1a\n" +
 	"\x0epharos-mainnet\x10\xc8\xc1\x87\x9e\xf5\xef͡l\n" +
 	"\x1a\n" +
