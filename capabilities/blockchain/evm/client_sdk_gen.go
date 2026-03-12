@@ -366,6 +366,8 @@ const JovayMainnet = 1523760397290643893
 
 const JovayTestnet = 945045181441419236
 
+const PharosAtlanticTestnet = 16098325658947243212
+
 const PharosMainnet = 7801139999541420232
 
 const PlasmaTestnet = 3967220077692964309
@@ -426,6 +428,8 @@ func ChainSelectorFromName(name string) (uint64, error) {
 		return JovayMainnet, nil
 	case "jovay-testnet":
 		return JovayTestnet, nil
+	case "pharos-atlantic-testnet":
+		return PharosAtlanticTestnet, nil
 	case "pharos-mainnet":
 		return PharosMainnet, nil
 	case "plasma-testnet":
