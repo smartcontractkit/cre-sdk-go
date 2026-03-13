@@ -1,4 +1,4 @@
-// Hand-written Aptos SDK client (mirrors evm client_sdk_gen pattern).
+
 // Capability ID: aptos:ChainSelector:<chainSelector>@1.0.0, method "View".
 
 package aptos
