@@ -119,7 +119,18 @@ func decodeWriteReportReply(b []byte) (*WriteReportReply, error) {
 			}
 			out.TxStatus = TxStatus(v)
 			b = b[m:]
-		case 2: // tx_hash string
+		case 2: // receiver_contract_execution_status enum (varint)
+			if typ != protowire.VarintType {
+				return nil, fmt.Errorf("decode WriteReportReply.receiver_contract_execution_status: unexpected wire type %d", typ)
+			}
+			v, m := protowire.ConsumeVarint(b)
+			if m < 0 {
+				return nil, fmt.Errorf("decode WriteReportReply.receiver_contract_execution_status varint: %v", protowire.ParseError(m))
+			}
+			status := ReceiverContractExecutionStatus(v)
+			out.ReceiverContractExecutionStatus = &status
+			b = b[m:]
+		case 3: // tx_hash string
 			if typ != protowire.BytesType {
 				return nil, fmt.Errorf("decode WriteReportReply.tx_hash: unexpected wire type %d", typ)
 			}
@@ -130,7 +141,7 @@ func decodeWriteReportReply(b []byte) (*WriteReportReply, error) {
 			txHash := string(v)
 			out.TxHash = &txHash
 			b = b[m:]
-		case 3: // transaction_fee varint
+		case 4: // transaction_fee varint
 			if typ != protowire.VarintType {
 				return nil, fmt.Errorf("decode WriteReportReply.transaction_fee: unexpected wire type %d", typ)
 			}
@@ -141,7 +152,7 @@ func decodeWriteReportReply(b []byte) (*WriteReportReply, error) {
 			fee := uint64(v)
 			out.TransactionFee = &fee
 			b = b[m:]
-		case 4: // error_message string
+		case 5: // error_message string
 			if typ != protowire.BytesType {
 				return nil, fmt.Errorf("decode WriteReportReply.error_message: unexpected wire type %d", typ)
 			}
