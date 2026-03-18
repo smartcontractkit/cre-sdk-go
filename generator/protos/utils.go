@@ -43,7 +43,13 @@ func installFromMod() error {
 
 	pluginDir, err := downloadPlugin(plugin, pluginVersion)
 	if err != nil {
-		return err
+		localPluginDir, localErr := findLocalPluginDir(".")
+		if localErr != nil {
+			return err
+		}
+
+		fmt.Printf("Falling back to local plugin source at %s after download failure: %v\n", localPluginDir, err)
+		return buildPlugin(localPluginDir)
 	}
 
 	return buildPlugin(pluginDir)
@@ -114,4 +120,24 @@ func buildPlugin(pluginDir string) error {
 	}
 
 	return nil
+}
+
+func findLocalPluginDir(start string) (string, error) {
+	root, err := filepath.Abs(start)
+	if err != nil {
+		return "", fmt.Errorf("failed to resolve working directory: %w", err)
+	}
+
+	for {
+		pluginDir := filepath.Join(root, "generator", "protoc-gen-cre")
+		if _, err := os.Stat(filepath.Join(pluginDir, "go.mod")); err == nil {
+			return pluginDir, nil
+		}
+
+		parent := filepath.Dir(root)
+		if parent == root {
+			return "", fmt.Errorf("failed to find local protoc plugin dir from %s", start)
+		}
+		root = parent
+	}
 }
