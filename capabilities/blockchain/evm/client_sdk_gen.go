@@ -380,6 +380,10 @@ const EthereumTestnetSepoliaZksync1 = 6898391096552792247
 
 const GnosisChainMainnet = 465200170687744372
 
+const GnosisChainTestnetChiado = 8871595565390010547
+
+const HyperliquidMainnet = 2442541497099098535
+
 const HyperliquidTestnet = 4286062357653186312
 
 const InkTestnetSepolia = 9763904284804119144
@@ -478,6 +482,10 @@ func ChainSelectorFromName(name string) (uint64, error) {
 		return EthereumTestnetSepoliaZksync1, nil
 	case "gnosis_chain-mainnet":
 		return GnosisChainMainnet, nil
+	case "gnosis_chain-testnet-chiado":
+		return GnosisChainTestnetChiado, nil
+	case "hyperliquid-mainnet":
+		return HyperliquidMainnet, nil
 	case "hyperliquid-testnet":
 		return HyperliquidTestnet, nil
 	case "ink-testnet-sepolia":
