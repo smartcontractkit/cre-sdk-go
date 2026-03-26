@@ -30,7 +30,7 @@ func (c *Basic) Action(runtime cre.Runtime, input *Input) cre.Promise[*Output] {
 	}), func(i *sdkpb.CapabilityResponse) (*Output, error) {
 		switch payload := i.Response.(type) {
 		case *sdkpb.CapabilityResponse_Error:
-			return nil, errors.New(payload.Error)
+			return nil, cre.NewCapabilityError(payload.Error, i.CapabilityId)
 		case *sdkpb.CapabilityResponse_Payload:
 			output := &Output{}
 			err = payload.Payload.UnmarshalTo(output)

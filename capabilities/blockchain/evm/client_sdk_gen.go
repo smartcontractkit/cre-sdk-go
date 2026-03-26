@@ -33,7 +33,7 @@ func (c *Client) CallContract(runtime cre.Runtime, input *CallContractRequest) c
 	}), func(i *sdkpb.CapabilityResponse) (*CallContractReply, error) {
 		switch payload := i.Response.(type) {
 		case *sdkpb.CapabilityResponse_Error:
-			return nil, errors.New(payload.Error)
+			return nil, cre.NewCapabilityError(payload.Error, i.CapabilityId)
 		case *sdkpb.CapabilityResponse_Payload:
 			output := &CallContractReply{}
 			err = payload.Payload.UnmarshalTo(output)
@@ -61,7 +61,7 @@ func (c *Client) FilterLogs(runtime cre.Runtime, input *FilterLogsRequest) cre.P
 	}), func(i *sdkpb.CapabilityResponse) (*FilterLogsReply, error) {
 		switch payload := i.Response.(type) {
 		case *sdkpb.CapabilityResponse_Error:
-			return nil, errors.New(payload.Error)
+			return nil, cre.NewCapabilityError(payload.Error, i.CapabilityId)
 		case *sdkpb.CapabilityResponse_Payload:
 			output := &FilterLogsReply{}
 			err = payload.Payload.UnmarshalTo(output)
@@ -89,7 +89,7 @@ func (c *Client) BalanceAt(runtime cre.Runtime, input *BalanceAtRequest) cre.Pro
 	}), func(i *sdkpb.CapabilityResponse) (*BalanceAtReply, error) {
 		switch payload := i.Response.(type) {
 		case *sdkpb.CapabilityResponse_Error:
-			return nil, errors.New(payload.Error)
+			return nil, cre.NewCapabilityError(payload.Error, i.CapabilityId)
 		case *sdkpb.CapabilityResponse_Payload:
 			output := &BalanceAtReply{}
 			err = payload.Payload.UnmarshalTo(output)
@@ -117,7 +117,7 @@ func (c *Client) EstimateGas(runtime cre.Runtime, input *EstimateGasRequest) cre
 	}), func(i *sdkpb.CapabilityResponse) (*EstimateGasReply, error) {
 		switch payload := i.Response.(type) {
 		case *sdkpb.CapabilityResponse_Error:
-			return nil, errors.New(payload.Error)
+			return nil, cre.NewCapabilityError(payload.Error, i.CapabilityId)
 		case *sdkpb.CapabilityResponse_Payload:
 			output := &EstimateGasReply{}
 			err = payload.Payload.UnmarshalTo(output)
@@ -145,7 +145,7 @@ func (c *Client) GetTransactionByHash(runtime cre.Runtime, input *GetTransaction
 	}), func(i *sdkpb.CapabilityResponse) (*GetTransactionByHashReply, error) {
 		switch payload := i.Response.(type) {
 		case *sdkpb.CapabilityResponse_Error:
-			return nil, errors.New(payload.Error)
+			return nil, cre.NewCapabilityError(payload.Error, i.CapabilityId)
 		case *sdkpb.CapabilityResponse_Payload:
 			output := &GetTransactionByHashReply{}
 			err = payload.Payload.UnmarshalTo(output)
@@ -173,7 +173,7 @@ func (c *Client) GetTransactionReceipt(runtime cre.Runtime, input *GetTransactio
 	}), func(i *sdkpb.CapabilityResponse) (*GetTransactionReceiptReply, error) {
 		switch payload := i.Response.(type) {
 		case *sdkpb.CapabilityResponse_Error:
-			return nil, errors.New(payload.Error)
+			return nil, cre.NewCapabilityError(payload.Error, i.CapabilityId)
 		case *sdkpb.CapabilityResponse_Payload:
 			output := &GetTransactionReceiptReply{}
 			err = payload.Payload.UnmarshalTo(output)
@@ -201,7 +201,7 @@ func (c *Client) HeaderByNumber(runtime cre.Runtime, input *HeaderByNumberReques
 	}), func(i *sdkpb.CapabilityResponse) (*HeaderByNumberReply, error) {
 		switch payload := i.Response.(type) {
 		case *sdkpb.CapabilityResponse_Error:
-			return nil, errors.New(payload.Error)
+			return nil, cre.NewCapabilityError(payload.Error, i.CapabilityId)
 		case *sdkpb.CapabilityResponse_Payload:
 			output := &HeaderByNumberReply{}
 			err = payload.Payload.UnmarshalTo(output)
@@ -304,7 +304,7 @@ func (c *Client) WriteReport(runtime cre.Runtime, input *WriteCreReportRequest) 
 	}), func(i *sdkpb.CapabilityResponse) (*WriteReportReply, error) {
 		switch payload := i.Response.(type) {
 		case *sdkpb.CapabilityResponse_Error:
-			return nil, errors.New(payload.Error)
+			return nil, cre.NewCapabilityError(payload.Error, i.CapabilityId)
 		case *sdkpb.CapabilityResponse_Payload:
 			output := &WriteReportReply{}
 			err = payload.Payload.UnmarshalTo(output)

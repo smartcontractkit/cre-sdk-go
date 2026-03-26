@@ -98,7 +98,7 @@ func TestRuntime_CallCapability(t *testing.T) {
 		}
 
 		_, err = testRuntime(t, test)
-		assert.Equal(t, expectedErr, err)
+		assert.ErrorContains(t, err, expectedErr.Error())
 	})
 
 	t.Run("await errors", func(t *testing.T) {
@@ -309,7 +309,7 @@ func TestDonRuntime_RunInNodeMode(t *testing.T) {
 			return consensus.Await()
 		}
 		_, err = testRuntime(t, test)
-		assert.Equal(t, cre.DonModeCallInNodeMode(), err)
+		assert.ErrorContains(t, err, cre.DonModeCallInNodeMode().Error())
 	})
 }
 

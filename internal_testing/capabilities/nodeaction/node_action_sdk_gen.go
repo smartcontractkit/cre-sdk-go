@@ -55,7 +55,7 @@ func (c *BasicAction) PerformAction(runtime cre.NodeRuntime, input *NodeInputs) 
 	}), func(i *sdkpb.CapabilityResponse) (*NodeOutputs, error) {
 		switch payload := i.Response.(type) {
 		case *sdkpb.CapabilityResponse_Error:
-			return nil, errors.New(payload.Error)
+			return nil, cre.NewCapabilityError(payload.Error, i.CapabilityId)
 		case *sdkpb.CapabilityResponse_Payload:
 			output := &NodeOutputs{}
 			err = payload.Payload.UnmarshalTo(output)

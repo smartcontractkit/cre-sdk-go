@@ -55,7 +55,7 @@ func (c *Client) SendRequest(runtime cre.NodeRuntime, input *Request) cre.Promis
 	}), func(i *sdkpb.CapabilityResponse) (*Response, error) {
 		switch payload := i.Response.(type) {
 		case *sdkpb.CapabilityResponse_Error:
-			return nil, errors.New(payload.Error)
+			return nil, cre.NewCapabilityError(payload.Error, i.CapabilityId)
 		case *sdkpb.CapabilityResponse_Payload:
 			output := &Response{}
 			err = payload.Payload.UnmarshalTo(output)

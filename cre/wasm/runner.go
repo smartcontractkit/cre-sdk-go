@@ -2,6 +2,7 @@ package wasm
 
 import (
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"log/slog"
 	"unsafe"
@@ -83,7 +84,12 @@ func (r *runner[C, T]) run(wfs []cre.ExecutionHandler[C, T]) {
 					exit(r.runnerInternals, &sdk.ExecutionResult{Result: &sdk.ExecutionResult_Value{Value: values.Proto(wrapped)}})
 				}
 			} else {
-				exit(r.runnerInternals, &sdk.ExecutionResult{Result: &sdk.ExecutionResult_Error{Error: err.Error()}})
+				result := &sdk.ExecutionResult{Result: &sdk.ExecutionResult_Error{Error: err.Error()}}
+				var capErr *cre.CapabilityError
+				if errors.As(err, &capErr) {
+					result.FailedCapabilityId = &capErr.CapabilityID
+				}
+				exit(r.runnerInternals, result)
 			}
 		}
 	}

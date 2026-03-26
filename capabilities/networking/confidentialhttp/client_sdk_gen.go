@@ -30,7 +30,7 @@ func (c *Client) SendRequest(runtime cre.Runtime, input *ConfidentialHTTPRequest
 	}), func(i *sdkpb.CapabilityResponse) (*HTTPResponse, error) {
 		switch payload := i.Response.(type) {
 		case *sdkpb.CapabilityResponse_Error:
-			return nil, errors.New(payload.Error)
+			return nil, cre.NewCapabilityError(payload.Error, i.CapabilityId)
 		case *sdkpb.CapabilityResponse_Payload:
 			output := &HTTPResponse{}
 			err = payload.Payload.UnmarshalTo(output)

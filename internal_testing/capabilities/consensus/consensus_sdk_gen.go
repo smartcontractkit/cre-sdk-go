@@ -32,7 +32,7 @@ func (c *Consensus) Simple(runtime cre.Runtime, input *sdk.SimpleConsensusInputs
 	}), func(i *sdkpb.CapabilityResponse) (*pb.Value, error) {
 		switch payload := i.Response.(type) {
 		case *sdkpb.CapabilityResponse_Error:
-			return nil, errors.New(payload.Error)
+			return nil, cre.NewCapabilityError(payload.Error, i.CapabilityId)
 		case *sdkpb.CapabilityResponse_Payload:
 			output := &pb.Value{}
 			err = payload.Payload.UnmarshalTo(output)
@@ -60,7 +60,7 @@ func (c *Consensus) Report(runtime cre.Runtime, input *sdk.ReportRequest) cre.Pr
 	}), func(i *sdkpb.CapabilityResponse) (*sdk.ReportResponse, error) {
 		switch payload := i.Response.(type) {
 		case *sdkpb.CapabilityResponse_Error:
-			return nil, errors.New(payload.Error)
+			return nil, cre.NewCapabilityError(payload.Error, i.CapabilityId)
 		case *sdkpb.CapabilityResponse_Payload:
 			output := &sdk.ReportResponse{}
 			err = payload.Payload.UnmarshalTo(output)
