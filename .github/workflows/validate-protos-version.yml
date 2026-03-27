@@ -1,0 +1,21 @@
+name: Validate chainlink-protos version
+
+on:
+  push:
+    branches:
+      - capabilities-development
+  pull_request:
+    branches:
+      - capabilities-development
+
+jobs:
+  validate-protos-version:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Validate protos version
+        uses: smartcontractkit/.github/actions/validate-protos-version@c3ad50a6eda897f2947ba580705f6fcefb3110d9
