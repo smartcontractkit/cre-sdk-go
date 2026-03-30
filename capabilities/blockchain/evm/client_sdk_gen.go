@@ -330,13 +330,27 @@ const BinanceSmartChainMainnet = 11344663589394136015
 
 const BinanceSmartChainTestnet = 13264668187771770619
 
+const CeloMainnet = 1346049177634351622
+
+const CronosTestnet = 2995292832068775165
+
+const DtccTestnetAndesite = 15513093881969820114
+
 const EthereumMainnet = 5009297550715157269
 
 const EthereumMainnetArbitrum1 = 4949039107694359620
 
 const EthereumMainnetBase1 = 15971525489660198786
 
+const EthereumMainnetInk1 = 3461204551265785888
+
+const EthereumMainnetLinea1 = 4627098889531055414
+
+const EthereumMainnetMantle1 = 1556008542357238666
+
 const EthereumMainnetOptimism1 = 3734403246176062136
+
+const EthereumMainnetScroll1 = 13204309965629103672
 
 const EthereumMainnetWorldchain1 = 2049429975587534727
 
@@ -352,11 +366,23 @@ const EthereumTestnetSepoliaBase1 = 10344971235874465080
 
 const EthereumTestnetSepoliaLinea1 = 5719461335882077547
 
+const EthereumTestnetSepoliaMantle1 = 8236463271206331221
+
 const EthereumTestnetSepoliaOptimism1 = 5224473277236331295
+
+const EthereumTestnetSepoliaScroll1 = 2279865765895943307
+
+const EthereumTestnetSepoliaUnichain1 = 14135854469784514356
 
 const EthereumTestnetSepoliaWorldchain1 = 5299555114858065850
 
 const EthereumTestnetSepoliaZksync1 = 6898391096552792247
+
+const GnosisChainMainnet = 465200170687744372
+
+const GnosisChainTestnetChiado = 8871595565390010547
+
+const HyperliquidMainnet = 2442541497099098535
 
 const HyperliquidTestnet = 4286062357653186312
 
@@ -366,7 +392,15 @@ const JovayMainnet = 1523760397290643893
 
 const JovayTestnet = 945045181441419236
 
+const MegaethMainnet = 6093540873831549674
+
+const MegaethTestnet2 = 18241817625092392675
+
+const PharosAtlanticTestnet = 16098325658947243212
+
 const PharosMainnet = 7801139999541420232
+
+const PlasmaMainnet = 9335212494177455608
 
 const PlasmaTestnet = 3967220077692964309
 
@@ -375,6 +409,14 @@ const PolygonMainnet = 4051577828743386545
 const PolygonTestnetAmoy = 16281711391670634445
 
 const PrivateTestnetAndesite = 6915682381028791124
+
+const SonicMainnet = 1673871237479749969
+
+const SonicTestnet = 1763698235108410440
+
+const TacTestnet = 9488606126177218005
+
+const XlayerTestnet = 10212741611335999305
 
 func ChainSelectorFromName(name string) (uint64, error) {
 	switch name {
@@ -390,14 +432,28 @@ func ChainSelectorFromName(name string) (uint64, error) {
 		return BinanceSmartChainMainnet, nil
 	case "binance_smart_chain-testnet":
 		return BinanceSmartChainTestnet, nil
+	case "celo-mainnet":
+		return CeloMainnet, nil
+	case "cronos-testnet":
+		return CronosTestnet, nil
+	case "dtcc-testnet-andesite":
+		return DtccTestnetAndesite, nil
 	case "ethereum-mainnet":
 		return EthereumMainnet, nil
 	case "ethereum-mainnet-arbitrum-1":
 		return EthereumMainnetArbitrum1, nil
 	case "ethereum-mainnet-base-1":
 		return EthereumMainnetBase1, nil
+	case "ethereum-mainnet-ink-1":
+		return EthereumMainnetInk1, nil
+	case "ethereum-mainnet-linea-1":
+		return EthereumMainnetLinea1, nil
+	case "ethereum-mainnet-mantle-1":
+		return EthereumMainnetMantle1, nil
 	case "ethereum-mainnet-optimism-1":
 		return EthereumMainnetOptimism1, nil
+	case "ethereum-mainnet-scroll-1":
+		return EthereumMainnetScroll1, nil
 	case "ethereum-mainnet-worldchain-1":
 		return EthereumMainnetWorldchain1, nil
 	case "ethereum-mainnet-xlayer-1":
@@ -412,12 +468,24 @@ func ChainSelectorFromName(name string) (uint64, error) {
 		return EthereumTestnetSepoliaBase1, nil
 	case "ethereum-testnet-sepolia-linea-1":
 		return EthereumTestnetSepoliaLinea1, nil
+	case "ethereum-testnet-sepolia-mantle-1":
+		return EthereumTestnetSepoliaMantle1, nil
 	case "ethereum-testnet-sepolia-optimism-1":
 		return EthereumTestnetSepoliaOptimism1, nil
+	case "ethereum-testnet-sepolia-scroll-1":
+		return EthereumTestnetSepoliaScroll1, nil
+	case "ethereum-testnet-sepolia-unichain-1":
+		return EthereumTestnetSepoliaUnichain1, nil
 	case "ethereum-testnet-sepolia-worldchain-1":
 		return EthereumTestnetSepoliaWorldchain1, nil
 	case "ethereum-testnet-sepolia-zksync-1":
 		return EthereumTestnetSepoliaZksync1, nil
+	case "gnosis_chain-mainnet":
+		return GnosisChainMainnet, nil
+	case "gnosis_chain-testnet-chiado":
+		return GnosisChainTestnetChiado, nil
+	case "hyperliquid-mainnet":
+		return HyperliquidMainnet, nil
 	case "hyperliquid-testnet":
 		return HyperliquidTestnet, nil
 	case "ink-testnet-sepolia":
@@ -426,8 +494,16 @@ func ChainSelectorFromName(name string) (uint64, error) {
 		return JovayMainnet, nil
 	case "jovay-testnet":
 		return JovayTestnet, nil
+	case "megaeth-mainnet":
+		return MegaethMainnet, nil
+	case "megaeth-testnet-2":
+		return MegaethTestnet2, nil
+	case "pharos-atlantic-testnet":
+		return PharosAtlanticTestnet, nil
 	case "pharos-mainnet":
 		return PharosMainnet, nil
+	case "plasma-mainnet":
+		return PlasmaMainnet, nil
 	case "plasma-testnet":
 		return PlasmaTestnet, nil
 	case "polygon-mainnet":
@@ -436,6 +512,14 @@ func ChainSelectorFromName(name string) (uint64, error) {
 		return PolygonTestnetAmoy, nil
 	case "private-testnet-andesite":
 		return PrivateTestnetAndesite, nil
+	case "sonic-mainnet":
+		return SonicMainnet, nil
+	case "sonic-testnet":
+		return SonicTestnet, nil
+	case "tac-testnet":
+		return TacTestnet, nil
+	case "xlayer-testnet":
+		return XlayerTestnet, nil
 	default:
 		return 0, errors.New("unknown ChainSelector" + name)
 	}
