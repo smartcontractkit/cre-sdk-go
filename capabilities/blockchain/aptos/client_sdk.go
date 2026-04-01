@@ -1,4 +1,3 @@
-
 // Capability ID: aptos:ChainSelector:<chainSelector>@1.0.0, method "View".
 
 package aptos
@@ -100,6 +99,8 @@ func (c *Client) View(runtime cre.Runtime, input *ViewRequest) cre.Promise[*View
 
 // decodeWriteReportReply decodes capabilities.blockchain.aptos.v1alpha.WriteReportReply
 // via protobuf wire parsing to avoid runtime reflection panics under WASM.
+// It accepts both the currently deployed Aptos capability wire layout and the
+// newer SDK layout for receiver_contract_execution_status during rollout.
 func decodeWriteReportReply(b []byte) (*WriteReportReply, error) {
 	out := &WriteReportReply{}
 	for len(b) > 0 {
@@ -119,50 +120,90 @@ func decodeWriteReportReply(b []byte) (*WriteReportReply, error) {
 			}
 			out.TxStatus = TxStatus(v)
 			b = b[m:]
-		case 2: // receiver_contract_execution_status enum (varint)
-			if typ != protowire.VarintType {
-				return nil, fmt.Errorf("decode WriteReportReply.receiver_contract_execution_status: unexpected wire type %d", typ)
+		case 2: // deployed layout: tx_hash string; newer layout: receiver status enum
+			switch typ {
+			case protowire.BytesType:
+				v, m := protowire.ConsumeBytes(b)
+				if m < 0 {
+					return nil, fmt.Errorf("decode WriteReportReply.tx_hash bytes: %v", protowire.ParseError(m))
+				}
+				txHash := string(v)
+				out.TxHash = &txHash
+				b = b[m:]
+			case protowire.VarintType:
+				v, m := protowire.ConsumeVarint(b)
+				if m < 0 {
+					return nil, fmt.Errorf("decode WriteReportReply.receiver_contract_execution_status varint: %v", protowire.ParseError(m))
+				}
+				status := ReceiverContractExecutionStatus(v)
+				out.ReceiverContractExecutionStatus = &status
+				b = b[m:]
+			default:
+				return nil, fmt.Errorf("decode WriteReportReply field 2: unexpected wire type %d", typ)
 			}
-			v, m := protowire.ConsumeVarint(b)
-			if m < 0 {
-				return nil, fmt.Errorf("decode WriteReportReply.receiver_contract_execution_status varint: %v", protowire.ParseError(m))
+		case 3: // deployed layout: transaction_fee varint; newer layout: tx_hash string
+			switch typ {
+			case protowire.VarintType:
+				v, m := protowire.ConsumeVarint(b)
+				if m < 0 {
+					return nil, fmt.Errorf("decode WriteReportReply.transaction_fee varint: %v", protowire.ParseError(m))
+				}
+				fee := uint64(v)
+				out.TransactionFee = &fee
+				b = b[m:]
+			case protowire.BytesType:
+				v, m := protowire.ConsumeBytes(b)
+				if m < 0 {
+					return nil, fmt.Errorf("decode WriteReportReply.tx_hash bytes: %v", protowire.ParseError(m))
+				}
+				txHash := string(v)
+				out.TxHash = &txHash
+				b = b[m:]
+			default:
+				return nil, fmt.Errorf("decode WriteReportReply field 3: unexpected wire type %d", typ)
 			}
-			status := ReceiverContractExecutionStatus(v)
-			out.ReceiverContractExecutionStatus = &status
-			b = b[m:]
-		case 3: // tx_hash string
-			if typ != protowire.BytesType {
-				return nil, fmt.Errorf("decode WriteReportReply.tx_hash: unexpected wire type %d", typ)
+		case 4: // deployed layout: error_message string; newer layout: transaction_fee varint
+			switch typ {
+			case protowire.BytesType:
+				v, m := protowire.ConsumeBytes(b)
+				if m < 0 {
+					return nil, fmt.Errorf("decode WriteReportReply.error_message bytes: %v", protowire.ParseError(m))
+				}
+				msg := string(v)
+				out.ErrorMessage = &msg
+				b = b[m:]
+			case protowire.VarintType:
+				v, m := protowire.ConsumeVarint(b)
+				if m < 0 {
+					return nil, fmt.Errorf("decode WriteReportReply.transaction_fee varint: %v", protowire.ParseError(m))
+				}
+				fee := uint64(v)
+				out.TransactionFee = &fee
+				b = b[m:]
+			default:
+				return nil, fmt.Errorf("decode WriteReportReply field 4: unexpected wire type %d", typ)
 			}
-			v, m := protowire.ConsumeBytes(b)
-			if m < 0 {
-				return nil, fmt.Errorf("decode WriteReportReply.tx_hash bytes: %v", protowire.ParseError(m))
+		case 5: // deployed layout: receiver status enum; newer layout: error_message string
+			switch typ {
+			case protowire.VarintType:
+				v, m := protowire.ConsumeVarint(b)
+				if m < 0 {
+					return nil, fmt.Errorf("decode WriteReportReply.receiver_contract_execution_status varint: %v", protowire.ParseError(m))
+				}
+				status := ReceiverContractExecutionStatus(v)
+				out.ReceiverContractExecutionStatus = &status
+				b = b[m:]
+			case protowire.BytesType:
+				v, m := protowire.ConsumeBytes(b)
+				if m < 0 {
+					return nil, fmt.Errorf("decode WriteReportReply.error_message bytes: %v", protowire.ParseError(m))
+				}
+				msg := string(v)
+				out.ErrorMessage = &msg
+				b = b[m:]
+			default:
+				return nil, fmt.Errorf("decode WriteReportReply field 5: unexpected wire type %d", typ)
 			}
-			txHash := string(v)
-			out.TxHash = &txHash
-			b = b[m:]
-		case 4: // transaction_fee varint
-			if typ != protowire.VarintType {
-				return nil, fmt.Errorf("decode WriteReportReply.transaction_fee: unexpected wire type %d", typ)
-			}
-			v, m := protowire.ConsumeVarint(b)
-			if m < 0 {
-				return nil, fmt.Errorf("decode WriteReportReply.transaction_fee varint: %v", protowire.ParseError(m))
-			}
-			fee := uint64(v)
-			out.TransactionFee = &fee
-			b = b[m:]
-		case 5: // error_message string
-			if typ != protowire.BytesType {
-				return nil, fmt.Errorf("decode WriteReportReply.error_message: unexpected wire type %d", typ)
-			}
-			v, m := protowire.ConsumeBytes(b)
-			if m < 0 {
-				return nil, fmt.Errorf("decode WriteReportReply.error_message bytes: %v", protowire.ParseError(m))
-			}
-			msg := string(v)
-			out.ErrorMessage = &msg
-			b = b[m:]
 		default:
 			m := protowire.ConsumeFieldValue(num, typ, b)
 			if m < 0 {
