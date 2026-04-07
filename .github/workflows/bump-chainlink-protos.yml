@@ -1,0 +1,171 @@
+# =============================================================================
+# Bump chainlink-protos Version Workflow
+# =============================================================================
+#
+# This workflow updates the chainlink-protos/cre/go dependency in the EVM
+# capability module, regenerates code, and creates a PR with version tags.
+#
+# TRIGGERS:
+#   - workflow_dispatch: Manual trigger via GitHub UI or gh CLI
+#   - repository_dispatch: Triggered by external workflows (e.g., chainlink-protos repo)
+#
+# PARAMETERS:
+#   version (required):
+#     The new chainlink-protos/cre/go version to bump to.
+#     Format: v0.0.0-YYYYMMDDHHMMSS-<commit-hash> (e.g., v0.0.0-20251202154221-30236deecda8)
+#
+#   evm_cap_version (optional):
+#     Explicit version tag for EVM capability (e.g., v1.0.0-beta.2).
+#     If empty, auto-increments from the latest capabilities/blockchain/evm/* tag.
+#
+#   sdk_version (optional):
+#     Explicit version tag for SDK (e.g., v1.1.2).
+#     If empty, auto-increments from the latest v*.*.* tag.
+#
+#   skip_tagging (optional, default: false):
+#     If true, skips version calculation and tagging entirely.
+#
+# CROSS-REPO TRIGGER EXAMPLE:
+#   uses: peter-evans/repository-dispatch@v3
+#   with:
+#     token: ${{ secrets.PAT_TOKEN }}
+#     repository: smartcontractkit/cre-sdk-go
+#     event-type: bump-chainlink-protos
+#     client-payload: '{"version": "v0.0.0-20251202154221-30236deecda8"}'
+#
+# =============================================================================
+
+name: Bump chainlink-protos version
+
+on:
+  # Manual trigger via GitHub UI or CLI
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'New version for github.com/smartcontractkit/chainlink-protos/cre/go (e.g., v0.0.0-20251202154221-30236deecda8)'
+        required: true
+        type: string
+      evm_cap_version:
+        description: 'EVM capability tag (e.g., v1.0.0-beta.2). Leave empty to auto-increment.'
+        required: false
+        type: string
+      sdk_version:
+        description: 'SDK version tag (e.g., v1.1.2). Leave empty to auto-increment.'
+        required: false
+        type: string
+      skip_tagging:
+        description: 'Skip version tagging entirely'
+        required: false
+        type: boolean
+        default: false
+
+  # External trigger from other workflows (e.g., chainlink-protos repo)
+  repository_dispatch:
+    types: [bump-chainlink-protos]
+
+jobs:
+  bump-version:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      # Clone repo with full history to access git tags for version calculation
+      - name: Checkout
+        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Set up Go
+        uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
+        with:
+          go-version-file: "go.mod"
+
+      # Update the chainlink-protos dependency in the EVM capability module
+      - name: Bump chainlink-protos version
+        working-directory: capabilities/blockchain/evm
+        run: |
+          go get github.com/smartcontractkit/chainlink-protos/cre/go@${{ inputs.version || github.event.client_payload.version }}
+          go mod tidy
+
+      # Regenerate all protobuf and SDK code to reflect the updated protos
+      - name: Run make clean-generate
+        run: make clean-generate
+
+      # Determine next version tags (uses explicit input or auto-increments from latest git tags)
+      - name: Calculate next versions
+        if: ${{ !inputs.skip_tagging && !github.event.client_payload.skip_tagging }}
+        id: calc-versions
+        run: |
+          ./script/calculate-next-versions.sh \
+            "${{ inputs.evm_cap_version || github.event.client_payload.evm_cap_version || '' }}" \
+            "${{ inputs.sdk_version || github.event.client_payload.sdk_version || '' }}"
+
+      # Construct PR labels including version info for post-merge tagging workflows
+      - name: Build labels list
+        id: labels
+        run: |
+          LABELS="bump-chainlink-protos"
+          if [ -n "${{ steps.calc-versions.outputs.evm_version }}" ]; then
+            LABELS="${LABELS},evm:${{ steps.calc-versions.outputs.evm_version }}"
+          fi
+          if [ -n "${{ steps.calc-versions.outputs.sdk_version }}" ]; then
+            LABELS="${LABELS},sdk:${{ steps.calc-versions.outputs.sdk_version }}"
+          fi
+          echo "labels=${LABELS}" >> $GITHUB_OUTPUT
+          echo "Labels: ${LABELS}"
+
+      # Create or update the PR with all changes
+      - name: Create Pull Request
+        id: create-pr
+        uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e # v7.0.8
+        env:
+          VERSION: ${{ inputs.version || github.event.client_payload.version }}
+          EVM_VERSION: ${{ steps.calc-versions.outputs.evm_version || '' }}
+          SDK_VERSION: ${{ steps.calc-versions.outputs.sdk_version || '' }}
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: bump chainlink-protos/cre/go to ${{ env.VERSION }}"
+          branch: chore/bump-chainlink-protos-${{ env.VERSION }}
+          delete-branch: true
+          title: "chore: bump chainlink-protos/cre/go to ${{ env.VERSION }}"
+          body: |
+            This PR bumps `github.com/smartcontractkit/chainlink-protos/cre/go` to version `${{ env.VERSION }}`.
+
+            Changes:
+            - Updated dependency in `capabilities/blockchain/evm/go.mod`
+            - Ran `make clean-generate` to regenerate code
+
+            **Tags to be created after merge:**
+            - EVM capability: `capabilities/blockchain/evm/${{ env.EVM_VERSION || 'skipped' }}`
+            - SDK: `${{ env.SDK_VERSION || 'skipped' }}`
+
+            ---
+            *This PR was automatically created by the bump-chainlink-protos workflow.*
+          labels: ${{ steps.labels.outputs.labels }}
+
+      # Write a summary to the GitHub Actions UI for visibility
+      - name: Output summary
+        env:
+          VERSION: ${{ inputs.version || github.event.client_payload.version }}
+          EVM_VERSION: ${{ steps.calc-versions.outputs.evm_version || 'skipped' }}
+          SDK_VERSION: ${{ steps.calc-versions.outputs.sdk_version || 'skipped' }}
+        run: |
+          echo "## Bump chainlink-protos Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Version Update" >> $GITHUB_STEP_SUMMARY
+          echo "- **chainlink-protos/cre/go:** \`${{ env.VERSION }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Pull Request" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.create-pr.outputs.pull-request-number }}" != "" ]; then
+            echo "- **PR Number:** #${{ steps.create-pr.outputs.pull-request-number }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **PR URL:** ${{ steps.create-pr.outputs.pull-request-url }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **PR Operation:** ${{ steps.create-pr.outputs.pull-request-operation }}" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- No PR was created (no changes detected)" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Tags to be created after merge" >> $GITHUB_STEP_SUMMARY
+          echo "- **EVM capability:** \`capabilities/blockchain/evm/${{ env.EVM_VERSION }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **SDK:** \`${{ env.SDK_VERSION }}\`" >> $GITHUB_STEP_SUMMARY
