@@ -20,6 +20,12 @@ func Handler[C any, M proto.Message, T any, O any](trigger Trigger[M, T], callba
 	return handler(trigger, callback)
 }
 
+// HandlerInTee creates a coupling of a Trigger and a callback function to be used in TEE (Trusted Execution Environment) mode.
+// The coupling ensures that when the Trigger is invoked, the callback function is called with a TeeRuntime.
+func HandlerInTee[C any, M proto.Message, T any, O any](trigger Trigger[M, T], callback func(config C, runtime TeeRuntime, payload T) (O, error)) ExecutionHandler[C, TeeRuntime] {
+	return handler(trigger, callback)
+}
+
 func handler[R, C any, M proto.Message, T any, O any](trigger Trigger[M, T], callback func(config C, runtime R, payload T) (O, error)) ExecutionHandler[C, R] {
 	wrapped := func(config C, runtime R, payload *anypb.Any) (any, error) {
 		unwrappedTrigger := trigger.NewT()

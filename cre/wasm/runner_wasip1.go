@@ -19,9 +19,18 @@ func switchModes(mode int32)
 //go:wasmimport env now
 func now(response unsafe.Pointer) int32
 
+//go:wasmimport env requirements
+func requirements(data unsafe.Pointer, dataLen int32)
+
 // NewRunner creates a new cre.Runner instance with the provided function to parse config.
 func NewRunner[C Config](parse func(configBytes []byte) (C, error)) cre.Runner[C] {
 	return newRunner[C](parse, runnerInternalsImpl{}, runtimeInternalsImpl{})
+}
+
+// NewTeeRunner creates a new cre.TeeRunner instance for TEE (Trusted Execution Environment) mode.
+// The tee parameter specifies the TEE configuration to be sent during workflow registration.
+func NewTeeRunner[A cre.AcceptedTees, C Config](tees A, parse func(configBytes []byte) (C, error)) cre.TeeRunner[C] {
+	return newTeeRunner(tees, parse, runnerInternalsImpl{}, runtimeInternalsImpl{})
 }
 
 type runnerInternalsImpl struct{}
@@ -50,4 +59,8 @@ func (r runnerInternalsImpl) now(response unsafe.Pointer) int32 {
 
 func (r runnerInternalsImpl) exit() {
 	os.Exit(0)
+}
+
+func (r runnerInternalsImpl) requirements(data unsafe.Pointer, dataLen int32) {
+	requirements(data, dataLen)
 }

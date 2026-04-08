@@ -275,3 +275,22 @@ func (rh *runtimeHelpers) SwitchModes(_ sdk.Mode) {}
 func (rh *runtimeHelpers) Now() time.Time {
 	return rh.timeProvider()
 }
+
+// NewTeeRuntime creates a new TestTeeRuntime for use in tests.
+// A nil Secrets map is treated as an empty map, but entries cannot be added later.
+func NewTeeRuntime(tb testing.TB, secrets Secrets) *TestTeeRuntime {
+	inner := NewRuntime(tb, secrets)
+	return &TestTeeRuntime{
+		TestRuntime: inner,
+		TeeRuntime:  sdkimpl.NewTeeRuntime(&inner.Runtime),
+	}
+}
+
+// TestTeeRuntime is a TeeRuntime implementation for use in unit tests.
+// Note that it should always be constructed via NewTeeRuntime.
+type TestTeeRuntime struct {
+	*TestRuntime
+	*sdkimpl.TeeRuntime
+}
+
+var _ cre.TeeRuntime = (*TestTeeRuntime)(nil)

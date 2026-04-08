@@ -6,12 +6,12 @@ import (
 	"log/slog"
 	"unsafe"
 
+	"github.com/smartcontractkit/chainlink-protos/cre/go/sdk"
+	"github.com/smartcontractkit/chainlink-protos/cre/go/values"
 	"github.com/smartcontractkit/cre-sdk-go/cre"
 	"github.com/smartcontractkit/cre-sdk-go/internal/sdkimpl"
 	"google.golang.org/protobuf/proto"
-
-	"github.com/smartcontractkit/chainlink-protos/cre/go/sdk"
-	"github.com/smartcontractkit/chainlink-protos/cre/go/values"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type Config any
@@ -23,6 +23,7 @@ type runnerInternals interface {
 	switchModes(mode int32)
 	now(response unsafe.Pointer) int32
 	exit()
+	requirements(data unsafe.Pointer, dataLen int32)
 }
 
 func newRunner[C Config](parse func(configBytes []byte) (C, error), runnerInternals runnerInternals, runtimeInternals runtimeInternals) cre.Runner[C] {
@@ -42,6 +43,45 @@ func newRunner[C Config](parse func(configBytes []byte) (C, error), runnerIntern
 			&runner[C, cre.Runtime]{
 				sp:              drt,
 				runtime:         drt,
+				runnerInternals: runnerInternals,
+				setRuntime: func(maxResponseSize uint64) {
+					drt.MaxResponseSize = maxResponseSize
+				},
+			}),
+		runnerInternals: runnerInternals,
+	}
+}
+
+func newTeeRunner[A cre.AcceptedTees, C Config](tees A, parse func(configBytes []byte) (C, error), runnerInternals runnerInternals, runtimeInternals runtimeInternals) cre.TeeRunner[C] {
+	runnerInternals.versionV2()
+	runnerInternals.switchModes(int32(sdk.Mode_MODE_DON))
+	reqs := &sdk.Requirements{Tee: &sdk.Tee{}}
+	switch typedTees := any(tees).(type) {
+	case []cre.TeeType:
+		reqs.Tee.Type = &sdk.Tee_TypeSelection{TypeSelection: &sdk.TeeTypeSelection{Types: typedTees}}
+	case cre.AnyTee:
+		reqs.Tee.Type = &sdk.Tee_Any{Any: &emptypb.Empty{}}
+	}
+
+	requirementsBuffered, _ := proto.Marshal(reqs)
+	marshalledPtr, marshalledLen, _ := bufferToPointerLen(requirementsBuffered)
+	runnerInternals.requirements(marshalledPtr, marshalledLen)
+
+	drt := &sdkimpl.Runtime{RuntimeBase: newRuntime(runtimeInternals, sdk.Mode_MODE_DON)}
+	trt := sdkimpl.NewTeeRuntime(drt)
+	return teeRunnerWrapper[C]{
+		baseRunner: getRunner(
+			parse,
+			&subscriber[C, cre.TeeRuntime]{
+				sp:              trt,
+				runnerInternals: runnerInternals,
+				setRuntime: func(maxResponseSize uint64) {
+					drt.MaxResponseSize = maxResponseSize
+				},
+			},
+			&runner[C, cre.TeeRuntime]{
+				sp:              trt,
+				runtime:         trt,
 				runnerInternals: runnerInternals,
 				setRuntime: func(maxResponseSize uint64) {
 					drt.MaxResponseSize = maxResponseSize
@@ -202,5 +242,18 @@ type runnerWrapper[C any] struct {
 
 func (r runnerWrapper[C]) Run(initFn func(config C, logger *slog.Logger, secretsProvider cre.SecretsProvider) (cre.Workflow[C], error)) {
 	wfs := r.getWorkflows(r.baseRunner.cfg(), r.secretsProvider(), initFn)
+	r.baseRunner.run(wfs)
+}
+
+type teeRunnerWrapper[C any] struct {
+	baseRunner[C, cre.TeeRuntime]
+	runnerInternals runnerInternals
+}
+
+func (r teeRunnerWrapper[C]) Run(initFn func(config C, logger *slog.Logger, secretsProvider cre.SecretsProvider) (cre.TeeWorkflow[C], error)) {
+	wfs, err := initFn(r.baseRunner.cfg(), newSlogger(), r.secretsProvider())
+	if err != nil {
+		exitErr(r.runnerInternals, err.Error())
+	}
 	r.baseRunner.run(wfs)
 }

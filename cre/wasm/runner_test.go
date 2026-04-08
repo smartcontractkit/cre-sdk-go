@@ -154,6 +154,36 @@ func TestRunner_Run(t *testing.T) {
 	})
 }
 
+func TestNewTeeRunner(t *testing.T) {
+	t.Run("Specified list", func(t *testing.T) {
+		acceptedTees := []cre.TeeType{cre.TeeType_TEE_TYPE_AWS_NITRO}
+
+		teeRunner := newTeeRunner(
+			acceptedTees, func(b []byte) (string, error) { return string(b), nil }, testRunnerInternals(t, subscribeRequest), testRuntimeInternals(t))
+
+		requirements := teeRunner.(teeRunnerWrapper[string]).baseRunner.(*subscriber[string, cre.TeeRuntime]).runnerInternals.(*runnerInternalsTestHook).requirementsSent
+		actual := &sdk.Requirements{}
+		require.NoError(t, proto.Unmarshal(requirements, actual))
+		expected := &sdk.Requirements{
+			Tee: &sdk.Tee{Type: &sdk.Tee_TypeSelection{TypeSelection: &sdk.TeeTypeSelection{Types: acceptedTees}}},
+		}
+		assert.True(t, proto.Equal(expected, actual))
+	})
+
+	t.Run("any tee", func(t *testing.T) {
+		teeRunner := newTeeRunner(
+			cre.AnyTee{}, func(b []byte) (string, error) { return string(b), nil }, testRunnerInternals(t, subscribeRequest), testRuntimeInternals(t))
+
+		requirements := teeRunner.(teeRunnerWrapper[string]).baseRunner.(*subscriber[string, cre.TeeRuntime]).runnerInternals.(*runnerInternalsTestHook).requirementsSent
+		actual := &sdk.Requirements{}
+		require.NoError(t, proto.Unmarshal(requirements, actual))
+		expected := &sdk.Requirements{
+			Tee: &sdk.Tee{Type: &sdk.Tee_Any{Any: &emptypb.Empty{}}},
+		}
+		assert.True(t, proto.Equal(expected, actual))
+	})
+}
+
 func assertEnv(t *testing.T, r cre.Runner[string]) {
 	ran := false
 	verifyEnv := func(config string, logger *slog.Logger, secretsProvider cre.SecretsProvider) (cre.Workflow[string], error) {
