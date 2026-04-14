@@ -42,6 +42,15 @@ func SendRequest[C, T any](
 }
 
 func (c *Client) SendRequest(runtime cre.NodeRuntime, input *Request) cre.Promise[*Response] {
+	return c.sendRequest(runtime, input)
+}
+
+// SendRequestInTee is the same as SendRequest but accepts a cre.TeeRuntime.
+func (c *Client) SendRequestInTee(runtime cre.TeeRuntime, input *Request) cre.Promise[*Response] {
+	return c.sendRequest(runtime, input)
+}
+
+func (c *Client) sendRequest(runtime cre.RuntimeBase, input *Request) cre.Promise[*Response] {
 	wrapped := &anypb.Any{}
 	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
