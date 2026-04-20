@@ -10,17 +10,15 @@ import (
 	"github.com/smartcontractkit/cre-sdk-go/cre"
 )
 
-type TemplateInjectionFn func(*chttp.ConfidentialHTTPRequest) (*chttp.ConfidentialHTTPRequest, error)
-
 type roundTripper struct {
-	runtime     cre.Runtime
-	injectionFn TemplateInjectionFn
+	runtime cre.Runtime
+	options []chttp.RequestOption
 }
 
 // NewRoundTripper provides a compatibility shim for HTTP libraries that transforms HTTP requests to use the confidential HTTP capability.
 // If injectionFn is nil, no secrets or template values will be added to the call before its made
-func NewRoundTripper(runtime cre.Runtime, injectionFn TemplateInjectionFn) http.RoundTripper {
-	return &roundTripper{runtime: runtime, injectionFn: injectionFn}
+func NewRoundTripper(runtime cre.Runtime, options ...chttp.RequestOption) http.RoundTripper {
+	return &roundTripper{runtime: runtime, options: options}
 }
 
 func (r *roundTripper) RoundTrip(request *http.Request) (*http.Response, error) {
@@ -40,24 +38,14 @@ func (r *roundTripper) RoundTrip(request *http.Request) (*http.Response, error) 
 		}
 	}
 
-	confRequest := &chttp.ConfidentialHTTPRequest{
-		Request: &chttp.HTTPRequest{
-			Url:          request.URL.String(),
-			Method:       request.Method,
-			Body:         &chttp.HTTPRequest_BodyBytes{BodyBytes: body},
-			MultiHeaders: headers,
-		},
+	req := &chttp.HTTPRequest{
+		Url:          request.URL.String(),
+		Method:       request.Method,
+		Body:         &chttp.HTTPRequest_BodyBytes{BodyBytes: body},
+		MultiHeaders: headers,
 	}
 
-	if r.injectionFn != nil {
-		var err error
-		confRequest, err = r.injectionFn(confRequest)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	response, err := client.SendRequest(r.runtime, confRequest).Await()
+	response, err := client.Send(r.runtime, req, r.options...).Await()
 	if err != nil {
 		return nil, err
 	}
