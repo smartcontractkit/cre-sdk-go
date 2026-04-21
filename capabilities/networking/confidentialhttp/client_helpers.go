@@ -4,11 +4,45 @@ import (
 	"github.com/smartcontractkit/cre-sdk-go/cre"
 )
 
-// appendSecret appends id to the collector and returns its Key for use as
-// the proto template name.
-func appendSecret(id *SecretIdentifier, secrets *[]*SecretIdentifier) string {
+// SecretParam is a type constraint for parameters that accept either a plain
+// string or a *SecretIdentifier. Use *SecretIdentifier for values that must
+// be fetched from the vault; use a plain string for non-sensitive identifiers
+// like a username or client ID.
+type SecretParam interface {
+	string | *SecretIdentifier
+}
+
+// toStringOrSecret converts a SecretParam into a *StringOrSecret proto value.
+// If s is a *SecretIdentifier it is also appended to secrets.
+func toStringOrSecret[S SecretParam](s S, secrets *[]*SecretIdentifier) *StringOrSecret {
+	switch v := any(s).(type) {
+	case *SecretIdentifier:
+		*secrets = append(*secrets, v)
+		return &StringOrSecret{Value: &StringOrSecret_Secret{Secret: v}}
+	case string:
+		return &StringOrSecret{Value: &StringOrSecret_Plain{Plain: v}}
+	}
+	return nil
+}
+
+// toStringOrSecretAny is the runtime equivalent of toStringOrSecret, used
+// when the concrete type is erased (e.g. stored in an option struct as any).
+func toStringOrSecretAny(v any, secrets *[]*SecretIdentifier) *StringOrSecret {
+	switch v := v.(type) {
+	case *SecretIdentifier:
+		*secrets = append(*secrets, v)
+		return &StringOrSecret{Value: &StringOrSecret_Secret{Secret: v}}
+	case string:
+		return &StringOrSecret{Value: &StringOrSecret_Plain{Plain: v}}
+	}
+	return nil
+}
+
+// addSecret appends id to the collector and returns it, for assignment
+// directly into a proto *SecretIdentifier field.
+func addSecret(id *SecretIdentifier, secrets *[]*SecretIdentifier) *SecretIdentifier {
 	*secrets = append(*secrets, id)
-	return id.Key
+	return id
 }
 
 // ---------------------------------------------------------------------------
@@ -68,14 +102,13 @@ func WithAuth(a *AuthConfig) RequestOption {
 func WithApiKey(headerName string, secret *SecretIdentifier, valuePrefix ...string) RequestOption {
 	return func(r *ConfidentialHTTPRequest) {
 		var secrets []*SecretIdentifier
-		name := appendSecret(secret, &secrets)
 		prefix := ""
 		if len(valuePrefix) > 0 {
 			prefix = valuePrefix[0]
 		}
 		r.Auth = &AuthConfig{Method: &AuthConfig_ApiKey{ApiKey: &ApiKeyAuth{
 			HeaderName:  headerName,
-			SecretName:  name,
+			Secret:      addSecret(secret, &secrets),
 			ValuePrefix: prefix,
 		}}}
 		r.VaultDonSecrets = append(r.VaultDonSecrets, secrets...)
@@ -87,14 +120,17 @@ func WithApiKey(headerName string, secret *SecretIdentifier, valuePrefix ...stri
 // ---------------------------------------------------------------------------
 
 // WithBasicAuth sends `Authorization: Basic base64(username:password)`.
-func WithBasicAuth(username, password *SecretIdentifier) RequestOption {
+// Username can be a plain string or a *SecretIdentifier; password is always
+// a secret.
+//
+//	WithBasicAuth("admin", passwordSecret)
+//	WithBasicAuth(usernameSecret, passwordSecret)
+func WithBasicAuth[U SecretParam](username U, password *SecretIdentifier) RequestOption {
 	return func(r *ConfidentialHTTPRequest) {
 		var secrets []*SecretIdentifier
-		uName := appendSecret(username, &secrets)
-		pName := appendSecret(password, &secrets)
 		r.Auth = &AuthConfig{Method: &AuthConfig_Basic{Basic: &BasicAuth{
-			UsernameSecretName: uName,
-			PasswordSecretName: pName,
+			Username: toStringOrSecret(username, &secrets),
+			Password: addSecret(password, &secrets),
 		}}}
 		r.VaultDonSecrets = append(r.VaultDonSecrets, secrets...)
 	}
@@ -123,8 +159,7 @@ func BearerPrefix(prefix string) BearerOption {
 func WithBearerToken(token *SecretIdentifier, opts ...BearerOption) RequestOption {
 	return func(r *ConfidentialHTTPRequest) {
 		var secrets []*SecretIdentifier
-		name := appendSecret(token, &secrets)
-		b := &BearerAuth{TokenSecretName: name}
+		b := &BearerAuth{Token: addSecret(token, &secrets)}
 		for _, o := range opts {
 			o(b)
 		}
@@ -157,9 +192,8 @@ func HmacEncoding(enc string) HmacSha256Option {
 func WithHmacSha256(secret *SecretIdentifier, signatureHeader, timestampHeader string, opts ...HmacSha256Option) RequestOption {
 	return func(r *ConfidentialHTTPRequest) {
 		var secrets []*SecretIdentifier
-		name := appendSecret(secret, &secrets)
 		h := &HmacSha256{
-			SecretName:      name,
+			Secret:          addSecret(secret, &secrets),
 			SignatureHeader: signatureHeader,
 			TimestampHeader: timestampHeader,
 		}
@@ -202,17 +236,17 @@ func WithUnsignedPayload(v bool) SigV4Option {
 }
 
 // WithAwsSigV4 signs outbound requests using AWS Signature Version 4.
+// accessKeyID can be a plain string or a *SecretIdentifier; secretAccessKey
+// is always a secret.
 //
-//	WithAwsSigV4(akSecret, skSecret, "us-east-1", "execute-api")
-//	WithAwsSigV4(akSecret, skSecret, "us-east-1", "s3",
+//	WithAwsSigV4("AKIAIOSFODNN7EXAMPLE", skSecret, "us-east-1", "s3")
+//	WithAwsSigV4(akSecret, skSecret, "us-east-1", "execute-api",
 //	    WithSessionToken(stsSecret), WithUnsignedPayload(true))
-func WithAwsSigV4(
-	accessKeyID, secretAccessKey *SecretIdentifier, region, service string, opts ...SigV4Option,
+func WithAwsSigV4[A SecretParam](
+	accessKeyID A, secretAccessKey *SecretIdentifier, region, service string, opts ...SigV4Option,
 ) RequestOption {
 	return func(r *ConfidentialHTTPRequest) {
 		var secrets []*SecretIdentifier
-		akName := appendSecret(accessKeyID, &secrets)
-		skName := appendSecret(secretAccessKey, &secrets)
 
 		cfg := &sigV4Config{}
 		for _, o := range opts {
@@ -220,15 +254,15 @@ func WithAwsSigV4(
 		}
 
 		a := &AwsSigV4{
-			AccessKeyIdSecretName:     akName,
-			SecretAccessKeySecretName: skName,
-			Region:                    region,
-			Service:                   service,
-			SignedHeaders:             cfg.signedHeaders,
-			UnsignedPayload:           cfg.unsignedPayload,
+			AccessKeyId:     toStringOrSecret(accessKeyID, &secrets),
+			SecretAccessKey: addSecret(secretAccessKey, &secrets),
+			Region:          region,
+			Service:         service,
+			SignedHeaders:   cfg.signedHeaders,
+			UnsignedPayload: cfg.unsignedPayload,
 		}
 		if cfg.sessionToken != nil {
-			a.SessionTokenSecretName = appendSecret(cfg.sessionToken, &secrets)
+			a.SessionToken = addSecret(cfg.sessionToken, &secrets)
 		}
 
 		r.Auth = &AuthConfig{Method: &AuthConfig_Hmac{Hmac: &HmacAuth{
@@ -271,10 +305,9 @@ type HmacCustomConfig struct {
 func WithHmacCustom(secret *SecretIdentifier, cfg HmacCustomConfig) RequestOption {
 	return func(r *ConfidentialHTTPRequest) {
 		var secrets []*SecretIdentifier
-		name := appendSecret(secret, &secrets)
 		r.Auth = &AuthConfig{Method: &AuthConfig_Hmac{Hmac: &HmacAuth{
 			Variant: &HmacAuth_Custom{Custom: &HmacCustom{
-				SecretName:        name,
+				Secret:            addSecret(secret, &secrets),
 				CanonicalTemplate: cfg.CanonicalTemplate,
 				Hash:              cfg.Hash,
 				Encoding:          cfg.Encoding,
@@ -296,7 +329,7 @@ type oauth2Config struct {
 	scopes           []string
 	audience         string
 	clientAuthMethod string
-	clientIDSecret   *SecretIdentifier
+	clientID         any // string or *SecretIdentifier, set via WithClientID
 	clientSecret     *SecretIdentifier
 	extraParams      map[string]string
 }
@@ -328,9 +361,10 @@ func WithOAuth2ClientBody() OAuth2Option {
 	return func(o *oauth2Config) { o.clientAuthMethod = "request_body" }
 }
 
-// WithClientID attaches a client_id secret (refresh_token grant).
-func WithClientID(secret *SecretIdentifier) OAuth2Option {
-	return func(o *oauth2Config) { o.clientIDSecret = secret }
+// WithClientID attaches a client_id (refresh_token grant). The value can be
+// a plain string or a *SecretIdentifier.
+func WithClientID[S SecretParam](id S) OAuth2Option {
+	return func(o *oauth2Config) { o.clientID = any(id) }
 }
 
 // WithClientSecret attaches a client_secret secret (refresh_token grant).
@@ -352,14 +386,16 @@ func WithExtraParams(params map[string]string) OAuth2Option {
 // access token at tokenURL, caches it per-workflow-owner, and attaches
 // `Authorization: Bearer <access_token>` to the outbound request.
 //
-// tokenURL must be https://.
-func WithOAuth2ClientCredentials(
-	tokenURL string, clientID, clientSecret *SecretIdentifier, opts ...OAuth2Option,
+// clientID can be a plain string or a *SecretIdentifier; clientSecret is
+// always a secret. tokenURL must be https://.
+//
+//	WithOAuth2ClientCredentials("https://idp/token", "my-client-id", csecSecret)
+//	WithOAuth2ClientCredentials("https://idp/token", cidSecret, csecSecret)
+func WithOAuth2ClientCredentials[C SecretParam](
+	tokenURL string, clientID C, clientSecret *SecretIdentifier, opts ...OAuth2Option,
 ) RequestOption {
 	return func(r *ConfidentialHTTPRequest) {
 		var secrets []*SecretIdentifier
-		cidName := appendSecret(clientID, &secrets)
-		csName := appendSecret(clientSecret, &secrets)
 
 		o := &oauth2Config{}
 		for _, opt := range opts {
@@ -367,13 +403,13 @@ func WithOAuth2ClientCredentials(
 		}
 
 		cc := &OAuth2ClientCredentials{
-			TokenUrl:               tokenURL,
-			ClientIdSecretName:     cidName,
-			ClientSecretSecretName: csName,
-			Scopes:                 o.scopes,
-			Audience:               o.audience,
-			ClientAuthMethod:       o.clientAuthMethod,
-			ExtraParams:            o.extraParams,
+			TokenUrl:         tokenURL,
+			ClientId:         toStringOrSecret(clientID, &secrets),
+			ClientSecret:     addSecret(clientSecret, &secrets),
+			Scopes:           o.scopes,
+			Audience:         o.audience,
+			ClientAuthMethod: o.clientAuthMethod,
+			ExtraParams:      o.extraParams,
 		}
 		r.Auth = &AuthConfig{Method: &AuthConfig_Oauth2{Oauth2: &OAuth2Auth{
 			Variant: &OAuth2Auth_ClientCredentials{ClientCredentials: cc},
@@ -396,7 +432,6 @@ func WithOAuth2RefreshToken(
 ) RequestOption {
 	return func(r *ConfidentialHTTPRequest) {
 		var secrets []*SecretIdentifier
-		rtName := appendSecret(refreshToken, &secrets)
 
 		o := &oauth2Config{}
 		for _, opt := range opts {
@@ -404,16 +439,16 @@ func WithOAuth2RefreshToken(
 		}
 
 		rt := &OAuth2RefreshToken{
-			TokenUrl:               tokenURL,
-			RefreshTokenSecretName: rtName,
-			Scopes:                 o.scopes,
-			ExtraParams:            o.extraParams,
+			TokenUrl:     tokenURL,
+			RefreshToken: addSecret(refreshToken, &secrets),
+			Scopes:       o.scopes,
+			ExtraParams:  o.extraParams,
 		}
-		if o.clientIDSecret != nil {
-			rt.ClientIdSecretName = appendSecret(o.clientIDSecret, &secrets)
+		if o.clientID != nil {
+			rt.ClientId = toStringOrSecretAny(o.clientID, &secrets)
 		}
 		if o.clientSecret != nil {
-			rt.ClientSecretSecretName = appendSecret(o.clientSecret, &secrets)
+			rt.ClientSecret = addSecret(o.clientSecret, &secrets)
 		}
 
 		r.Auth = &AuthConfig{Method: &AuthConfig_Oauth2{Oauth2: &OAuth2Auth{
