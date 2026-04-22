@@ -57,8 +57,12 @@ func newTeeRunner[A cre.AcceptedTees, C Config](tees A, parse func(configBytes [
 	runnerInternals.switchModes(int32(sdk.Mode_MODE_DON))
 	reqs := &sdk.Requirements{Tee: &sdk.Tee{}}
 	switch typedTees := any(tees).(type) {
-	case []cre.TeeType:
-		reqs.Tee.Type = &sdk.Tee_TypeSelection{TypeSelection: &sdk.TeeTypeSelection{Types: typedTees}}
+	case []cre.TeeAndRegions:
+		typeRegions := make([]*sdk.TeeTypeAndRegions, len(typedTees))
+		for i, tee := range typedTees {
+			typeRegions[i] = &sdk.TeeTypeAndRegions{Type: tee.Type, Regions: tee.Regions}
+		}
+		reqs.Tee.Type = &sdk.Tee_TypeSelection{TypeSelection: &sdk.TeeTypeSelection{Types: typeRegions}}
 	case cre.AnyTee:
 		reqs.Tee.Type = &sdk.Tee_Any{Any: &emptypb.Empty{}}
 	}

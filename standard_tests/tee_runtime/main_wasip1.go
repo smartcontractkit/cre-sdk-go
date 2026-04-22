@@ -21,7 +21,7 @@ func trigger(config []byte, runtime cre.TeeRuntime, payload *basictrigger.Output
 func main() {
 
 	runner := wasm.NewTeeRunner(
-		[]cre.TeeType{cre.TeeType_TEE_TYPE_AWS_NITRO},
+		[]cre.TeeAndRegions{{Type: cre.TeeType_TEE_TYPE_AWS_NITRO, Regions: []string{"us-west-2"}}},
 		func(configBytes []byte) ([]byte, error) { return configBytes, nil },
 	)
 

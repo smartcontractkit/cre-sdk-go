@@ -156,7 +156,7 @@ func TestRunner_Run(t *testing.T) {
 
 func TestNewTeeRunner(t *testing.T) {
 	t.Run("Specified list", func(t *testing.T) {
-		acceptedTees := []cre.TeeType{cre.TeeType_TEE_TYPE_AWS_NITRO}
+		acceptedTees := []cre.TeeAndRegions{{Type: cre.TeeType_TEE_TYPE_AWS_NITRO, Regions: []string{"us-west-2"}}}
 
 		teeRunner := newTeeRunner(
 			acceptedTees, func(b []byte) (string, error) { return string(b), nil }, testRunnerInternals(t, subscribeRequest), testRuntimeInternals(t))
@@ -165,7 +165,7 @@ func TestNewTeeRunner(t *testing.T) {
 		actual := &sdk.Requirements{}
 		require.NoError(t, proto.Unmarshal(requirements, actual))
 		expected := &sdk.Requirements{
-			Tee: &sdk.Tee{Type: &sdk.Tee_TypeSelection{TypeSelection: &sdk.TeeTypeSelection{Types: acceptedTees}}},
+			Tee: &sdk.Tee{Type: &sdk.Tee_TypeSelection{TypeSelection: &sdk.TeeTypeSelection{Types: []*sdk.TeeTypeAndRegions{{Type: sdk.TeeType_TEE_TYPE_AWS_NITRO, Regions: []string{"us-west-2"}}}}}},
 		}
 		assert.True(t, proto.Equal(expected, actual))
 	})

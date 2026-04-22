@@ -16,12 +16,20 @@ type Runner[C any] interface {
 
 type AnyTee struct{}
 
-type TeeType = sdk.TeeType
+type Type = sdk.TeeType
+
+type TeeAndRegions struct {
+	Type
+
+	// Regions limits what regions the TEE can run in.
+	// If empty or nil, there is no region limitation.
+	Regions []string
+}
 
 const TeeType_TEE_TYPE_AWS_NITRO = sdk.TeeType_TEE_TYPE_AWS_NITRO
 
 type AcceptedTees interface {
-	[]TeeType | AnyTee
+	[]TeeAndRegions | AnyTee
 }
 
 // TeeRunner is the entry point to running a CRE workflow in TEE (Trusted Execution Environment) mode.
