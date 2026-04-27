@@ -154,33 +154,131 @@ func TestRunner_Run(t *testing.T) {
 	})
 }
 
-func TestNewTeeRunner(t *testing.T) {
-	t.Run("Specified list", func(t *testing.T) {
+func TestHandlerInTee(t *testing.T) {
+	t.Run("specified list sets requirements on subscription", func(t *testing.T) {
 		acceptedTees := []cre.TeeAndRegions{{Type: cre.TeeType_TEE_TYPE_AWS_NITRO, Regions: []string{"us-west-2"}}}
 
-		teeRunner := newTeeRunner(
-			acceptedTees, func(b []byte) (string, error) { return string(b), nil }, testRunnerInternals(t, subscribeRequest), testRuntimeInternals(t))
+		internals := testRunnerInternals(t, subscribeRequest)
+		dr := newRunner(func(b []byte) (string, error) { return string(b), nil }, internals, testRuntimeInternals(t))
 
-		requirements := teeRunner.(teeRunnerWrapper[string]).baseRunner.(*subscriber[string, cre.TeeRuntime]).runnerInternals.(*runnerInternalsTestHook).requirementsSent
-		actual := &sdk.Requirements{}
-		require.NoError(t, proto.Unmarshal(requirements, actual))
-		expected := &sdk.Requirements{
-			Tee: &sdk.Tee{Type: &sdk.Tee_TypeSelection{TypeSelection: &sdk.TeeTypeSelection{Types: []*sdk.TeeTypeAndRegions{{Type: sdk.TeeType_TEE_TYPE_AWS_NITRO, Regions: []string{"us-west-2"}}}}}},
+		dr.Run(func(string, *slog.Logger, cre.SecretsProvider) (cre.Workflow[string], error) {
+			return cre.Workflow[string]{
+				cre.HandlerInTee(
+					basictrigger.Trigger(testworkflow.TestWorkflowTriggerConfig()),
+					func(_ string, _ cre.TeeRuntime, _ *basictrigger.Outputs) (string, error) {
+						return "tee-result", nil
+					},
+					acceptedTees,
+				),
+			}, nil
+		})
+
+		actual := &sdk.ExecutionResult{}
+		require.NoError(t, proto.Unmarshal(internals.sentResponse, actual))
+		switch result := actual.Result.(type) {
+		case *sdk.ExecutionResult_TriggerSubscriptions:
+			subs := result.TriggerSubscriptions.Subscriptions
+			require.Len(t, subs, 1)
+			expected := &sdk.Requirements{
+				Tee: &sdk.Tee{Type: &sdk.Tee_TypeSelection{TypeSelection: &sdk.TeeTypeSelection{Types: []*sdk.TeeTypeAndRegions{{Type: sdk.TeeType_TEE_TYPE_AWS_NITRO, Regions: []string{"us-west-2"}}}}}},
+			}
+			assert.True(t, proto.Equal(expected, subs[0].Requirements))
+		default:
+			assert.Fail(t, "unexpected result type", result)
 		}
-		assert.True(t, proto.Equal(expected, actual))
 	})
 
-	t.Run("any tee", func(t *testing.T) {
-		teeRunner := newTeeRunner(
-			cre.AnyTee{}, func(b []byte) (string, error) { return string(b), nil }, testRunnerInternals(t, subscribeRequest), testRuntimeInternals(t))
+	t.Run("any tee sets requirements on subscription", func(t *testing.T) {
+		internals := testRunnerInternals(t, subscribeRequest)
+		dr := newRunner(func(b []byte) (string, error) { return string(b), nil }, internals, testRuntimeInternals(t))
 
-		requirements := teeRunner.(teeRunnerWrapper[string]).baseRunner.(*subscriber[string, cre.TeeRuntime]).runnerInternals.(*runnerInternalsTestHook).requirementsSent
-		actual := &sdk.Requirements{}
-		require.NoError(t, proto.Unmarshal(requirements, actual))
-		expected := &sdk.Requirements{
-			Tee: &sdk.Tee{Type: &sdk.Tee_Any{Any: &emptypb.Empty{}}},
+		dr.Run(func(string, *slog.Logger, cre.SecretsProvider) (cre.Workflow[string], error) {
+			return cre.Workflow[string]{
+				cre.HandlerInTee(
+					basictrigger.Trigger(testworkflow.TestWorkflowTriggerConfig()),
+					func(_ string, _ cre.TeeRuntime, _ *basictrigger.Outputs) (string, error) {
+						return "tee-result", nil
+					},
+					cre.AnyTee{},
+				),
+			}, nil
+		})
+
+		actual := &sdk.ExecutionResult{}
+		require.NoError(t, proto.Unmarshal(internals.sentResponse, actual))
+		switch result := actual.Result.(type) {
+		case *sdk.ExecutionResult_TriggerSubscriptions:
+			subs := result.TriggerSubscriptions.Subscriptions
+			require.Len(t, subs, 1)
+			expected := &sdk.Requirements{
+				Tee: &sdk.Tee{Type: &sdk.Tee_Any{Any: &emptypb.Empty{}}},
+			}
+			assert.True(t, proto.Equal(expected, subs[0].Requirements))
+		default:
+			assert.Fail(t, "unexpected result type", result)
 		}
-		assert.True(t, proto.Equal(expected, actual))
+	})
+
+	t.Run("regular handler has no requirements on subscription", func(t *testing.T) {
+		internals := testRunnerInternals(t, subscribeRequest)
+		dr := newRunner(func(b []byte) (string, error) { return string(b), nil }, internals, testRuntimeInternals(t))
+
+		dr.Run(func(string, *slog.Logger, cre.SecretsProvider) (cre.Workflow[string], error) {
+			return cre.Workflow[string]{
+				cre.Handler(
+					basictrigger.Trigger(testworkflow.TestWorkflowTriggerConfig()),
+					func(_ string, _ cre.Runtime, _ *basictrigger.Outputs) (string, error) {
+						return "no-tee", nil
+					},
+				),
+			}, nil
+		})
+
+		actual := &sdk.ExecutionResult{}
+		require.NoError(t, proto.Unmarshal(internals.sentResponse, actual))
+		switch result := actual.Result.(type) {
+		case *sdk.ExecutionResult_TriggerSubscriptions:
+			subs := result.TriggerSubscriptions.Subscriptions
+			require.Len(t, subs, 1)
+			assert.Nil(t, subs[0].Requirements)
+		default:
+			assert.Fail(t, "unexpected result type", result)
+		}
+	})
+
+	t.Run("tee handler callback receives TeeRuntime", func(t *testing.T) {
+		acceptedTees := []cre.TeeAndRegions{{Type: cre.TeeType_TEE_TYPE_AWS_NITRO, Regions: []string{"us-west-2"}}}
+
+		triggerReq := &sdk.ExecuteRequest{
+			Config:          anyConfig,
+			MaxResponseSize: anyMaxResponseSize,
+			Request: &sdk.ExecuteRequest_Trigger{
+				Trigger: &sdk.Trigger{
+					Id:      0,
+					Payload: mustAny(testworkflow.TestWorkflowTrigger()),
+				},
+			},
+		}
+
+		internals := testRunnerInternals(t, triggerReq)
+		dr := newRunner(func(b []byte) (string, error) { return string(b), nil }, internals, testRuntimeInternals(t))
+
+		callbackInvoked := false
+		dr.Run(func(string, *slog.Logger, cre.SecretsProvider) (cre.Workflow[string], error) {
+			return cre.Workflow[string]{
+				cre.HandlerInTee(
+					basictrigger.Trigger(testworkflow.TestWorkflowTriggerConfig()),
+					func(_ string, rt cre.TeeRuntime, _ *basictrigger.Outputs) (string, error) {
+						callbackInvoked = true
+						assert.NotNil(t, rt, "TeeRuntime should not be nil")
+						return "done", nil
+					},
+					acceptedTees,
+				),
+			}, nil
+		})
+
+		assert.True(t, callbackInvoked, "tee callback should have been invoked")
 	})
 }
 

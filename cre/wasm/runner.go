@@ -22,7 +22,6 @@ type runnerInternals interface {
 	switchModes(mode int32)
 	now(response unsafe.Pointer) int32
 	exit()
-	requirements(data unsafe.Pointer, dataLen int32)
 }
 
 func newRunner[C Config](parse func(configBytes []byte) (C, error), runnerInternals runnerInternals, runtimeInternals runtimeInternals) cre.Runner[C] {
@@ -42,7 +41,7 @@ func newRunner[C Config](parse func(configBytes []byte) (C, error), runnerIntern
 			&runner[C, cre.Runtime]{
 				sp:              drt,
 				runtime:         drt,
-				switchRunner:    switchRuntimeWrapper{Runtime: drt},
+				switchRuntime:   &switchRuntimeWrapper{Runtime: drt},
 				runnerInternals: runnerInternals,
 				setRuntime: func(maxResponseSize uint64) {
 					drt.MaxResponseSize = maxResponseSize
@@ -54,13 +53,13 @@ func newRunner[C Config](parse func(configBytes []byte) (C, error), runnerIntern
 
 type runner[C, T any] struct {
 	runnerInternals
-	trigger      *sdk.Trigger
-	id           string
-	runtime      T
-	switchRunner T
-	setRuntime   func(maxResponseSize uint64)
-	config       C
-	sp           cre.SecretsProvider
+	trigger       *sdk.Trigger
+	id            string
+	runtime       T
+	switchRuntime T
+	setRuntime    func(maxResponseSize uint64)
+	config        C
+	sp            cre.SecretsProvider
 }
 
 var _ baseRunner[any, cre.Runtime] = (*runner[any, cre.Runtime])(nil)
@@ -77,12 +76,8 @@ func (r *runner[C, T]) run(wfs []cre.ExecutionHandler[C, T]) {
 	runtime := r.runtime
 	for idx, handler := range wfs {
 		if uint64(idx) == r.trigger.Id {
-			if reqsProvider, ok := handler.(interface{ Requirements() *sdk.Requirements }); ok {
-				reqs := reqsProvider.Requirements()
-				requirementsBuffered, _ := proto.Marshal(reqs)
-				marshalledPtr, marshalledLen, _ := bufferToPointerLen(requirementsBuffered)
-				r.runnerInternals.requirements(marshalledPtr, marshalledLen)
-				runtime = r.switchRunner
+			if _, ok := handler.(cre.ExecutionHandlerWithRequirements[C, T]); ok {
+				runtime = r.switchRuntime
 			}
 
 			response, err := handler.Callback()(r.config, runtime, r.trigger.Payload)
@@ -122,11 +117,15 @@ func (s *subscriber[C, T]) secretsProvider() cre.SecretsProvider {
 func (s *subscriber[C, T]) run(wfs []cre.ExecutionHandler[C, T]) {
 	subscriptions := make([]*sdk.TriggerSubscription, len(wfs))
 	for i, handler := range wfs {
-		subscriptions[i] = &sdk.TriggerSubscription{
+		sub := &sdk.TriggerSubscription{
 			Id:      handler.CapabilityID(),
 			Payload: handler.TriggerCfg(),
 			Method:  handler.Method(),
 		}
+		if reqsProvider, ok := handler.(cre.ExecutionHandlerWithRequirements[C, T]); ok {
+			sub.Requirements = reqsProvider.Requirements()
+		}
+		subscriptions[i] = sub
 	}
 	triggerSubscription := &sdk.TriggerSubscriptionRequest{Subscriptions: subscriptions}
 
@@ -225,3 +224,4 @@ type switchRuntimeWrapper struct {
 func (s *switchRuntimeWrapper) Tee() cre.TeeRuntime {
 	return sdkimpl.NewTeeRuntime(s.Runtime)
 }
+

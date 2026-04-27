@@ -30,7 +30,18 @@ func Handler[C any, M proto.Message, T any, O any](trigger Trigger[M, T], callba
 // HandlerInTee creates a coupling of a Trigger and a callback function to be used in TEE (Trusted Execution Environment) mode.
 // The coupling ensures that when the Trigger is invoked, the callback function is called with a TeeRuntime.
 func HandlerInTee[C any, M proto.Message, T any, O any, A AcceptedTees](trigger Trigger[M, T], callback func(config C, runtime TeeRuntime, payload T) (O, error), tees A) ExecutionHandler[C, Runtime] {
-	requirements := &sdk.Requirements{Tee: &sdk.Tee{}}
+	wrapped := func(config C, runtime Runtime, t T) (O, error) {
+		helper, ok := runtime.(interface{ Tee() TeeRuntime })
+		if !ok {
+			panic("Runner did not provide an extractable TEERuntime. If you wrapped the runtime, wrap the method Tee() TeeRuntime instead.")
+		}
+
+		return callback(config, helper.Tee(), t)
+	}
+	return handler(trigger, wrapped, teeRequirements(tees))
+}
+
+func teeRequirements[A AcceptedTees](tees A) *sdk.Requirements {
 	reqs := &sdk.Requirements{Tee: &sdk.Tee{}}
 	switch typedTees := any(tees).(type) {
 	case []TeeAndRegions:
@@ -42,17 +53,7 @@ func HandlerInTee[C any, M proto.Message, T any, O any, A AcceptedTees](trigger 
 	case AnyTee:
 		reqs.Tee.Type = &sdk.Tee_Any{Any: &emptypb.Empty{}}
 	}
-
-	wrapped := func(config C, runtime Runtime, t T) (O, error) {
-		// hack to allow it to pass us a teeRuntime
-		helper, ok := runtime.(interface{ Tee() TeeRuntime })
-		if !ok {
-			panic("Runner did not provide an extractable TEERuntime. If you wrapped the runtime, wrap the method Tee() TeeRuntime instead.")
-		}
-
-		return callback(config, helper.Tee(), t)
-	}
-	return handler(trigger, wrapped, requirements)
+	return reqs
 }
 
 func handler[R, C any, M proto.Message, T any, O any](trigger Trigger[M, T], callback func(config C, runtime R, payload T) (O, error), requirements *sdk.Requirements) ExecutionHandler[C, R] {
@@ -77,7 +78,7 @@ func handler[R, C any, M proto.Message, T any, O any](trigger Trigger[M, T], cal
 		return eh
 	}
 
-	return executionHandlerWithRequirementsImpl[C, R]{ExecutionHandler: eh, requirements: requirements}
+	return &executionHandlerWithRequirementsImpl[C, R]{ExecutionHandler: eh, requirements: requirements}
 }
 
 type executionHandlerImpl[C, R any, M proto.Message, T any] struct {

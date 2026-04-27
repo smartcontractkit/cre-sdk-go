@@ -8,13 +8,12 @@ import (
 )
 
 type runnerInternalsTestHook struct {
-	testTb           testing.TB
-	execId           string
-	arguments        []string
-	sentResponse     []byte
-	modeSwitched     bool
-	mode             int32
-	requirementsSent []byte
+	testTb       testing.TB
+	execId       string
+	arguments    []string
+	sentResponse []byte
+	modeSwitched bool
+	mode         int32
 }
 
 func (r *runnerInternalsTestHook) args() []string {
@@ -39,10 +38,6 @@ func (r *runnerInternalsTestHook) now(_ unsafe.Pointer) int32 {
 
 func (r *runnerInternalsTestHook) exit() {
 	// Unlike the WASM, tests continue to execute
-}
-
-func (r *runnerInternalsTestHook) requirements(data unsafe.Pointer, dataLen int32) {
-	r.requirementsSent = unsafe.Slice((*byte)(data), dataLen)
 }
 
 var _ runnerInternals = (*runnerInternalsTestHook)(nil)
