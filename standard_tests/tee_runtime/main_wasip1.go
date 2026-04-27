@@ -8,9 +8,13 @@ import (
 	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basictrigger"
 )
 
-func subscribe(_ []byte, _ *slog.Logger, _ cre.SecretsProvider) (cre.TeeWorkflow[[]byte], error) {
-	return cre.TeeWorkflow[[]byte]{
-		cre.HandlerInTee(basictrigger.Trigger(&basictrigger.Config{Name: "first-trigger", Number: 100}), trigger),
+func subscribe(_ []byte, _ *slog.Logger, _ cre.SecretsProvider) (cre.Workflow[[]byte], error) {
+	teeRequiements := []cre.TeeAndRegions{{Type: cre.TeeType_TEE_TYPE_AWS_NITRO, Regions: []string{"us-west-2"}}}
+	return cre.Workflow[[]byte]{
+		cre.HandlerInTee(
+			basictrigger.Trigger(&basictrigger.Config{Name: "first-trigger", Number: 100}),
+			trigger,
+			teeRequiements),
 	}, nil
 }
 
@@ -19,11 +23,6 @@ func trigger(config []byte, runtime cre.TeeRuntime, payload *basictrigger.Output
 }
 
 func main() {
-
-	runner := wasm.NewTeeRunner(
-		[]cre.TeeAndRegions{{Type: cre.TeeType_TEE_TYPE_AWS_NITRO, Regions: []string{"us-west-2"}}},
-		func(configBytes []byte) ([]byte, error) { return configBytes, nil },
-	)
-
+	runner := wasm.NewRunner(func(configBytes []byte) ([]byte, error) { return configBytes, nil })
 	runner.Run(subscribe)
 }

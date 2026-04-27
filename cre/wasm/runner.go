@@ -11,7 +11,6 @@ import (
 	"github.com/smartcontractkit/cre-sdk-go/cre"
 	"github.com/smartcontractkit/cre-sdk-go/internal/sdkimpl"
 	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type Config any
@@ -43,49 +42,7 @@ func newRunner[C Config](parse func(configBytes []byte) (C, error), runnerIntern
 			&runner[C, cre.Runtime]{
 				sp:              drt,
 				runtime:         drt,
-				runnerInternals: runnerInternals,
-				setRuntime: func(maxResponseSize uint64) {
-					drt.MaxResponseSize = maxResponseSize
-				},
-			}),
-		runnerInternals: runnerInternals,
-	}
-}
-
-func newTeeRunner[A cre.AcceptedTees, C Config](tees A, parse func(configBytes []byte) (C, error), runnerInternals runnerInternals, runtimeInternals runtimeInternals) cre.TeeRunner[C] {
-	runnerInternals.versionV2()
-	runnerInternals.switchModes(int32(sdk.Mode_MODE_DON))
-	reqs := &sdk.Requirements{Tee: &sdk.Tee{}}
-	switch typedTees := any(tees).(type) {
-	case []cre.TeeAndRegions:
-		typeRegions := make([]*sdk.TeeTypeAndRegions, len(typedTees))
-		for i, tee := range typedTees {
-			typeRegions[i] = &sdk.TeeTypeAndRegions{Type: tee.Type, Regions: tee.Regions}
-		}
-		reqs.Tee.Type = &sdk.Tee_TypeSelection{TypeSelection: &sdk.TeeTypeSelection{Types: typeRegions}}
-	case cre.AnyTee:
-		reqs.Tee.Type = &sdk.Tee_Any{Any: &emptypb.Empty{}}
-	}
-
-	requirementsBuffered, _ := proto.Marshal(reqs)
-	marshalledPtr, marshalledLen, _ := bufferToPointerLen(requirementsBuffered)
-	runnerInternals.requirements(marshalledPtr, marshalledLen)
-
-	drt := &sdkimpl.Runtime{RuntimeBase: newRuntime(runtimeInternals, sdk.Mode_MODE_DON)}
-	trt := sdkimpl.NewTeeRuntime(drt)
-	return teeRunnerWrapper[C]{
-		baseRunner: getRunner(
-			parse,
-			&subscriber[C, cre.TeeRuntime]{
-				sp:              trt,
-				runnerInternals: runnerInternals,
-				setRuntime: func(maxResponseSize uint64) {
-					drt.MaxResponseSize = maxResponseSize
-				},
-			},
-			&runner[C, cre.TeeRuntime]{
-				sp:              trt,
-				runtime:         trt,
+				switchRunner:    switchRuntimeWrapper{Runtime: drt},
 				runnerInternals: runnerInternals,
 				setRuntime: func(maxResponseSize uint64) {
 					drt.MaxResponseSize = maxResponseSize
@@ -97,12 +54,13 @@ func newTeeRunner[A cre.AcceptedTees, C Config](tees A, parse func(configBytes [
 
 type runner[C, T any] struct {
 	runnerInternals
-	trigger    *sdk.Trigger
-	id         string
-	runtime    T
-	setRuntime func(maxResponseSize uint64)
-	config     C
-	sp         cre.SecretsProvider
+	trigger      *sdk.Trigger
+	id           string
+	runtime      T
+	switchRunner T
+	setRuntime   func(maxResponseSize uint64)
+	config       C
+	sp           cre.SecretsProvider
 }
 
 var _ baseRunner[any, cre.Runtime] = (*runner[any, cre.Runtime])(nil)
@@ -116,9 +74,19 @@ func (r *runner[C, T]) secretsProvider() cre.SecretsProvider {
 }
 
 func (r *runner[C, T]) run(wfs []cre.ExecutionHandler[C, T]) {
+	runtime := r.runtime
 	for idx, handler := range wfs {
 		if uint64(idx) == r.trigger.Id {
-			response, err := handler.Callback()(r.config, r.runtime, r.trigger.Payload)
+			if reqsProvider, ok := handler.(interface{ Requirements() *sdk.Requirements }); ok {
+				reqs := reqsProvider.Requirements()
+				requirementsBuffered, _ := proto.Marshal(reqs)
+				marshalledPtr, marshalledLen, _ := bufferToPointerLen(requirementsBuffered)
+				r.runnerInternals.requirements(marshalledPtr, marshalledLen)
+				runtime = r.switchRunner
+			}
+
+			response, err := handler.Callback()(r.config, runtime, r.trigger.Payload)
+
 			if err == nil {
 				wrapped, err := values.Wrap(response)
 				if err != nil {
@@ -249,15 +217,11 @@ func (r runnerWrapper[C]) Run(initFn func(config C, logger *slog.Logger, secrets
 	r.baseRunner.run(wfs)
 }
 
-type teeRunnerWrapper[C any] struct {
-	baseRunner[C, cre.TeeRuntime]
-	runnerInternals runnerInternals
+type switchRuntimeWrapper struct {
+	// used to implement the runtime, but will be discarded
+	*sdkimpl.Runtime
 }
 
-func (r teeRunnerWrapper[C]) Run(initFn func(config C, logger *slog.Logger, secretsProvider cre.SecretsProvider) (cre.TeeWorkflow[C], error)) {
-	wfs, err := initFn(r.baseRunner.cfg(), newSlogger(), r.secretsProvider())
-	if err != nil {
-		exitErr(r.runnerInternals, err.Error())
-	}
-	r.baseRunner.run(wfs)
+func (s *switchRuntimeWrapper) Tee() cre.TeeRuntime {
+	return sdkimpl.NewTeeRuntime(s.Runtime)
 }

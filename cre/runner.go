@@ -31,11 +31,3 @@ const TeeType_TEE_TYPE_AWS_NITRO = sdk.TeeType_TEE_TYPE_AWS_NITRO
 type AcceptedTees interface {
 	[]TeeAndRegions | AnyTee
 }
-
-// TeeRunner is the entry point to running a CRE workflow in TEE (Trusted Execution Environment) mode.
-type TeeRunner[C any] interface {
-	// Run creates the TEE workflow and starts it.
-	// Upon registration of a workflow, a run is used to register to `Trigger`s.
-	// Upon receiving a trigger, the appropriate handler's callback is invoked with a TeeRuntime.
-	Run(initFn func(config C, logger *slog.Logger, secretsProvider SecretsProvider) (TeeWorkflow[C], error))
-}

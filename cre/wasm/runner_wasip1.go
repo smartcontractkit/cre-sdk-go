@@ -27,12 +27,6 @@ func NewRunner[C Config](parse func(configBytes []byte) (C, error)) cre.Runner[C
 	return newRunner[C](parse, runnerInternalsImpl{}, runtimeInternalsImpl{})
 }
 
-// NewTeeRunner creates a new cre.TeeRunner instance for TEE (Trusted Execution Environment) mode.
-// The tee parameter specifies the TEE configuration to be sent during workflow registration.
-func NewTeeRunner[A cre.AcceptedTees, C Config](tees A, parse func(configBytes []byte) (C, error)) cre.TeeRunner[C] {
-	return newTeeRunner(tees, parse, runnerInternalsImpl{}, runtimeInternalsImpl{})
-}
-
 type runnerInternalsImpl struct{}
 
 var _ runnerInternals = runnerInternalsImpl{}
