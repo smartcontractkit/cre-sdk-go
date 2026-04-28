@@ -6,12 +6,11 @@ import (
 	"log/slog"
 	"unsafe"
 
+	"github.com/smartcontractkit/chainlink-protos/cre/go/sdk"
+	"github.com/smartcontractkit/chainlink-protos/cre/go/values"
 	"github.com/smartcontractkit/cre-sdk-go/cre"
 	"github.com/smartcontractkit/cre-sdk-go/internal/sdkimpl"
 	"google.golang.org/protobuf/proto"
-
-	"github.com/smartcontractkit/chainlink-protos/cre/go/sdk"
-	"github.com/smartcontractkit/chainlink-protos/cre/go/values"
 )
 
 type Config any
@@ -42,6 +41,7 @@ func newRunner[C Config](parse func(configBytes []byte) (C, error), runnerIntern
 			&runner[C, cre.Runtime]{
 				sp:              drt,
 				runtime:         drt,
+				switchRuntime:   &switchRuntimeWrapper{Runtime: drt},
 				runnerInternals: runnerInternals,
 				setRuntime: func(maxResponseSize uint64) {
 					drt.MaxResponseSize = maxResponseSize
@@ -53,12 +53,13 @@ func newRunner[C Config](parse func(configBytes []byte) (C, error), runnerIntern
 
 type runner[C, T any] struct {
 	runnerInternals
-	trigger    *sdk.Trigger
-	id         string
-	runtime    T
-	setRuntime func(maxResponseSize uint64)
-	config     C
-	sp         cre.SecretsProvider
+	trigger       *sdk.Trigger
+	id            string
+	runtime       T
+	switchRuntime T
+	setRuntime    func(maxResponseSize uint64)
+	config        C
+	sp            cre.SecretsProvider
 }
 
 var _ baseRunner[any, cre.Runtime] = (*runner[any, cre.Runtime])(nil)
@@ -72,9 +73,15 @@ func (r *runner[C, T]) secretsProvider() cre.SecretsProvider {
 }
 
 func (r *runner[C, T]) run(wfs []cre.ExecutionHandler[C, T]) {
+	runtime := r.runtime
 	for idx, handler := range wfs {
 		if uint64(idx) == r.trigger.Id {
-			response, err := handler.Callback()(r.config, r.runtime, r.trigger.Payload)
+			if _, ok := handler.(cre.ExecutionHandlerWithRequirements[C, T]); ok {
+				runtime = r.switchRuntime
+			}
+
+			response, err := handler.Callback()(r.config, runtime, r.trigger.Payload)
+
 			if err == nil {
 				wrapped, err := values.Wrap(response)
 				if err != nil {
@@ -110,11 +117,15 @@ func (s *subscriber[C, T]) secretsProvider() cre.SecretsProvider {
 func (s *subscriber[C, T]) run(wfs []cre.ExecutionHandler[C, T]) {
 	subscriptions := make([]*sdk.TriggerSubscription, len(wfs))
 	for i, handler := range wfs {
-		subscriptions[i] = &sdk.TriggerSubscription{
+		sub := &sdk.TriggerSubscription{
 			Id:      handler.CapabilityID(),
 			Payload: handler.TriggerCfg(),
 			Method:  handler.Method(),
 		}
+		if reqsProvider, ok := handler.(cre.ExecutionHandlerWithRequirements[C, T]); ok {
+			sub.Requirements = reqsProvider.Requirements()
+		}
+		subscriptions[i] = sub
 	}
 	triggerSubscription := &sdk.TriggerSubscriptionRequest{Subscriptions: subscriptions}
 
@@ -204,3 +215,13 @@ func (r runnerWrapper[C]) Run(initFn func(config C, logger *slog.Logger, secrets
 	wfs := r.getWorkflows(r.baseRunner.cfg(), r.secretsProvider(), initFn)
 	r.baseRunner.run(wfs)
 }
+
+type switchRuntimeWrapper struct {
+	// used to implement the runtime, but will be discarded
+	*sdkimpl.Runtime
+}
+
+func (s *switchRuntimeWrapper) Tee() cre.TeeRuntime {
+	return sdkimpl.NewTeeRuntime(s.Runtime)
+}
+

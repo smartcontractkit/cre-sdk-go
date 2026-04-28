@@ -19,6 +19,10 @@ type BasicAction struct {
 }
 
 func (c *BasicAction) PerformAction(runtime cre.Runtime, input *p1.Item) cre.Promise[*p2.Item] {
+	return c.performAction(runtime, input)
+}
+
+func (c *BasicAction) performAction(runtime cre.RuntimeBase, input *p1.Item) cre.Promise[*p2.Item] {
 	wrapped := &anypb.Any{}
 	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {

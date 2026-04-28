@@ -19,6 +19,10 @@ type BasicAction struct {
 
 // PerformAction This comment tests the generator's ability to handle leading comments on methods.
 func (c *BasicAction) PerformAction(runtime cre.Runtime, input *Inputs) cre.Promise[*Outputs] {
+	return c.performAction(runtime, input)
+}
+
+func (c *BasicAction) performAction(runtime cre.RuntimeBase, input *Inputs) cre.Promise[*Outputs] {
 	wrapped := &anypb.Any{}
 	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
