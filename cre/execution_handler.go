@@ -4,7 +4,6 @@ import (
 	"github.com/smartcontractkit/chainlink-protos/cre/go/sdk"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
-	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 // ExecutionHandler defines a coupling of a Trigger and a callback function to be used by the SDK.
@@ -45,13 +44,13 @@ func teeRequirements[A AcceptedTees](tees A) *sdk.Requirements {
 	reqs := &sdk.Requirements{Tee: &sdk.Tee{}}
 	switch typedTees := any(tees).(type) {
 	case []TeeAndRegions:
-		typeRegions := make([]*sdk.TeeTypeAndRegions, len(typedTees))
+		typesRegions := make([]*sdk.TeeTypeAndRegions, len(typedTees))
 		for i, tee := range typedTees {
-			typeRegions[i] = &sdk.TeeTypeAndRegions{Type: tee.Type, Regions: tee.Regions}
+			typesRegions[i] = &sdk.TeeTypeAndRegions{Type: tee.Type, Regions: tee.Regions}
 		}
-		reqs.Tee.Type = &sdk.Tee_TypeSelection{TypeSelection: &sdk.TeeTypeSelection{Types: typeRegions}}
+		reqs.Tee.Item = &sdk.Tee_TeeTypesAndRegions{TeeTypesAndRegions: &sdk.TeeTypesAndRegions{TeeTypeAndRegions: typesRegions}}
 	case AnyTee:
-		reqs.Tee.Type = &sdk.Tee_Any{Any: &emptypb.Empty{}}
+		reqs.Tee.Item = &sdk.Tee_AnyRegions{AnyRegions: &sdk.Regions{Regions: typedTees.Regions}}
 	}
 	return reqs
 }

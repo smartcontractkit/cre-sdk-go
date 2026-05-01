@@ -180,7 +180,7 @@ func TestHandlerInTee(t *testing.T) {
 			subs := result.TriggerSubscriptions.Subscriptions
 			require.Len(t, subs, 1)
 			expected := &sdk.Requirements{
-				Tee: &sdk.Tee{Type: &sdk.Tee_TypeSelection{TypeSelection: &sdk.TeeTypeSelection{Types: []*sdk.TeeTypeAndRegions{{Type: sdk.TeeType_TEE_TYPE_AWS_NITRO, Regions: []string{"us-west-2"}}}}}},
+				Tee: &sdk.Tee{Item: &sdk.Tee_TeeTypesAndRegions{TeeTypesAndRegions: &sdk.TeeTypesAndRegions{TeeTypeAndRegions: []*sdk.TeeTypeAndRegions{{Type: sdk.TeeType_TEE_TYPE_AWS_NITRO, Regions: []string{"us-west-2"}}}}}},
 			}
 			assert.True(t, proto.Equal(expected, subs[0].Requirements))
 		default:
@@ -199,7 +199,7 @@ func TestHandlerInTee(t *testing.T) {
 					func(_ string, _ cre.TeeRuntime, _ *basictrigger.Outputs) (string, error) {
 						return "tee-result", nil
 					},
-					cre.AnyTee{},
+					cre.AnyTee{Regions: []string{"us-west-2"}},
 				),
 			}, nil
 		})
@@ -211,7 +211,7 @@ func TestHandlerInTee(t *testing.T) {
 			subs := result.TriggerSubscriptions.Subscriptions
 			require.Len(t, subs, 1)
 			expected := &sdk.Requirements{
-				Tee: &sdk.Tee{Type: &sdk.Tee_Any{Any: &emptypb.Empty{}}},
+				Tee: &sdk.Tee{Item: &sdk.Tee_AnyRegions{AnyRegions: &sdk.Regions{Regions: []string{"us-west-2"}}}},
 			}
 			assert.True(t, proto.Equal(expected, subs[0].Requirements))
 		default:

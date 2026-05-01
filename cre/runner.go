@@ -16,13 +16,18 @@ type Runner[C any] interface {
 	Run(initFn InitFn[C])
 }
 
-type AnyTee struct{}
-
 type Type = sdk.TeeType
 
 type TeeAndRegions struct {
 	Type
 
+	// Regions limits what regions the TEE can run in.
+	// If empty or nil, there is no region limitation.
+	Regions []string
+}
+
+// AnyTee specifies that any TEE type is acceptable, with optional region constraints.
+type AnyTee struct {
 	// Regions limits what regions the TEE can run in.
 	// If empty or nil, there is no region limitation.
 	Regions []string
