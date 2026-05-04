@@ -225,3 +225,41 @@ type NodeRuntime struct {
 var _ cre.NodeRuntime = &NodeRuntime{}
 
 func (n *NodeRuntime) IsNodeRuntime() {}
+
+type TeeRuntime struct {
+	don *Runtime
+}
+
+var _ cre.TeeRuntime = &TeeRuntime{}
+
+func NewTeeRuntime(don *Runtime) *TeeRuntime {
+	return &TeeRuntime{don: don}
+}
+
+func (t *TeeRuntime) CallCapability(request *sdk.CapabilityRequest) cre.Promise[*sdk.CapabilityResponse] {
+	return t.don.CallCapability(request)
+}
+
+func (t *TeeRuntime) Rand() (*rand.Rand, error) {
+	return t.don.Rand()
+}
+
+func (t *TeeRuntime) Now() time.Time {
+	return t.don.Now()
+}
+
+func (t *TeeRuntime) Logger() *slog.Logger {
+	return t.don.Logger()
+}
+
+func (t *TeeRuntime) GetSecret(req *sdk.SecretRequest) cre.Promise[*sdk.Secret] {
+	return t.don.GetSecret(req)
+}
+
+func (t *TeeRuntime) ReportFromDon(request *cre.ReportRequest) cre.Promise[*cre.Report] {
+	return t.don.GenerateReport(request)
+}
+
+func (t *TeeRuntime) UsingTheDons() cre.Runtime {
+	return t.don
+}

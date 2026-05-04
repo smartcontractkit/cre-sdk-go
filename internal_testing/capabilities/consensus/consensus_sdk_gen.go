@@ -19,6 +19,10 @@ type Consensus struct {
 }
 
 func (c *Consensus) Simple(runtime cre.Runtime, input *sdk.SimpleConsensusInputs) cre.Promise[*pb.Value] {
+	return c.simple(runtime, input)
+}
+
+func (c *Consensus) simple(runtime cre.RuntimeBase, input *sdk.SimpleConsensusInputs) cre.Promise[*pb.Value] {
 	wrapped := &anypb.Any{}
 	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
@@ -47,6 +51,10 @@ func (c *Consensus) Simple(runtime cre.Runtime, input *sdk.SimpleConsensusInputs
 }
 
 func (c *Consensus) Report(runtime cre.Runtime, input *sdk.ReportRequest) cre.Promise[*cre.Report] {
+	return c.report(runtime, input)
+}
+
+func (c *Consensus) report(runtime cre.RuntimeBase, input *sdk.ReportRequest) cre.Promise[*cre.Report] {
 	wrapped := &anypb.Any{}
 	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {

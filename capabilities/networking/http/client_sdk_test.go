@@ -25,7 +25,7 @@ var anyResponse = &http.Response{
 }
 
 var anyContext = []byte{4, 5, 6}
-var anyReport = `prepended metadata: {"data": "example"}`
+var anyReport = append(makeMd(), []byte(`prepended metadata: {"data": "example"}`)...)
 var anySigs = []*sdk.AttributedSignature{
 	{
 		Signature: []byte{7, 8, 9},
@@ -42,6 +42,14 @@ var anyReportResponse = &sdk.ReportResponse{
 	ReportContext: anyContext,
 	RawReport:     []byte(anyReport),
 	Sigs:          anySigs,
+}
+
+func makeMd() []byte {
+	md := make([]byte, 109)
+	for i := 0; i < len(md); i++ {
+		md[i] = byte(i)
+	}
+	return md
 }
 
 func TestClient_SendReport(t *testing.T) {
