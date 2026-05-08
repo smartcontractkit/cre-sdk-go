@@ -28,24 +28,27 @@ func newRunner[C Config](parse func(configBytes []byte) (C, error), runnerIntern
 	runnerInternals.versionV2()
 	runnerInternals.switchModes(int32(sdk.Mode_MODE_DON))
 	drt := &sdkimpl.Runtime{RuntimeBase: newRuntime(runtimeInternals, sdk.Mode_MODE_DON)}
+	setRuntime := func(maxResponseSize uint64) {
+		drt.MaxResponseSize = maxResponseSize
+	}
 	return runnerWrapper[C]{
 		baseRunner: getRunner(
 			parse,
 			&subscriber[C, cre.Runtime]{
 				sp:              drt,
 				runnerInternals: runnerInternals,
-				setRuntime: func(maxResponseSize uint64) {
-					drt.MaxResponseSize = maxResponseSize
-				},
+				setRuntime:      setRuntime,
 			},
 			&runner[C, cre.Runtime]{
 				sp:              drt,
 				runtime:         drt,
 				switchRuntime:   &switchRuntimeWrapper{Runtime: drt},
 				runnerInternals: runnerInternals,
-				setRuntime: func(maxResponseSize uint64) {
-					drt.MaxResponseSize = maxResponseSize
-				},
+				setRuntime:      setRuntime,
+			},
+			&preHookRunner[C, cre.Runtime]{
+				runnerInternals: runnerInternals,
+				setRuntime:      setRuntime,
 			}),
 		runnerInternals: runnerInternals,
 	}
@@ -125,6 +128,9 @@ func (s *subscriber[C, T]) run(wfs []cre.ExecutionHandler[C, T]) {
 		if reqsProvider, ok := handler.(cre.ExecutionHandlerWithRequirements[C, T]); ok {
 			sub.Requirements = reqsProvider.Requirements()
 		}
+		if _, ok := handler.(cre.ExecutionHandlerWithPreHook[C, T]); ok {
+			sub.PreHook = true
+		}
 		subscriptions[i] = sub
 	}
 	triggerSubscription := &sdk.TriggerSubscriptionRequest{Subscriptions: subscriptions}
@@ -144,7 +150,52 @@ func (r runnerWrapper[C]) getWorkflows(config C, secretsProvider cre.SecretsProv
 	return wfs
 }
 
-func getRunner[C, T any](parse func(configBytes []byte) (C, error), subscribe *subscriber[C, T], run *runner[C, T]) baseRunner[C, T] {
+type preHookRunner[C, T any] struct {
+	runnerInternals
+	trigger    *sdk.Trigger
+	config     C
+	sp         cre.SecretsProvider
+	setRuntime func(maxResponseSize uint64)
+}
+
+var _ baseRunner[any, cre.Runtime] = (*preHookRunner[any, cre.Runtime])(nil)
+
+func (p *preHookRunner[C, T]) cfg() C {
+	return p.config
+}
+
+func (p *preHookRunner[C, T]) secretsProvider() cre.SecretsProvider {
+	return p.sp
+}
+
+func (p *preHookRunner[C, T]) run(wfs []cre.ExecutionHandler[C, T]) {
+	idx := int(p.trigger.Id)
+	if idx < 0 || idx >= len(wfs) {
+		exitErr(p.runnerInternals, fmt.Sprintf("trigger not found: no workflow handler registered at index %d (trigger ID %d). The workflow has %d handler(s) registered. Verify the trigger subscription matches a registered handler", idx, p.trigger.Id, len(wfs)))
+		return
+	}
+
+	preHookHandler, ok := wfs[idx].(cre.ExecutionHandlerWithPreHook[C, T])
+	if !ok {
+		exitErr(p.runnerInternals, fmt.Sprintf("no preHook registered for handler at index %d (trigger ID %d). The handler was subscribed with preHook enabled but no preHook function was provided", idx, p.trigger.Id))
+		return
+	}
+
+	if p.trigger.Payload == nil {
+		exitErr(p.runnerInternals, fmt.Sprintf("trigger payload is missing for preHook at index %d (trigger ID %d). The trigger event must include a payload", idx, p.trigger.Id))
+		return
+	}
+
+	restrictions, err := preHookHandler.PreHook(p.config, p.trigger.Payload)
+	if err != nil {
+		exitErr(p.runnerInternals, err.Error())
+		return
+	}
+
+	exit(p.runnerInternals, &sdk.ExecutionResult{Result: &sdk.ExecutionResult_Restrictions{Restrictions: restrictions}})
+}
+
+func getRunner[C, T any](parse func(configBytes []byte) (C, error), subscribe *subscriber[C, T], run *runner[C, T], preHook *preHookRunner[C, T]) baseRunner[C, T] {
 	args := run.args()
 
 	// We expect exactly 2 args, i.e. `wasm <blob>`,
@@ -183,6 +234,11 @@ func getRunner[C, T any](parse func(configBytes []byte) (C, error), subscribe *s
 		run.config = c
 		run.setRuntime(execRequest.MaxResponseSize)
 		return run
+	case *sdk.ExecuteRequest_PreHook:
+		preHook.trigger = req.PreHook
+		preHook.config = c
+		preHook.setRuntime(execRequest.MaxResponseSize)
+		return preHook
 	}
 
 	exitErr(subscribe.runnerInternals, fmt.Sprintf("invalid request: unknown request type %T", execRequest.Request))

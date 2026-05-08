@@ -47,6 +47,8 @@ type {{.GoName}} struct {
     {{- end }}
 {{- end }}
 
+{{template "restrictor" (dict "Service" $service)}}
+
 {{- range Labels . }}
     {{- range $name, $value:= .DefaultValues }}
         const {{ SafeGoName $name }} = {{ $value }}

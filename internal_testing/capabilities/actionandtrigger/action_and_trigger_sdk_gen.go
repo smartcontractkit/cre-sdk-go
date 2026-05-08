@@ -82,3 +82,18 @@ func (t *basicTrigger) ConfigAsAny() *anypb.Any {
 func (t *basicTrigger) Adapt(trigger *TriggerEvent) (*TriggerEvent, error) {
 	return trigger, nil
 }
+
+type BasicRestrictor struct {
+}
+
+func (c *BasicRestrictor) LimitAction(maxCalls int32) *sdkpb.CapabilityRestriction {
+	return &sdkpb.CapabilityRestriction{
+		Restriction: &sdkpb.CapabilityRestriction_Method{
+			Method: &sdkpb.MethodRestriction{
+				Id:       "basic-test-action-trigger@1.0.0",
+				Method:   "Action",
+				MaxCalls: maxCalls,
+			},
+		},
+	}
+}
