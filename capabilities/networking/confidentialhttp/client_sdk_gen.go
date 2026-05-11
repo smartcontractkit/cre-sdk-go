@@ -20,11 +20,6 @@ func (c *Client) SendRequest(runtime cre.Runtime, input *ConfidentialHTTPRequest
 	return c.sendRequest(runtime, input)
 }
 
-// SendRequestInTee is the same as SendRequest but accepts a cre.TeeRuntime.
-func (c *Client) SendRequestInTee(runtime cre.TeeRuntime, input *ConfidentialHTTPRequest) cre.Promise[*HTTPResponse] {
-	return c.sendRequest(runtime, input)
-}
-
 func (c *Client) sendRequest(runtime cre.RuntimeBase, input *ConfidentialHTTPRequest) cre.Promise[*HTTPResponse] {
 	wrapped := &anypb.Any{}
 	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
@@ -51,4 +46,19 @@ func (c *Client) sendRequest(runtime cre.RuntimeBase, input *ConfidentialHTTPReq
 
 	return capCallResponse
 
+}
+
+type ClientRestrictor struct {
+}
+
+func (c *ClientRestrictor) LimitSendRequest(maxCalls int32) *sdkpb.CapabilityRestriction {
+	return &sdkpb.CapabilityRestriction{
+		Restriction: &sdkpb.CapabilityRestriction_Method{
+			Method: &sdkpb.MethodRestriction{
+				Id:       "confidential-http@1.0.0-alpha",
+				Method:   "SendRequest",
+				MaxCalls: maxCalls,
+			},
+		},
+	}
 }
