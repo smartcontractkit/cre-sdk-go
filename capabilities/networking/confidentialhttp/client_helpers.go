@@ -419,6 +419,45 @@ func WithOAuth2ClientCredentials[C SecretParam](
 }
 
 // ---------------------------------------------------------------------------
+// mTLS
+// ---------------------------------------------------------------------------
+
+// MtlsOption customizes an MtlsAuth config.
+type MtlsOption func(*MtlsAuth)
+
+// WithMtlsCACert sets an optional CA certificate for server verification.
+// caCert must be declared in VaultDonSecrets.
+func WithMtlsCACert(caCert *SecretIdentifier) MtlsOption {
+	return func(m *MtlsAuth) { m.CaCert = caCert }
+}
+
+// WithMtls configures mutual TLS for the outbound request. clientCert and
+// clientKey are Vault secret references to the PEM-encoded client certificate
+// and private key respectively. Both are appended to VaultDonSecrets
+// automatically. The target URL must use https://.
+//
+//	cert := &confhttp.SecretIdentifier{Key: "my-cert", Namespace: "my-ns"}
+//	key  := &confhttp.SecretIdentifier{Key: "my-key",  Namespace: "my-ns"}
+//	client.Send(runtime, req, confhttp.WithMtls(cert, key))
+func WithMtls(clientCert, clientKey *SecretIdentifier, opts ...MtlsOption) RequestOption {
+	return func(r *ConfidentialHTTPRequest) {
+		var secrets []*SecretIdentifier
+		m := &MtlsAuth{
+			ClientCert: addSecret(clientCert, &secrets),
+			ClientKey:  addSecret(clientKey, &secrets),
+		}
+		for _, o := range opts {
+			o(m)
+		}
+		if m.CaCert != nil {
+			secrets = append(secrets, m.CaCert)
+		}
+		r.Request.Mtls = m
+		r.VaultDonSecrets = append(r.VaultDonSecrets, secrets...)
+	}
+}
+
+// ---------------------------------------------------------------------------
 // OAuth 2.0 — Refresh Token
 // ---------------------------------------------------------------------------
 
