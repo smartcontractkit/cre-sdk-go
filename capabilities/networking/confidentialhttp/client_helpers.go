@@ -4,12 +4,50 @@ import (
 	"github.com/smartcontractkit/cre-sdk-go/cre"
 )
 
-// This file is hand-written (not generated). It provides ergonomic builders
-// for the AuthConfig variants and a Send() convenience wrapper over the
-// generated SendRequest.
-//
-// The generated SendRequest remains available for advanced callers that
-// need to construct the raw *ConfidentialHTTPRequest directly.
+// SecretParam is a type constraint for parameters that accept either a plain
+// string or a *SecretIdentifier. Use *SecretIdentifier for values that must
+// be fetched from the vault; use a plain string for non-sensitive identifiers
+// like a username or client ID.
+type SecretParam interface {
+	string | *SecretIdentifier
+}
+
+// toStringOrSecret converts a SecretParam into a *StringOrSecret proto value.
+// If s is a *SecretIdentifier it is also appended to secrets.
+func toStringOrSecret[S SecretParam](s S, secrets *[]*SecretIdentifier) *StringOrSecret {
+	switch v := any(s).(type) {
+	case *SecretIdentifier:
+		*secrets = append(*secrets, v)
+		return &StringOrSecret{Value: &StringOrSecret_Secret{Secret: v}}
+	case string:
+		return &StringOrSecret{Value: &StringOrSecret_Plain{Plain: v}}
+	}
+	return nil
+}
+
+// toStringOrSecretAny is the runtime equivalent of toStringOrSecret, used
+// when the concrete type is erased (e.g. stored in an option struct as any).
+func toStringOrSecretAny(v any, secrets *[]*SecretIdentifier) *StringOrSecret {
+	switch v := v.(type) {
+	case *SecretIdentifier:
+		*secrets = append(*secrets, v)
+		return &StringOrSecret{Value: &StringOrSecret_Secret{Secret: v}}
+	case string:
+		return &StringOrSecret{Value: &StringOrSecret_Plain{Plain: v}}
+	}
+	return nil
+}
+
+// addSecret appends id to the collector and returns it, for assignment
+// directly into a proto *SecretIdentifier field.
+func addSecret(id *SecretIdentifier, secrets *[]*SecretIdentifier) *SecretIdentifier {
+	*secrets = append(*secrets, id)
+	return id
+}
+
+// ---------------------------------------------------------------------------
+// Send + RequestOption
+// ---------------------------------------------------------------------------
 
 // Send is the recommended entry point for sending a confidential HTTP
 // request. It assembles a *ConfidentialHTTPRequest from the supplied
@@ -17,10 +55,10 @@ import (
 //
 // Typical usage:
 //
+//	apiKey := &confhttp.SecretIdentifier{Key: "cg_key", Namespace: "my-ns"}
 //	client.Send(runtime,
 //	    &confhttp.HTTPRequest{Url: "https://example.com", Method: "GET"},
-//	    confhttp.WithSecrets(mySecret),
-//	    confhttp.WithAuth(confhttp.WithApiKey("x-api-key", "my_api_key")),
+//	    confhttp.WithApiKey("x-api-key", apiKey),
 //	)
 func (c *Client) Send(runtime cre.Runtime, req *HTTPRequest, opts ...RequestOption) cre.Promise[*HTTPResponse] {
 	cr := &ConfidentialHTTPRequest{Request: req}
@@ -34,62 +72,75 @@ func (c *Client) Send(runtime cre.Runtime, req *HTTPRequest, opts ...RequestOpti
 // before it is marshaled and sent.
 type RequestOption func(*ConfidentialHTTPRequest)
 
-// WithSecrets declares the Vault-DON secrets that the capability must fetch
-// before executing the request. Every secret name referenced by an
-// AuthConfig must also appear here.
+// WithSecrets declares additional Vault-DON secrets that the capability must
+// fetch. Secrets passed to auth helpers are registered automatically; use
+// this only for extra secrets not covered by the auth config.
 func WithSecrets(ids ...*SecretIdentifier) RequestOption {
 	return func(r *ConfidentialHTTPRequest) {
 		r.VaultDonSecrets = append(r.VaultDonSecrets, ids...)
 	}
 }
 
-// WithAuth attaches an AuthConfig to the request so the capability signs
-// the outbound request using the selected method.
+// WithAuth attaches a pre-built AuthConfig to the request. Prefer the typed
+// helpers (WithApiKey, WithBasicAuth, …) which set auth and register secrets
+// in one step. This is available for callers who construct *AuthConfig
+// manually.
 func WithAuth(a *AuthConfig) RequestOption {
 	return func(r *ConfidentialHTTPRequest) {
 		r.Auth = a
 	}
 }
 
-// -----------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 // API Key
-// -----------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 
-// WithApiKey constructs an AuthConfig that attaches a secret value to the
-// named header. Example:
+// WithApiKey attaches a secret value to the named header.
 //
-//	WithApiKey("x-api-key", "coingecko_api_key")
-//	WithApiKey("Authorization", "pager_token", "ApiKey ")  // with prefix
-func WithApiKey(headerName, secretName string, valuePrefix ...string) *AuthConfig {
-	prefix := ""
-	if len(valuePrefix) > 0 {
-		prefix = valuePrefix[0]
+//	WithApiKey("x-api-key", secret)
+//	WithApiKey("Authorization", secret, "ApiKey ")  // with prefix
+func WithApiKey(headerName string, secret *SecretIdentifier, valuePrefix ...string) RequestOption {
+	return func(r *ConfidentialHTTPRequest) {
+		var secrets []*SecretIdentifier
+		prefix := ""
+		if len(valuePrefix) > 0 {
+			prefix = valuePrefix[0]
+		}
+		r.Auth = &AuthConfig{Method: &AuthConfig_ApiKey{ApiKey: &ApiKeyAuth{
+			HeaderName:  headerName,
+			Secret:      addSecret(secret, &secrets),
+			ValuePrefix: prefix,
+		}}}
+		r.VaultDonSecrets = append(r.VaultDonSecrets, secrets...)
 	}
-	return &AuthConfig{Method: &AuthConfig_ApiKey{ApiKey: &ApiKeyAuth{
-		HeaderName:  headerName,
-		SecretName:  secretName,
-		ValuePrefix: prefix,
-	}}}
 }
 
-// -----------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 // Basic
-// -----------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 
-// WithBasicAuth constructs an AuthConfig that sends
-// `Authorization: Basic base64(username:password)`.
-func WithBasicAuth(usernameSecretName, passwordSecretName string) *AuthConfig {
-	return &AuthConfig{Method: &AuthConfig_Basic{Basic: &BasicAuth{
-		UsernameSecretName: usernameSecretName,
-		PasswordSecretName: passwordSecretName,
-	}}}
+// WithBasicAuth sends `Authorization: Basic base64(username:password)`.
+// Username can be a plain string or a *SecretIdentifier; password is always
+// a secret.
+//
+//	WithBasicAuth("admin", passwordSecret)
+//	WithBasicAuth(usernameSecret, passwordSecret)
+func WithBasicAuth[U SecretParam](username U, password *SecretIdentifier) RequestOption {
+	return func(r *ConfidentialHTTPRequest) {
+		var secrets []*SecretIdentifier
+		r.Auth = &AuthConfig{Method: &AuthConfig_Basic{Basic: &BasicAuth{
+			Username: toStringOrSecret(username, &secrets),
+			Password: addSecret(password, &secrets),
+		}}}
+		r.VaultDonSecrets = append(r.VaultDonSecrets, secrets...)
+	}
 }
 
-// -----------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 // Bearer
-// -----------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 
-// BearerOption customizes a BearerToken AuthConfig.
+// BearerOption customizes a BearerToken auth config.
 type BearerOption func(*BearerAuth)
 
 // BearerHeader overrides the header name (default "Authorization").
@@ -98,7 +149,6 @@ func BearerHeader(name string) BearerOption {
 }
 
 // BearerPrefix overrides the value prefix (default "Bearer ").
-// Useful for e.g. GitHub's "Authorization: token <pat>".
 func BearerPrefix(prefix string) BearerOption {
 	return func(b *BearerAuth) { b.ValuePrefix = prefix }
 }
@@ -106,17 +156,21 @@ func BearerPrefix(prefix string) BearerOption {
 // WithBearerToken attaches a pre-issued bearer token as
 // `Authorization: Bearer <token>` (defaults). Header name / prefix can be
 // overridden via BearerHeader / BearerPrefix.
-func WithBearerToken(tokenSecretName string, opts ...BearerOption) *AuthConfig {
-	b := &BearerAuth{TokenSecretName: tokenSecretName}
-	for _, o := range opts {
-		o(b)
+func WithBearerToken(token *SecretIdentifier, opts ...BearerOption) RequestOption {
+	return func(r *ConfidentialHTTPRequest) {
+		var secrets []*SecretIdentifier
+		b := &BearerAuth{Token: addSecret(token, &secrets)}
+		for _, o := range opts {
+			o(b)
+		}
+		r.Auth = &AuthConfig{Method: &AuthConfig_Bearer{Bearer: b}}
+		r.VaultDonSecrets = append(r.VaultDonSecrets, secrets...)
 	}
-	return &AuthConfig{Method: &AuthConfig_Bearer{Bearer: b}}
 }
 
-// -----------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 // HMAC-SHA256
-// -----------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 
 // HmacSha256Option customizes a HmacSha256 AuthConfig.
 type HmacSha256Option func(*HmacSha256)
@@ -135,71 +189,92 @@ func HmacEncoding(enc string) HmacSha256Option {
 // WithHmacSha256 signs requests using HMAC-SHA256 over the canonical string
 //
 //	method "\n" url "\n" sha256(body) "\n" timestamp.
-//
-// Signature is attached to signatureHeader (default "X-Signature") and
-// the timestamp to timestampHeader (default "X-Timestamp"). Pass empty
-// strings to use the defaults.
-func WithHmacSha256(secretName, signatureHeader, timestampHeader string, opts ...HmacSha256Option) *AuthConfig {
-	h := &HmacSha256{
-		SecretName:      secretName,
-		SignatureHeader: signatureHeader,
-		TimestampHeader: timestampHeader,
+func WithHmacSha256(secret *SecretIdentifier, signatureHeader, timestampHeader string, opts ...HmacSha256Option) RequestOption {
+	return func(r *ConfidentialHTTPRequest) {
+		var secrets []*SecretIdentifier
+		h := &HmacSha256{
+			Secret:          addSecret(secret, &secrets),
+			SignatureHeader: signatureHeader,
+			TimestampHeader: timestampHeader,
+		}
+		for _, o := range opts {
+			o(h)
+		}
+		r.Auth = &AuthConfig{Method: &AuthConfig_Hmac{Hmac: &HmacAuth{
+			Variant: &HmacAuth_Sha256{Sha256: h},
+		}}}
+		r.VaultDonSecrets = append(r.VaultDonSecrets, secrets...)
 	}
-	for _, o := range opts {
-		o(h)
-	}
-	return &AuthConfig{Method: &AuthConfig_Hmac{Hmac: &HmacAuth{
-		Variant: &HmacAuth_Sha256{Sha256: h},
-	}}}
 }
 
-// -----------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 // AWS SigV4
-// -----------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+
+type sigV4Config struct {
+	sessionToken    *SecretIdentifier
+	signedHeaders   []string
+	unsignedPayload bool
+}
 
 // SigV4Option customizes an AwsSigV4 AuthConfig.
-type SigV4Option func(*AwsSigV4)
+type SigV4Option func(*sigV4Config)
 
 // WithSessionToken includes a temporary STS session token.
-func WithSessionToken(secretName string) SigV4Option {
-	return func(a *AwsSigV4) { a.SessionTokenSecretName = secretName }
+func WithSessionToken(secret *SecretIdentifier) SigV4Option {
+	return func(c *sigV4Config) { c.sessionToken = secret }
 }
 
 // WithSignedHeaders overrides the default set of signed headers.
 func WithSignedHeaders(headers ...string) SigV4Option {
-	return func(a *AwsSigV4) { a.SignedHeaders = headers }
+	return func(c *sigV4Config) { c.signedHeaders = headers }
 }
 
-// WithUnsignedPayload enables S3-style UNSIGNED-PAYLOAD signing (useful for
-// large body uploads).
+// WithUnsignedPayload enables S3-style UNSIGNED-PAYLOAD signing.
 func WithUnsignedPayload(v bool) SigV4Option {
-	return func(a *AwsSigV4) { a.UnsignedPayload = v }
+	return func(c *sigV4Config) { c.unsignedPayload = v }
 }
 
 // WithAwsSigV4 signs outbound requests using AWS Signature Version 4.
-// Example:
+// accessKeyID can be a plain string or a *SecretIdentifier; secretAccessKey
+// is always a secret.
 //
-//	WithAwsSigV4("aws_ak", "aws_sk", "us-east-1", "execute-api")
-//	WithAwsSigV4("aws_ak", "aws_sk", "us-east-1", "s3",
-//	    WithSessionToken("aws_st"), WithUnsignedPayload(true))
-func WithAwsSigV4(accessKeyIDSecretName, secretAccessKeySecretName, region, service string, opts ...SigV4Option) *AuthConfig {
-	a := &AwsSigV4{
-		AccessKeyIdSecretName:     accessKeyIDSecretName,
-		SecretAccessKeySecretName: secretAccessKeySecretName,
-		Region:                    region,
-		Service:                   service,
+//	WithAwsSigV4("AKIAIOSFODNN7EXAMPLE", skSecret, "us-east-1", "s3")
+//	WithAwsSigV4(akSecret, skSecret, "us-east-1", "execute-api",
+//	    WithSessionToken(stsSecret), WithUnsignedPayload(true))
+func WithAwsSigV4[A SecretParam](
+	accessKeyID A, secretAccessKey *SecretIdentifier, region, service string, opts ...SigV4Option,
+) RequestOption {
+	return func(r *ConfidentialHTTPRequest) {
+		var secrets []*SecretIdentifier
+
+		cfg := &sigV4Config{}
+		for _, o := range opts {
+			o(cfg)
+		}
+
+		a := &AwsSigV4{
+			AccessKeyId:     toStringOrSecret(accessKeyID, &secrets),
+			SecretAccessKey: addSecret(secretAccessKey, &secrets),
+			Region:          region,
+			Service:         service,
+			SignedHeaders:   cfg.signedHeaders,
+			UnsignedPayload: cfg.unsignedPayload,
+		}
+		if cfg.sessionToken != nil {
+			a.SessionToken = addSecret(cfg.sessionToken, &secrets)
+		}
+
+		r.Auth = &AuthConfig{Method: &AuthConfig_Hmac{Hmac: &HmacAuth{
+			Variant: &HmacAuth_AwsSigV4{AwsSigV4: a},
+		}}}
+		r.VaultDonSecrets = append(r.VaultDonSecrets, secrets...)
 	}
-	for _, o := range opts {
-		o(a)
-	}
-	return &AuthConfig{Method: &AuthConfig_Hmac{Hmac: &HmacAuth{
-		Variant: &HmacAuth_AwsSigV4{AwsSigV4: a},
-	}}}
 }
 
-// -----------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 // HMAC Custom
-// -----------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 
 // Hash identifies the hash algorithm used by HmacCustom.
 type Hash = HmacCustom_Hash
@@ -209,10 +284,10 @@ const (
 	HashSHA512 Hash = HmacCustom_HASH_SHA512
 )
 
-// HmacCustomOpts carries the parameters for a fully user-defined HMAC
-// signing scheme.
-type HmacCustomOpts struct {
-	SecretName        string
+// HmacCustomConfig carries the non-secret parameters for a fully
+// user-defined HMAC signing scheme. The secret itself is passed as the first
+// argument to WithHmacCustom.
+type HmacCustomConfig struct {
 	CanonicalTemplate string // Go text/template
 	Hash              Hash
 	Encoding          string // "hex" (default) or "base64"
@@ -227,128 +302,197 @@ type HmacCustomOpts struct {
 //
 //	{{.method}} {{.url}} {{.path}} {{.query}} {{.body}} {{.body_sha256}}
 //	{{.timestamp}} {{.nonce}} {{header "X-Foo"}}
-func WithHmacCustom(opts HmacCustomOpts) *AuthConfig {
-	return &AuthConfig{Method: &AuthConfig_Hmac{Hmac: &HmacAuth{
-		Variant: &HmacAuth_Custom{Custom: &HmacCustom{
-			SecretName:        opts.SecretName,
-			CanonicalTemplate: opts.CanonicalTemplate,
-			Hash:              opts.Hash,
-			Encoding:          opts.Encoding,
-			SignatureHeader:   opts.SignatureHeader,
-			SignaturePrefix:   opts.SignaturePrefix,
-			TimestampHeader:   opts.TimestampHeader,
-			NonceHeader:       opts.NonceHeader,
-		}},
-	}}}
+func WithHmacCustom(secret *SecretIdentifier, cfg HmacCustomConfig) RequestOption {
+	return func(r *ConfidentialHTTPRequest) {
+		var secrets []*SecretIdentifier
+		r.Auth = &AuthConfig{Method: &AuthConfig_Hmac{Hmac: &HmacAuth{
+			Variant: &HmacAuth_Custom{Custom: &HmacCustom{
+				Secret:            addSecret(secret, &secrets),
+				CanonicalTemplate: cfg.CanonicalTemplate,
+				Hash:              cfg.Hash,
+				Encoding:          cfg.Encoding,
+				SignatureHeader:   cfg.SignatureHeader,
+				SignaturePrefix:   cfg.SignaturePrefix,
+				TimestampHeader:   cfg.TimestampHeader,
+				NonceHeader:       cfg.NonceHeader,
+			}},
+		}}}
+		r.VaultDonSecrets = append(r.VaultDonSecrets, secrets...)
+	}
 }
 
-// -----------------------------------------------------------------------------
-// OAuth 2.0 — Client Credentials
-// -----------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// OAuth 2.0 — shared options
+// ---------------------------------------------------------------------------
+
+type oauth2Config struct {
+	scopes           []string
+	audience         string
+	clientAuthMethod string
+	clientID         any // string or *SecretIdentifier, set via WithClientID
+	clientSecret     *SecretIdentifier
+	extraParams      map[string]string
+}
 
 // OAuth2Option customizes an OAuth2 AuthConfig. The same type is accepted by
 // both WithOAuth2ClientCredentials and WithOAuth2RefreshToken; not every
 // option applies to both grants (e.g. WithAudience is only meaningful for
 // client_credentials).
-type OAuth2Option func(*oauth2Opts)
-
-type oauth2Opts struct {
-	scopes           []string
-	audience         string
-	clientAuthMethod string
-	clientIDSecret   string
-	clientSecret     string
-	extraParams      map[string]string
-}
+type OAuth2Option func(*oauth2Config)
 
 // WithScopes sets the OAuth2 scope list.
 func WithScopes(scopes ...string) OAuth2Option {
-	return func(o *oauth2Opts) { o.scopes = scopes }
+	return func(o *oauth2Config) { o.scopes = scopes }
 }
 
 // WithAudience sets the Auth0-style "audience" parameter (client_credentials).
 func WithAudience(a string) OAuth2Option {
-	return func(o *oauth2Opts) { o.audience = a }
+	return func(o *oauth2Config) { o.audience = a }
 }
 
 // WithOAuth2ClientBasic sends client_id/client_secret via HTTP Basic Auth
 // on the token endpoint (default behavior).
 func WithOAuth2ClientBasic() OAuth2Option {
-	return func(o *oauth2Opts) { o.clientAuthMethod = "basic_auth" }
+	return func(o *oauth2Config) { o.clientAuthMethod = "basic_auth" }
 }
 
 // WithOAuth2ClientBody sends client_id/client_secret in the request body.
 func WithOAuth2ClientBody() OAuth2Option {
-	return func(o *oauth2Opts) { o.clientAuthMethod = "request_body" }
+	return func(o *oauth2Config) { o.clientAuthMethod = "request_body" }
 }
 
-// WithClientID attaches a client_id secret name (refresh_token grant).
-func WithClientID(secretName string) OAuth2Option {
-	return func(o *oauth2Opts) { o.clientIDSecret = secretName }
+// WithClientID attaches a client_id (refresh_token grant). The value can be
+// a plain string or a *SecretIdentifier.
+func WithClientID[S SecretParam](id S) OAuth2Option {
+	return func(o *oauth2Config) { o.clientID = any(id) }
 }
 
-// WithClientSecret attaches a client_secret secret name (refresh_token grant).
-func WithClientSecret(secretName string) OAuth2Option {
-	return func(o *oauth2Opts) { o.clientSecret = secretName }
+// WithClientSecret attaches a client_secret secret (refresh_token grant).
+func WithClientSecret(secret *SecretIdentifier) OAuth2Option {
+	return func(o *oauth2Config) { o.clientSecret = secret }
 }
 
 // WithExtraParams merges extra form params sent to the token endpoint.
 func WithExtraParams(params map[string]string) OAuth2Option {
-	return func(o *oauth2Opts) { o.extraParams = params }
+	return func(o *oauth2Config) { o.extraParams = params }
 }
+
+// ---------------------------------------------------------------------------
+// OAuth 2.0 — Client Credentials
+// ---------------------------------------------------------------------------
 
 // WithOAuth2ClientCredentials constructs an OAuth2 client_credentials
-// AuthConfig. The capability will exchange client_id + client_secret for an
-// access token at tokenURL, cache it per-workflow-owner, and attach
+// RequestOption. The capability exchanges client_id + client_secret for an
+// access token at tokenURL, caches it per-workflow-owner, and attaches
 // `Authorization: Bearer <access_token>` to the outbound request.
 //
-// tokenURL must be https://.
-func WithOAuth2ClientCredentials(tokenURL, clientIDSecretName, clientSecretSecretName string, opts ...OAuth2Option) *AuthConfig {
-	o := &oauth2Opts{}
-	for _, opt := range opts {
-		opt(o)
+// clientID can be a plain string or a *SecretIdentifier; clientSecret is
+// always a secret. tokenURL must be https://.
+//
+//	WithOAuth2ClientCredentials("https://idp/token", "my-client-id", csecSecret)
+//	WithOAuth2ClientCredentials("https://idp/token", cidSecret, csecSecret)
+func WithOAuth2ClientCredentials[C SecretParam](
+	tokenURL string, clientID C, clientSecret *SecretIdentifier, opts ...OAuth2Option,
+) RequestOption {
+	return func(r *ConfidentialHTTPRequest) {
+		var secrets []*SecretIdentifier
+
+		o := &oauth2Config{}
+		for _, opt := range opts {
+			opt(o)
+		}
+
+		cc := &OAuth2ClientCredentials{
+			TokenUrl:         tokenURL,
+			ClientId:         toStringOrSecret(clientID, &secrets),
+			ClientSecret:     addSecret(clientSecret, &secrets),
+			Scopes:           o.scopes,
+			Audience:         o.audience,
+			ClientAuthMethod: o.clientAuthMethod,
+			ExtraParams:      o.extraParams,
+		}
+		r.Auth = &AuthConfig{Method: &AuthConfig_Oauth2{Oauth2: &OAuth2Auth{
+			Variant: &OAuth2Auth_ClientCredentials{ClientCredentials: cc},
+		}}}
+		r.VaultDonSecrets = append(r.VaultDonSecrets, secrets...)
 	}
-	cc := &OAuth2ClientCredentials{
-		TokenUrl:               tokenURL,
-		ClientIdSecretName:     clientIDSecretName,
-		ClientSecretSecretName: clientSecretSecretName,
-		Scopes:                 o.scopes,
-		Audience:               o.audience,
-		ClientAuthMethod:       o.clientAuthMethod,
-		ExtraParams:            o.extraParams,
-	}
-	return &AuthConfig{Method: &AuthConfig_Oauth2{Oauth2: &OAuth2Auth{
-		Variant: &OAuth2Auth_ClientCredentials{ClientCredentials: cc},
-	}}}
 }
 
-// -----------------------------------------------------------------------------
-// OAuth 2.0 — Refresh Token
-// -----------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// mTLS
+// ---------------------------------------------------------------------------
 
-// WithOAuth2RefreshToken constructs an OAuth2 refresh_token AuthConfig. The
-// workflow must have a long-lived refresh_token stored in Vault. The
+// MtlsOption customizes an MtlsAuth config.
+type MtlsOption func(*MtlsAuth)
+
+// WithMtlsCACert sets an optional CA certificate for server verification.
+// caCert must be declared in VaultDonSecrets.
+func WithMtlsCACert(caCert *SecretIdentifier) MtlsOption {
+	return func(m *MtlsAuth) { m.CaCert = caCert }
+}
+
+// WithMtls configures mutual TLS for the outbound request. clientCert and
+// clientKey are Vault secret references to the PEM-encoded client certificate
+// and private key respectively. Both are appended to VaultDonSecrets
+// automatically. The target URL must use https://.
+//
+//	cert := &confhttp.SecretIdentifier{Key: "my-cert", Namespace: "my-ns"}
+//	key  := &confhttp.SecretIdentifier{Key: "my-key",  Namespace: "my-ns"}
+//	client.Send(runtime, req, confhttp.WithMtls(cert, key))
+func WithMtls(clientCert, clientKey *SecretIdentifier, opts ...MtlsOption) RequestOption {
+	return func(r *ConfidentialHTTPRequest) {
+		var secrets []*SecretIdentifier
+		m := &MtlsAuth{
+			ClientCert: addSecret(clientCert, &secrets),
+			ClientKey:  addSecret(clientKey, &secrets),
+		}
+		for _, o := range opts {
+			o(m)
+		}
+		if m.CaCert != nil {
+			secrets = append(secrets, m.CaCert)
+		}
+		r.Request.Mtls = m
+		r.VaultDonSecrets = append(r.VaultDonSecrets, secrets...)
+	}
+}
+
+// ---------------------------------------------------------------------------
+// OAuth 2.0 — Refresh Token
+// ---------------------------------------------------------------------------
+
+// WithOAuth2RefreshToken constructs an OAuth2 refresh_token RequestOption.
+// The workflow must have a long-lived refresh_token stored in Vault. The
 // capability exchanges it at tokenURL for an access_token on cache miss.
 //
 // tokenURL must be https://.
-//
-// Note: if the IdP rotates refresh tokens on every exchange, the capability
-// cannot write the new token back to Vault. Prefer IdPs where refresh
-// rotation is disabled, or use client_credentials when possible.
-func WithOAuth2RefreshToken(tokenURL, refreshTokenSecretName string, opts ...OAuth2Option) *AuthConfig {
-	o := &oauth2Opts{}
-	for _, opt := range opts {
-		opt(o)
+func WithOAuth2RefreshToken(
+	tokenURL string, refreshToken *SecretIdentifier, opts ...OAuth2Option,
+) RequestOption {
+	return func(r *ConfidentialHTTPRequest) {
+		var secrets []*SecretIdentifier
+
+		o := &oauth2Config{}
+		for _, opt := range opts {
+			opt(o)
+		}
+
+		rt := &OAuth2RefreshToken{
+			TokenUrl:     tokenURL,
+			RefreshToken: addSecret(refreshToken, &secrets),
+			Scopes:       o.scopes,
+			ExtraParams:  o.extraParams,
+		}
+		if o.clientID != nil {
+			rt.ClientId = toStringOrSecretAny(o.clientID, &secrets)
+		}
+		if o.clientSecret != nil {
+			rt.ClientSecret = addSecret(o.clientSecret, &secrets)
+		}
+
+		r.Auth = &AuthConfig{Method: &AuthConfig_Oauth2{Oauth2: &OAuth2Auth{
+			Variant: &OAuth2Auth_RefreshToken{RefreshToken: rt},
+		}}}
+		r.VaultDonSecrets = append(r.VaultDonSecrets, secrets...)
 	}
-	rt := &OAuth2RefreshToken{
-		TokenUrl:               tokenURL,
-		RefreshTokenSecretName: refreshTokenSecretName,
-		ClientIdSecretName:     o.clientIDSecret,
-		ClientSecretSecretName: o.clientSecret,
-		Scopes:                 o.scopes,
-		ExtraParams:            o.extraParams,
-	}
-	return &AuthConfig{Method: &AuthConfig_Oauth2{Oauth2: &OAuth2Auth{
-		Variant: &OAuth2Auth_RefreshToken{RefreshToken: rt},
-	}}}
 }
