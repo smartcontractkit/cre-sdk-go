@@ -318,6 +318,8 @@ func (c *Client) WriteReport(runtime cre.Runtime, input *WriteCreReportRequest) 
 
 }
 
+const AdiTestnet = 9418205736192840573
+
 const ApechainTestnetCurtis = 9900119385908781505
 
 const ArcTestnet = 3034092155422581607
@@ -331,6 +333,8 @@ const BinanceSmartChainMainnet = 11344663589394136015
 const BinanceSmartChainTestnet = 13264668187771770619
 
 const CeloMainnet = 1346049177634351622
+
+const CeloSepolia = 3761762704474186180
 
 const CronosTestnet = 2995292832068775165
 
@@ -420,6 +424,8 @@ const XlayerTestnet = 10212741611335999305
 
 func ChainSelectorFromName(name string) (uint64, error) {
 	switch name {
+	case "adi-testnet":
+		return AdiTestnet, nil
 	case "apechain-testnet-curtis":
 		return ApechainTestnetCurtis, nil
 	case "arc-testnet":
@@ -434,6 +440,8 @@ func ChainSelectorFromName(name string) (uint64, error) {
 		return BinanceSmartChainTestnet, nil
 	case "celo-mainnet":
 		return CeloMainnet, nil
+	case "celo-sepolia":
+		return CeloSepolia, nil
 	case "cronos-testnet":
 		return CronosTestnet, nil
 	case "dtcc-testnet-andesite":
