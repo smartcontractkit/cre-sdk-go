@@ -318,6 +318,8 @@ func (c *Client) WriteReport(runtime cre.Runtime, input *WriteCreReportRequest) 
 
 }
 
+const AdiMainnet = 4059281736450291836
+
 const AdiTestnet = 9418205736192840573
 
 const ApechainTestnetCurtis = 9900119385908781505
@@ -424,6 +426,8 @@ const XlayerTestnet = 10212741611335999305
 
 func ChainSelectorFromName(name string) (uint64, error) {
 	switch name {
+	case "adi-mainnet":
+		return AdiMainnet, nil
 	case "adi-testnet":
 		return AdiTestnet, nil
 	case "apechain-testnet-curtis":
