@@ -430,11 +430,10 @@ func (x *Account) GetSpace() uint64 {
 
 // Compute budget configuration when submitting txs.
 type ComputeConfig struct {
-	state           protoimpl.MessageState `protogen:"open.v1"`
-	ComputeLimit    uint32                 `protobuf:"varint,1,opt,name=compute_limit,json=computeLimit,proto3" json:"compute_limit,omitempty"`            // max CUs (approx per-tx limit)
-	ComputeMaxPrice uint64                 `protobuf:"varint,2,opt,name=compute_max_price,json=computeMaxPrice,proto3" json:"compute_max_price,omitempty"` // max lamports per CU
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ComputeLimit  uint32                 `protobuf:"varint,1,opt,name=compute_limit,json=computeLimit,proto3" json:"compute_limit,omitempty"` // max CUs (approx per-tx limit)
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ComputeConfig) Reset() {
@@ -470,13 +469,6 @@ func (*ComputeConfig) Descriptor() ([]byte, []int) {
 func (x *ComputeConfig) GetComputeLimit() uint32 {
 	if x != nil {
 		return x.ComputeLimit
-	}
-	return 0
-}
-
-func (x *ComputeConfig) GetComputeMaxPrice() uint64 {
-	if x != nil {
-		return x.ComputeMaxPrice
 	}
 	return 0
 }
@@ -3433,10 +3425,9 @@ const file_capabilities_blockchain_solana_v1alpha_client_proto_rawDesc = "" +
 	"executable\x120\n" +
 	"\n" +
 	"rent_epoch\x18\x05 \x01(\v2\x11.values.v1.BigIntR\trentEpoch\x12\x14\n" +
-	"\x05space\x18\x06 \x01(\x04R\x05space\"`\n" +
+	"\x05space\x18\x06 \x01(\x04R\x05space\"4\n" +
 	"\rComputeConfig\x12#\n" +
-	"\rcompute_limit\x18\x01 \x01(\rR\fcomputeLimit\x12*\n" +
-	"\x11compute_max_price\x18\x02 \x01(\x04R\x0fcomputeMaxPrice\"\x95\x01\n" +
+	"\rcompute_limit\x18\x01 \x01(\rR\fcomputeLimit\"\x95\x01\n" +
 	"\x0fDataBytesOrJSON\x12P\n" +
 	"\bencoding\x18\x01 \x01(\x0e24.capabilities.blockchain.solana.v1alpha.EncodingTypeR\bencoding\x12\x12\n" +
 	"\x03raw\x18\x02 \x01(\fH\x00R\x03raw\x12\x14\n" +
@@ -3710,7 +3701,7 @@ const file_capabilities_blockchain_solana_v1alpha_client_proto_rawDesc = "" +
 	"\x17COMPARISON_OPERATOR_LTE\x10\x05*\x82\x01\n" +
 	"\x1fReceiverContractExecutionStatus\x12.\n" +
 	"*RECEIVER_CONTRACT_EXECUTION_STATUS_SUCCESS\x10\x00\x12/\n" +
-	"+RECEIVER_CONTRACT_EXECUTION_STATUS_REVERTED\x10\x012\xb8\f\n" +
+	"+RECEIVER_CONTRACT_EXECUTION_STATUS_REVERTED\x10\x012\x80\f\n" +
 	"\x06Client\x12\xa4\x01\n" +
 	"\x16GetAccountInfoWithOpts\x12E.capabilities.blockchain.solana.v1alpha.GetAccountInfoWithOptsRequest\x1aC.capabilities.blockchain.solana.v1alpha.GetAccountInfoWithOptsReply\x12\x80\x01\n" +
 	"\n" +
@@ -3723,14 +3714,10 @@ const file_capabilities_blockchain_solana_v1alpha_client_proto_rawDesc = "" +
 	"\x0eGetTransaction\x12=.capabilities.blockchain.solana.v1alpha.GetTransactionRequest\x1a;.capabilities.blockchain.solana.v1alpha.GetTransactionReply\x12|\n" +
 	"\n" +
 	"LogTrigger\x12?.capabilities.blockchain.solana.v1alpha.FilterLogTriggerRequest\x1a+.capabilities.blockchain.solana.v1alpha.Log0\x01\x12\x83\x01\n" +
-	"\vWriteReport\x12:.capabilities.blockchain.solana.v1alpha.WriteReportRequest\x1a8.capabilities.blockchain.solana.v1alpha.WriteReportReply\x1a}\x82\xb5\x18y\b\x01\x12\fsolana@1.0.0\x1ag\n" +
-	"\rChainSelector\x12V\x12T\n" +
+	"\vWriteReport\x12:.capabilities.blockchain.solana.v1alpha.WriteReportRequest\x1a8.capabilities.blockchain.solana.v1alpha.WriteReportReply\x1aE\x82\xb5\x18A\b\x01\x12\fsolana@1.0.0\x1a/\n" +
+	"\rChainSelector\x12\x1e\x12\x1c\n" +
 	"\x1a\n" +
-	"\rsolana-devnet\x10\xdf\uf327\xa9\xfc\xb1\xf6\xe3\x01\n" +
-	"\x1a\n" +
-	"\x0esolana-mainnet\x10\xe7\x93ߌ\xb6\x9f\xae\xdd\x01\n" +
-	"\x1a\n" +
-	"\x0esolana-testnet\x10\xaf\x9a\xea\xd0šӻWb\x06proto3"
+	"\rsolana-devnet\x10\xdf\uf327\xa9\xfc\xb1\xf6\xe3\x01b\x06proto3"
 
 var (
 	file_capabilities_blockchain_solana_v1alpha_client_proto_rawDescOnce sync.Once
