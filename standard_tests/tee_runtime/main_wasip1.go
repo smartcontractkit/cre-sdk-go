@@ -8,7 +8,7 @@ import (
 	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basictrigger"
 )
 
-var teeRequirements = []cre.TeeAndRegions{{Type: cre.TeeType_TEE_TYPE_AWS_NITRO, Regions: []string{"us-west-2"}}}
+var teeRequirements = cre.OneOfTees{cre.Nitro{Regions: []cre.NitroRegion{cre.NitroUsWest2}}}
 
 func subscribe(_ []byte, _ *slog.Logger, _ cre.SecretsProvider) (cre.Workflow[[]byte], error) {
 	return cre.Workflow[[]byte]{

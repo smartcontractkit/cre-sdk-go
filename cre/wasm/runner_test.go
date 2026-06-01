@@ -169,7 +169,7 @@ func TestRunner_Run(t *testing.T) {
 
 func TestHandlerInTee(t *testing.T) {
 	t.Run("specified list sets requirements on subscription", func(t *testing.T) {
-		acceptedTees := []cre.TeeAndRegions{{Type: cre.TeeType_TEE_TYPE_AWS_NITRO, Regions: []string{"us-west-2"}}}
+		acceptedTees := cre.OneOfTees{cre.Nitro{Regions: []cre.NitroRegion{cre.NitroUsWest2}}}
 
 		internals := testRunnerInternals(t, subscribeRequest)
 		dr := newRunner(func(b []byte) (string, error) { return string(b), nil }, internals, testRuntimeInternals(t))
@@ -212,7 +212,7 @@ func TestHandlerInTee(t *testing.T) {
 					func(_ string, _ cre.TeeRuntime, _ *basictrigger.Outputs) (string, error) {
 						return "tee-result", nil
 					},
-					cre.AnyTee{Regions: []string{"us-west-2"}},
+					cre.AnyTeeInRegions{Regions: []cre.Region{cre.AwsUsWest2}},
 				),
 			}, nil
 		})
@@ -260,7 +260,7 @@ func TestHandlerInTee(t *testing.T) {
 	})
 
 	t.Run("tee handler callback receives TeeRuntime", func(t *testing.T) {
-		acceptedTees := []cre.TeeAndRegions{{Type: cre.TeeType_TEE_TYPE_AWS_NITRO, Regions: []string{"us-west-2"}}}
+		acceptedTees := cre.OneOfTees{cre.Nitro{Regions: []cre.NitroRegion{cre.NitroUsWest2}}}
 
 		triggerReq := &sdk.ExecuteRequest{
 			Config:          anyConfig,
@@ -441,7 +441,7 @@ func TestHandlerWithPreHook(t *testing.T) {
 	})
 
 	t.Run("HandlerInTeeWithPreHook sets both Requirements and PreHook on subscription", func(t *testing.T) {
-		acceptedTees := []cre.TeeAndRegions{{Type: cre.TeeType_TEE_TYPE_AWS_NITRO, Regions: []string{"us-west-2"}}}
+		acceptedTees := cre.OneOfTees{cre.Nitro{Regions: []cre.NitroRegion{cre.NitroUsWest2}}}
 		dr := getTestRunner(t, subscribeRequest)
 		dr.Run(func(string, *slog.Logger, cre.SecretsProvider) (cre.Workflow[string], error) {
 			return cre.Workflow[string]{

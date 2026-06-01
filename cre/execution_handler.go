@@ -50,20 +50,20 @@ func HandlerWithPreHook[C any, M proto.Message, T any, O any](
 
 // HandlerInTee creates a coupling of a Trigger and a callback function to be used in TEE (Trusted Execution Environment) mode.
 // The coupling ensures that when the Trigger is invoked, the callback function is called with a TeeRuntime.
-func HandlerInTee[C any, M proto.Message, T any, O any, A AcceptedTees](trigger Trigger[M, T], callback func(config C, runtime TeeRuntime, payload T) (O, error), tees A) ExecutionHandler[C, Runtime] {
-	return handler(trigger, wrapTeeCallback(callback), teeRequirements(tees))
+func HandlerInTee[C any, M proto.Message, T any, O any](trigger Trigger[M, T], callback func(config C, runtime TeeRuntime, payload T) (O, error), tees TeeConstraint) ExecutionHandler[C, Runtime] {
+	return handler(trigger, wrapTeeCallback(callback), tees.toRequirements())
 }
 
 // HandlerInTeeWithPreHook is like HandlerInTee but also registers a PreHook that runs
-// before the workflow execution to produce the restrictions for that execution.
-func HandlerInTeeWithPreHook[C any, M proto.Message, T any, O any, A AcceptedTees](
+// in the DON before the workflow execution to produce the restrictions for that execution.
+func HandlerInTeeWithPreHook[C any, M proto.Message, T any, O any](
 	trigger Trigger[M, T],
 	callback func(config C, runtime TeeRuntime, payload T) (O, error),
-	tees A,
+	tees TeeConstraint,
 	preHook func(config C, payload T) (*sdk.Restrictions, error),
 ) ExecutionHandler[C, Runtime] {
 	return &executionHandlerWithPreHookImpl[C, Runtime]{
-		ExecutionHandler: handler(trigger, wrapTeeCallback(callback), teeRequirements(tees)),
+		ExecutionHandler: handler(trigger, wrapTeeCallback(callback), tees.toRequirements()),
 		preHook:          wrapTypedPreHook(trigger, preHook),
 	}
 }
@@ -90,21 +90,6 @@ func wrapTypedPreHook[C any, M proto.Message, T any](trigger Trigger[M, T], preH
 		}
 		return preHook(config, input)
 	}
-}
-
-func teeRequirements[A AcceptedTees](tees A) *sdk.Requirements {
-	reqs := &sdk.Requirements{Tee: &sdk.Tee{}}
-	switch typedTees := any(tees).(type) {
-	case []TeeAndRegions:
-		typesRegions := make([]*sdk.TeeTypeAndRegions, len(typedTees))
-		for i, tee := range typedTees {
-			typesRegions[i] = &sdk.TeeTypeAndRegions{Type: tee.Type, Regions: tee.Regions}
-		}
-		reqs.Tee.Item = &sdk.Tee_TeeTypesAndRegions{TeeTypesAndRegions: &sdk.TeeTypesAndRegions{TeeTypeAndRegions: typesRegions}}
-	case AnyTee:
-		reqs.Tee.Item = &sdk.Tee_AnyRegions{AnyRegions: &sdk.Regions{Regions: typedTees.Regions}}
-	}
-	return reqs
 }
 
 func handler[R, C any, M proto.Message, T any, O any](trigger Trigger[M, T], callback func(config C, runtime R, payload T) (O, error), requirements *sdk.Requirements) ExecutionHandler[C, R] {
