@@ -20,6 +20,10 @@ type Client struct {
 }
 
 func (c *Client) AccountAPTBalance(runtime cre.Runtime, input *AccountAPTBalanceRequest) cre.Promise[*AccountAPTBalanceReply] {
+	return c.accountAPTBalance(runtime, input)
+}
+
+func (c *Client) accountAPTBalance(runtime cre.RuntimeBase, input *AccountAPTBalanceRequest) cre.Promise[*AccountAPTBalanceReply] {
 	wrapped := &anypb.Any{}
 	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
@@ -48,6 +52,10 @@ func (c *Client) AccountAPTBalance(runtime cre.Runtime, input *AccountAPTBalance
 }
 
 func (c *Client) View(runtime cre.Runtime, input *ViewRequest) cre.Promise[*ViewReply] {
+	return c.view(runtime, input)
+}
+
+func (c *Client) view(runtime cre.RuntimeBase, input *ViewRequest) cre.Promise[*ViewReply] {
 	wrapped := &anypb.Any{}
 	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
@@ -76,6 +84,10 @@ func (c *Client) View(runtime cre.Runtime, input *ViewRequest) cre.Promise[*View
 }
 
 func (c *Client) TransactionByHash(runtime cre.Runtime, input *TransactionByHashRequest) cre.Promise[*TransactionByHashReply] {
+	return c.transactionByHash(runtime, input)
+}
+
+func (c *Client) transactionByHash(runtime cre.RuntimeBase, input *TransactionByHashRequest) cre.Promise[*TransactionByHashReply] {
 	wrapped := &anypb.Any{}
 	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
@@ -104,6 +116,10 @@ func (c *Client) TransactionByHash(runtime cre.Runtime, input *TransactionByHash
 }
 
 func (c *Client) AccountTransactions(runtime cre.Runtime, input *AccountTransactionsRequest) cre.Promise[*AccountTransactionsReply] {
+	return c.accountTransactions(runtime, input)
+}
+
+func (c *Client) accountTransactions(runtime cre.RuntimeBase, input *AccountTransactionsRequest) cre.Promise[*AccountTransactionsReply] {
 	wrapped := &anypb.Any{}
 	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
@@ -171,6 +187,10 @@ func (i *WriteCreReportRequest) X_GeneratedCodeOnly_Unwrap() *WriteReportRequest
 }
 
 func (c *Client) WriteReport(runtime cre.Runtime, input *WriteCreReportRequest) cre.Promise[*WriteReportReply] {
+	return c.writeReport(runtime, input)
+}
+
+func (c *Client) writeReport(runtime cre.RuntimeBase, input *WriteCreReportRequest) cre.Promise[*WriteReportReply] {
 	wrapped := &anypb.Any{}
 	err := anypb.MarshalFrom(wrapped, input.X_GeneratedCodeOnly_Unwrap(), proto.MarshalOptions{Deterministic: true})
 	if err != nil {

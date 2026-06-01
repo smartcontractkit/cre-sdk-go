@@ -20,6 +20,10 @@ type Client struct {
 }
 
 func (c *Client) GetAccountInfoWithOpts(runtime cre.Runtime, input *GetAccountInfoWithOptsRequest) cre.Promise[*GetAccountInfoWithOptsReply] {
+	return c.getAccountInfoWithOpts(runtime, input)
+}
+
+func (c *Client) getAccountInfoWithOpts(runtime cre.RuntimeBase, input *GetAccountInfoWithOptsRequest) cre.Promise[*GetAccountInfoWithOptsReply] {
 	wrapped := &anypb.Any{}
 	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
@@ -48,6 +52,10 @@ func (c *Client) GetAccountInfoWithOpts(runtime cre.Runtime, input *GetAccountIn
 }
 
 func (c *Client) GetBalance(runtime cre.Runtime, input *GetBalanceRequest) cre.Promise[*GetBalanceReply] {
+	return c.getBalance(runtime, input)
+}
+
+func (c *Client) getBalance(runtime cre.RuntimeBase, input *GetBalanceRequest) cre.Promise[*GetBalanceReply] {
 	wrapped := &anypb.Any{}
 	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
@@ -76,6 +84,10 @@ func (c *Client) GetBalance(runtime cre.Runtime, input *GetBalanceRequest) cre.P
 }
 
 func (c *Client) GetBlock(runtime cre.Runtime, input *GetBlockRequest) cre.Promise[*GetBlockReply] {
+	return c.getBlock(runtime, input)
+}
+
+func (c *Client) getBlock(runtime cre.RuntimeBase, input *GetBlockRequest) cre.Promise[*GetBlockReply] {
 	wrapped := &anypb.Any{}
 	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
@@ -104,6 +116,10 @@ func (c *Client) GetBlock(runtime cre.Runtime, input *GetBlockRequest) cre.Promi
 }
 
 func (c *Client) GetFeeForMessage(runtime cre.Runtime, input *GetFeeForMessageRequest) cre.Promise[*GetFeeForMessageReply] {
+	return c.getFeeForMessage(runtime, input)
+}
+
+func (c *Client) getFeeForMessage(runtime cre.RuntimeBase, input *GetFeeForMessageRequest) cre.Promise[*GetFeeForMessageReply] {
 	wrapped := &anypb.Any{}
 	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
@@ -132,6 +148,10 @@ func (c *Client) GetFeeForMessage(runtime cre.Runtime, input *GetFeeForMessageRe
 }
 
 func (c *Client) GetMultipleAccountsWithOpts(runtime cre.Runtime, input *GetMultipleAccountsWithOptsRequest) cre.Promise[*GetMultipleAccountsWithOptsReply] {
+	return c.getMultipleAccountsWithOpts(runtime, input)
+}
+
+func (c *Client) getMultipleAccountsWithOpts(runtime cre.RuntimeBase, input *GetMultipleAccountsWithOptsRequest) cre.Promise[*GetMultipleAccountsWithOptsReply] {
 	wrapped := &anypb.Any{}
 	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
@@ -160,6 +180,10 @@ func (c *Client) GetMultipleAccountsWithOpts(runtime cre.Runtime, input *GetMult
 }
 
 func (c *Client) GetSignatureStatuses(runtime cre.Runtime, input *GetSignatureStatusesRequest) cre.Promise[*GetSignatureStatusesReply] {
+	return c.getSignatureStatuses(runtime, input)
+}
+
+func (c *Client) getSignatureStatuses(runtime cre.RuntimeBase, input *GetSignatureStatusesRequest) cre.Promise[*GetSignatureStatusesReply] {
 	wrapped := &anypb.Any{}
 	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
@@ -188,6 +212,10 @@ func (c *Client) GetSignatureStatuses(runtime cre.Runtime, input *GetSignatureSt
 }
 
 func (c *Client) GetSlotHeight(runtime cre.Runtime, input *GetSlotHeightRequest) cre.Promise[*GetSlotHeightReply] {
+	return c.getSlotHeight(runtime, input)
+}
+
+func (c *Client) getSlotHeight(runtime cre.RuntimeBase, input *GetSlotHeightRequest) cre.Promise[*GetSlotHeightReply] {
 	wrapped := &anypb.Any{}
 	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
@@ -216,6 +244,10 @@ func (c *Client) GetSlotHeight(runtime cre.Runtime, input *GetSlotHeightRequest)
 }
 
 func (c *Client) GetTransaction(runtime cre.Runtime, input *GetTransactionRequest) cre.Promise[*GetTransactionReply] {
+	return c.getTransaction(runtime, input)
+}
+
+func (c *Client) getTransaction(runtime cre.RuntimeBase, input *GetTransactionRequest) cre.Promise[*GetTransactionReply] {
 	wrapped := &anypb.Any{}
 	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
@@ -325,6 +357,10 @@ func (i *WriteCreReportRequest) X_GeneratedCodeOnly_Unwrap() *WriteReportRequest
 }
 
 func (c *Client) WriteReport(runtime cre.Runtime, input *WriteCreReportRequest) cre.Promise[*WriteReportReply] {
+	return c.writeReport(runtime, input)
+}
+
+func (c *Client) writeReport(runtime cre.RuntimeBase, input *WriteCreReportRequest) cre.Promise[*WriteReportReply] {
 	wrapped := &anypb.Any{}
 	err := anypb.MarshalFrom(wrapped, input.X_GeneratedCodeOnly_Unwrap(), proto.MarshalOptions{Deterministic: true})
 	if err != nil {
