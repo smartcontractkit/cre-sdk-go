@@ -28,31 +28,18 @@ func Handler[C any, M proto.Message, T any, O any](trigger Trigger[M, T], callba
 
 // HandlerInTee creates a coupling of a Trigger and a callback function to be used in TEE (Trusted Execution Environment) mode.
 // The coupling ensures that when the Trigger is invoked, the callback function is called with a TeeRuntime.
-func HandlerInTee[C any, M proto.Message, T any, O any, A AcceptedTees](trigger Trigger[M, T], callback func(config C, runtime TeeRuntime, payload T) (O, error), tees A) ExecutionHandler[C, Runtime] {
-	wrapped := func(config C, runtime Runtime, t T) (O, error) {
+func HandlerInTee[C any, M proto.Message, T any, O any](trigger Trigger[M, T], callback func(config C, runtime TeeRuntime, payload T) (O, error), tees TeeConstraint) ExecutionHandler[C, Runtime] {
+	return handler(trigger, wrapTeeCallback(callback), tees.toRequirements())
+}
+
+func wrapTeeCallback[C any, T any, O any](callback func(config C, runtime TeeRuntime, payload T) (O, error)) func(config C, runtime Runtime, payload T) (O, error) {
+	return func(config C, runtime Runtime, t T) (O, error) {
 		helper, ok := runtime.(interface{ Tee() TeeRuntime })
 		if !ok {
 			panic("Runner did not provide an extractable TEERuntime. If you wrapped the runtime, wrap the method Tee() TeeRuntime instead.")
 		}
-
 		return callback(config, helper.Tee(), t)
 	}
-	return handler(trigger, wrapped, teeRequirements(tees))
-}
-
-func teeRequirements[A AcceptedTees](tees A) *sdk.Requirements {
-	reqs := &sdk.Requirements{Tee: &sdk.Tee{}}
-	switch typedTees := any(tees).(type) {
-	case []TeeAndRegions:
-		typesRegions := make([]*sdk.TeeTypeAndRegions, len(typedTees))
-		for i, tee := range typedTees {
-			typesRegions[i] = &sdk.TeeTypeAndRegions{Type: tee.Type, Regions: tee.Regions}
-		}
-		reqs.Tee.Item = &sdk.Tee_TeeTypesAndRegions{TeeTypesAndRegions: &sdk.TeeTypesAndRegions{TeeTypeAndRegions: typesRegions}}
-	case AnyTee:
-		reqs.Tee.Item = &sdk.Tee_AnyRegions{AnyRegions: &sdk.Regions{Regions: typedTees.Regions}}
-	}
-	return reqs
 }
 
 func handler[R, C any, M proto.Message, T any, O any](trigger Trigger[M, T], callback func(config C, runtime R, payload T) (O, error), requirements *sdk.Requirements) ExecutionHandler[C, R] {
@@ -99,6 +86,8 @@ type executionHandlerWithRequirementsImpl[C, R any] struct {
 	ExecutionHandler[C, R]
 	requirements *sdk.Requirements
 }
+
+var _ ExecutionHandlerWithRequirements[any, any] = (*executionHandlerWithRequirementsImpl[any, any])(nil)
 
 func (h *executionHandlerWithRequirementsImpl[C, R]) Requirements() *sdk.Requirements {
 	return h.requirements
