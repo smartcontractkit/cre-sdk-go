@@ -33,8 +33,15 @@ func newGeneratorAndInstallTools(install func() error) (*pkg.ProtocGen, error) {
 	}, nil
 }
 
-// installFromMod installs the protoc-gen-cre plugin from the same commit as the SDK you're using
+// installFromMod installs the protoc-gen-cre plugin from the same commit as the SDK you're using.
+// If the current module's go.mod has a replace directive for the plugin pointing to a local directory,
+// the plugin is built directly from that local directory instead of being downloaded.
 func installFromMod() error {
+	if localDir := getLocalReplaceDir(plugin); localDir != "" {
+		fmt.Printf("Using local replace for %s at %s\n", plugin, localDir)
+		return buildPlugin(localDir)
+	}
+
 	fmt.Printf("Finding version to use for %s\n.", sdk)
 	pluginVersion, err := getVersion(sdk, ".")
 	if err != nil {
@@ -47,6 +54,25 @@ func installFromMod() error {
 	}
 
 	return buildPlugin(pluginDir)
+}
+
+// getLocalReplaceDir returns the local directory for a module's replace directive, or empty string if none.
+func getLocalReplaceDir(modulePath string) string {
+	cmd := exec.Command("go", "list", "-m", "-json", modulePath)
+	out, err := cmd.Output()
+	if err != nil {
+		return ""
+	}
+
+	var mod struct {
+		Replace *struct {
+			Dir string
+		}
+	}
+	if err = json.Unmarshal(out, &mod); err != nil || mod.Replace == nil {
+		return ""
+	}
+	return mod.Replace.Dir
 }
 
 // buildProtocGenLocally builds against the local protoc-gen-cre source code.
