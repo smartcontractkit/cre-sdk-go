@@ -33,6 +33,17 @@ func {{.Method.GoName}}[C, T any](
 
 {{ if .Method.Comments.Leading.String }}//{{.Method.GoName}} {{CleanComments .Method.Comments.Leading.String}} {{ end }}
 func (c *{{.Service.GoName}}) {{.Method.GoName}}(runtime cre.{{.Mode}}Runtime, input *{{name $inputIdent .GoPackageName}}) cre.Promise[*{{name $outputIdent .GoPackageName}}] { {{- if .Comments.Trailing.String }}// {{CleanComments .Comments.Trailing.String}} {{ end }}
+    return c.{{LowerFirst .Method.GoName}}(runtime, input)
+}
+{{ $teeEnabled := TeeEnabled .Service }}
+{{ if $teeEnabled }}
+//{{.Method.GoName}}InTee is the same as {{.Method.GoName}} but accepts a cre.TeeRuntime.
+func (c *{{.Service.GoName}}) {{.Method.GoName}}InTee(runtime cre.TeeRuntime, input *{{name $inputIdent .GoPackageName}}) cre.Promise[*{{name $outputIdent .GoPackageName}}] {
+    return c.{{LowerFirst .Method.GoName}}(runtime, input)
+}
+{{ end }}
+
+func (c *{{.Service.GoName}}) {{LowerFirst .Method.GoName}}(runtime cre.RuntimeBase, input *{{name $inputIdent .GoPackageName}}) cre.Promise[*{{name $outputIdent .GoPackageName}}] {
     wrapped := &anypb.Any{}
     err := anypb.MarshalFrom(wrapped, input{{- if ne $inputIdent .InputType -}}.X_GeneratedCodeOnly_Unwrap(){{- end -}}, proto.MarshalOptions{Deterministic: true})
     if err != nil {
