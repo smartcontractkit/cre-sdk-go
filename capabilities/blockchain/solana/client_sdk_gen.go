@@ -179,6 +179,38 @@ func (c *Client) getMultipleAccountsWithOpts(runtime cre.RuntimeBase, input *Get
 
 }
 
+func (c *Client) GetProgramAccounts(runtime cre.Runtime, input *GetProgramAccountsRequest) cre.Promise[*GetProgramAccountsReply] {
+	return c.getProgramAccounts(runtime, input)
+}
+
+func (c *Client) getProgramAccounts(runtime cre.RuntimeBase, input *GetProgramAccountsRequest) cre.Promise[*GetProgramAccountsReply] {
+	wrapped := &anypb.Any{}
+	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
+	if err != nil {
+		return cre.PromiseFromResult[*GetProgramAccountsReply](nil, err)
+	}
+
+	capCallResponse := cre.Then(runtime.CallCapability(&sdkpb.CapabilityRequest{
+		Id:      "solana" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
+		Payload: wrapped,
+		Method:  "GetProgramAccounts",
+	}), func(i *sdkpb.CapabilityResponse) (*GetProgramAccountsReply, error) {
+		switch payload := i.Response.(type) {
+		case *sdkpb.CapabilityResponse_Error:
+			return nil, errors.New(payload.Error)
+		case *sdkpb.CapabilityResponse_Payload:
+			output := &GetProgramAccountsReply{}
+			err = payload.Payload.UnmarshalTo(output)
+			return output, err
+		default:
+			return nil, errors.New("unexpected response type")
+		}
+	})
+
+	return capCallResponse
+
+}
+
 func (c *Client) GetSignatureStatuses(runtime cre.Runtime, input *GetSignatureStatusesRequest) cre.Promise[*GetSignatureStatusesReply] {
 	return c.getSignatureStatuses(runtime, input)
 }
