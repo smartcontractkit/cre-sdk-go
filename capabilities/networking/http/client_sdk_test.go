@@ -3,6 +3,7 @@ package http_test
 import (
 	"context"
 	"encoding/binary"
+	"encoding/hex"
 	"log/slog"
 	"reflect"
 	"testing"
@@ -24,8 +25,8 @@ var anyResponse = &http.Response{
 	Body:       []byte(`{"message": "success"}`),
 }
 
-var anyContext = []byte{4, 5, 6}
-var anyReport = `prepended metadata: {"data": "example"}`
+var anyContext = mustDecodeHex("000e8ce31db48e5e44619d24d9dadfc5f22a34db8205b2b25cd831eab02244c500000000000000000000000000000000000000000000000000000001612bcb000000000000000000000000000000000000000000000000000000000000000000")
+var anyReport = mustDecodeHex("010d46e9e05b28a322cd96c94f1f60c236a1b52bd446d98396f1a84afae388836a69c96faa000000010000000100a3bb3b17a1053fe409147c2b170af4866c182070905e5a0f314be04c8296a336613263393832646464b0f2d38245dd6d397ebbdb5a814b753d56c30715000148656c6c6f2c20576f726c6421")
 var anySigs = []*sdk.AttributedSignature{
 	{
 		Signature: []byte{7, 8, 9},
@@ -138,4 +139,12 @@ func assertReport(t *testing.T, input *http.Request) (*http.Response, error) {
 		t.Errorf("Expected cache settings %v, got %v", expectedCacheSettings, input.CacheSettings)
 	}
 	return anyResponse, nil
+}
+
+func mustDecodeHex(s string) []byte {
+	b, err := hex.DecodeString(s)
+	if err != nil {
+		panic(err)
+	}
+	return b
 }
