@@ -47,6 +47,9 @@ type ClientCapability struct {
 	GetMultipleAccountsWithOpts func(ctx context.Context, input *solana.GetMultipleAccountsWithOptsRequest) (*solana.GetMultipleAccountsWithOptsReply, error)
 	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
 
+	GetProgramAccounts func(ctx context.Context, input *solana.GetProgramAccountsRequest) (*solana.GetProgramAccountsReply, error)
+	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
+
 	GetSignatureStatuses func(ctx context.Context, input *solana.GetSignatureStatusesRequest) (*solana.GetSignatureStatusesReply, error)
 	// TODO: https://smartcontract-it.atlassian.net/browse/CAPPL-799 add the default to the call
 
@@ -162,6 +165,28 @@ func (c *ClientCapability) Invoke(ctx context.Context, request *sdkpb.Capability
 			break
 		}
 		resp, err := c.GetMultipleAccountsWithOpts(ctx, input)
+		if err != nil {
+			capResp.Response = &sdkpb.CapabilityResponse_Error{Error: err.Error()}
+		} else {
+			payload, err := anypb.New(resp)
+			if err == nil {
+				capResp.Response = &sdkpb.CapabilityResponse_Payload{Payload: payload}
+			} else {
+				capResp.Response = &sdkpb.CapabilityResponse_Error{Error: err.Error()}
+			}
+		}
+	case "GetProgramAccounts":
+		input := &solana.GetProgramAccountsRequest{}
+		if err := request.Payload.UnmarshalTo(input); err != nil {
+			capResp.Response = &sdkpb.CapabilityResponse_Error{Error: err.Error()}
+			break
+		}
+
+		if c.GetProgramAccounts == nil {
+			capResp.Response = &sdkpb.CapabilityResponse_Error{Error: "no stub provided for GetProgramAccounts"}
+			break
+		}
+		resp, err := c.GetProgramAccounts(ctx, input)
 		if err != nil {
 			capResp.Response = &sdkpb.CapabilityResponse_Error{Error: err.Error()}
 		} else {
