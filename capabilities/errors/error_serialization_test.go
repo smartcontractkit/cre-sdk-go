@@ -16,12 +16,19 @@ func requireCapabilityError(tb testing.TB, err error) caperrs.Error {
 	return ce
 }
 
+func capabilityErrorsEqual(a, b caperrs.Error) bool {
+	return a.Code() == b.Code() &&
+		a.Origin() == b.Origin() &&
+		a.Visibility() == b.Visibility() &&
+		a.Error() == b.Error()
+}
+
 func TestParsingOldErrorFormat(t *testing.T) {
 	oldErrorMsgString := "failed to execute capability: some error occurred"
 	deserializedErr := requireCapabilityError(t, caperrs.DeserializeErrorFromString(oldErrorMsgString, true))
 
 	expectedErr := caperrs.NewError(stderrors.New(oldErrorMsgString), caperrs.VisibilityPrivate, caperrs.OriginSystem, caperrs.Unknown)
-	if !deserializedErr.Equals(expectedErr) {
+	if !capabilityErrorsEqual(deserializedErr, expectedErr) {
 		t.Errorf("expected %v, got %v", expectedErr, deserializedErr)
 	}
 }
@@ -31,7 +38,7 @@ func TestParsingWithInvalidVisibilityOriginAndErrorCodesAndBackwardsCompatibilit
 		serializedError := "InvalidVisibility:User:Unknown:some error occurred"
 		deserializedErr := requireCapabilityError(t, caperrs.DeserializeErrorFromString(serializedError, true))
 		expectedErr := caperrs.NewError(stderrors.New(serializedError), caperrs.VisibilityPrivate, caperrs.OriginSystem, caperrs.Unknown)
-		if !deserializedErr.Equals(expectedErr) {
+		if !capabilityErrorsEqual(deserializedErr, expectedErr) {
 			t.Errorf("expected %v, got %v", expectedErr, deserializedErr)
 		}
 	})
@@ -40,7 +47,7 @@ func TestParsingWithInvalidVisibilityOriginAndErrorCodesAndBackwardsCompatibilit
 		serializedError := "Public:InvalidOrigin:Unknown:some error occurred"
 		deserializedErr := requireCapabilityError(t, caperrs.DeserializeErrorFromString(serializedError, true))
 		expectedErr := caperrs.NewError(stderrors.New(serializedError), caperrs.VisibilityPrivate, caperrs.OriginSystem, caperrs.Unknown)
-		if !deserializedErr.Equals(expectedErr) {
+		if !capabilityErrorsEqual(deserializedErr, expectedErr) {
 			t.Errorf("expected %v, got %v", expectedErr, deserializedErr)
 		}
 	})
@@ -49,7 +56,7 @@ func TestParsingWithInvalidVisibilityOriginAndErrorCodesAndBackwardsCompatibilit
 		serializedError := "Public:System:InvalidErrorCode:some error occurred"
 		deserializedErr := requireCapabilityError(t, caperrs.DeserializeErrorFromString(serializedError, true))
 		expectedErr := caperrs.NewError(stderrors.New(serializedError), caperrs.VisibilityPrivate, caperrs.OriginSystem, caperrs.Unknown)
-		if !deserializedErr.Equals(expectedErr) {
+		if !capabilityErrorsEqual(deserializedErr, expectedErr) {
 			t.Errorf("expected %v, got %v", expectedErr, deserializedErr)
 		}
 	})
@@ -59,7 +66,7 @@ func TestParsingWithInvalidVisibilityOriginAndErrorCodesAndBackwardsCompatibilit
 		deserializedErr := requireCapabilityError(t, caperrs.DeserializeErrorFromString(msg, true))
 
 		expectedErr := caperrs.NewError(stderrors.New(msg), caperrs.VisibilityPrivate, caperrs.OriginSystem, caperrs.Unknown)
-		if !deserializedErr.Equals(expectedErr) {
+		if !capabilityErrorsEqual(deserializedErr, expectedErr) {
 			t.Errorf("expected %v, got %v", expectedErr, deserializedErr)
 		}
 	})
@@ -69,7 +76,7 @@ func TestParsingWithInvalidVisibilityOriginAndErrorCodesAndBackwardsCompatibilit
 		deserializedErr := requireCapabilityError(t, caperrs.DeserializeErrorFromString(msg, true))
 
 		expectedErr := caperrs.NewError(stderrors.New(msg), caperrs.VisibilityPrivate, caperrs.OriginSystem, caperrs.Unknown)
-		if !deserializedErr.Equals(expectedErr) {
+		if !capabilityErrorsEqual(deserializedErr, expectedErr) {
 			t.Errorf("expected %v, got %v", expectedErr, deserializedErr)
 		}
 	})
@@ -79,7 +86,7 @@ func TestParsingWithInvalidVisibilityOriginAndErrorCodesAndBackwardsCompatibilit
 		msg := "failed: attempt: Unknown: details here"
 		deserializedErr := requireCapabilityError(t, caperrs.DeserializeErrorFromString(msg, true))
 		expectedErr := caperrs.NewError(stderrors.New(msg), caperrs.VisibilityPrivate, caperrs.OriginSystem, caperrs.Unknown)
-		require.True(t, deserializedErr.Equals(expectedErr))
+		require.True(t, capabilityErrorsEqual(deserializedErr, expectedErr))
 	})
 }
 
@@ -97,6 +104,6 @@ func TestDeserializeErrorFromString_withoutCapabilityWrap(t *testing.T) {
 		expected := caperrs.NewError(stderrors.New("detail"), caperrs.VisibilityPublic, caperrs.OriginUser, caperrs.DeadlineExceeded)
 		err := caperrs.DeserializeErrorFromString(serialized, false)
 		deserialized := requireCapabilityError(t, err)
-		require.True(t, expected.Equals(deserialized))
+		require.True(t, capabilityErrorsEqual(expected, deserialized))
 	})
 }

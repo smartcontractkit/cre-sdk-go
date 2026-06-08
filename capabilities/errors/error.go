@@ -77,7 +77,6 @@ type Error interface {
 	Visibility() Visibility
 	Origin() Origin
 	Code() ErrorCode
-	Equals(otherErr Error) bool
 }
 
 type capabilityError struct {
@@ -110,11 +109,4 @@ func (e capabilityError) Visibility() Visibility {
 
 func (e capabilityError) Code() ErrorCode {
 	return e.errorCode
-}
-
-func (e capabilityError) Equals(otherErr Error) bool {
-	return e.errorCode == otherErr.Code() &&
-		e.origin == otherErr.Origin() &&
-		e.visibility == otherErr.Visibility() &&
-		e.Error() == otherErr.Error()
 }
