@@ -2,7 +2,6 @@ package errors_test
 
 import (
 	stderrors "errors"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -15,51 +14,6 @@ func requireCapabilityError(tb testing.TB, err error) caperrs.Error {
 	ce, ok := err.(caperrs.Error)
 	require.True(tb, ok, "expected capability errors.Error, got %T", err)
 	return ce
-}
-
-func TestErrorSerializationAndDeserialization(t *testing.T) {
-	visibilities := []caperrs.Visibility{caperrs.VisibilityPublic, caperrs.VisibilityPrivate}
-	origins := []caperrs.Origin{caperrs.OriginUser, caperrs.OriginSystem}
-	errorCodes := []caperrs.ErrorCode{caperrs.Unknown, caperrs.ConsensusFailed, caperrs.InvalidArgument}
-
-	for _, v := range visibilities {
-		for _, o := range origins {
-			for _, c := range errorCodes {
-				originalErr := caperrs.NewError(stderrors.New("test error"), v, o, c)
-				serialized := originalErr.SerializeToString()
-				deserializedErr := requireCapabilityError(t, caperrs.DeserializeErrorFromString(serialized, true))
-				if !originalErr.Equals(deserializedErr) {
-					t.Errorf("expected %v, got %v", originalErr, deserializedErr)
-				}
-			}
-		}
-	}
-}
-
-func TestRemoteErrorSerializationAndDeserialization(t *testing.T) {
-	visibilities := []caperrs.Visibility{caperrs.VisibilityPublic, caperrs.VisibilityPrivate}
-	origins := []caperrs.Origin{caperrs.OriginUser, caperrs.OriginSystem}
-	errorCodes := []caperrs.ErrorCode{caperrs.Unknown, caperrs.ConsensusFailed, caperrs.InvalidArgument}
-
-	for _, v := range visibilities {
-		for _, o := range origins {
-			for _, c := range errorCodes {
-				originalErr := caperrs.NewError(stderrors.New("test error"), v, o, c)
-				serialized := originalErr.SerializeToRemoteString()
-				deserializedErr := requireCapabilityError(t, caperrs.DeserializeErrorFromString(serialized, true))
-				if v == caperrs.VisibilityPrivate {
-					require.Equal(t, deserializedErr.Visibility(), originalErr.Visibility())
-					require.Equal(t, deserializedErr.Origin(), originalErr.Origin())
-					require.Equal(t, deserializedErr.Code(), originalErr.Code())
-					require.True(t, strings.Contains(deserializedErr.Error(), "error whilst executing capability - the error message is not publicly reportable"))
-				} else {
-					if !originalErr.Equals(deserializedErr) {
-						t.Errorf("expected %v, got %v", originalErr, deserializedErr)
-					}
-				}
-			}
-		}
-	}
 }
 
 func TestParsingOldErrorFormat(t *testing.T) {
@@ -134,8 +88,7 @@ func TestParsingWithInvalidVisibilityOriginAndErrorCodesAndBackwardsCompatibilit
 }
 
 func TestIsSerializedCapabilityErrorString(t *testing.T) {
-	valid := caperrs.NewError(stderrors.New("detail"), caperrs.VisibilityPublic, caperrs.OriginSystem, caperrs.InvalidArgument).SerializeToString()
-	require.True(t, caperrs.IsSerializedCapabilityErrorString(valid))
+	require.True(t, caperrs.IsSerializedCapabilityErrorString("Public:System:InvalidArgument:detail"))
 
 	require.False(t, caperrs.IsSerializedCapabilityErrorString("Public:System"))
 	require.False(t, caperrs.IsSerializedCapabilityErrorString("Public:System:Unknown"))
@@ -157,10 +110,10 @@ func TestDeserializeErrorFromString_withoutCapabilityWrap(t *testing.T) {
 	})
 
 	t.Run("valid serialized still returns capability error", func(t *testing.T) {
-		original := caperrs.NewError(stderrors.New("detail"), caperrs.VisibilityPublic, caperrs.OriginUser, caperrs.DeadlineExceeded)
-		serialized := original.SerializeToString()
+		serialized := "Public:User:DeadlineExceeded:detail"
+		expected := caperrs.NewError(stderrors.New("detail"), caperrs.VisibilityPublic, caperrs.OriginUser, caperrs.DeadlineExceeded)
 		err := caperrs.DeserializeErrorFromString(serialized, false)
 		deserialized := requireCapabilityError(t, err)
-		require.True(t, original.Equals(deserialized))
+		require.True(t, expected.Equals(deserialized))
 	})
 }

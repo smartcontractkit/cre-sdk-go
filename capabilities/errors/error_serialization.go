@@ -53,21 +53,3 @@ func DeserializeErrorFromString(errorMsg string, wrapUndeserializableAsCapabilit
 
 	return NewError(errors.New(detail), visibility, origin, errorCode)
 }
-
-func (e capabilityError) SerializeToString() string {
-	return e.serializeToString(e.err.Error())
-}
-
-func (e capabilityError) serializeToString(errMsg string) string {
-	return e.visibility.String() + errorMessageSeparator + e.origin.String() + errorMessageSeparator + e.Code().String() + errorMessageSeparator + errMsg
-}
-
-// SerializeToRemoteString serializes the error for sending to remote nodes.
-// If the error is private, the actual error message is replaced with a generic message.
-func (e capabilityError) SerializeToRemoteString() string {
-	if e.Visibility() == VisibilityPublic {
-		return e.serializeToString(e.err.Error())
-	}
-
-	return e.serializeToString("error whilst executing capability - the error message is not publicly reportable")
-}

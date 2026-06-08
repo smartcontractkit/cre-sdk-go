@@ -77,8 +77,6 @@ type Error interface {
 	Visibility() Visibility
 	Origin() Origin
 	Code() ErrorCode
-	SerializeToString() string
-	SerializeToRemoteString() string
 	Equals(otherErr Error) bool
 }
 
