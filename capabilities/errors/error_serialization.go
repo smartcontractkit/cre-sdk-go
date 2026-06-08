@@ -7,15 +7,6 @@ import (
 
 const errorMessageSeparator = ":"
 
-// IsSerializedCapabilityErrorString reports whether s uses the capability error
-// wire format (Visibility:Origin:ErrorCode:detail) with known enum/code names.
-// Arbitrary text that happens to contain three colons is not treated as
-// serialized unless the first three segments are valid.
-func IsSerializedCapabilityErrorString(s string) bool {
-	parts := strings.SplitN(s, errorMessageSeparator, 4)
-	return len(parts) == 4 && serializedCapabilityErrorMetadataValid(parts[0], parts[1], parts[2])
-}
-
 func serializedCapabilityErrorMetadataValid(visibility, origin, errorCode string) bool {
 	switch FromVisibilityString(visibility) {
 	case VisibilityPublic, VisibilityPrivate:

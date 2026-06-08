@@ -30,7 +30,6 @@ func TestParsingWithInvalidVisibilityOriginAndErrorCodesAndBackwardsCompatibilit
 	t.Run("InvalidVisibility", func(t *testing.T) {
 		serializedError := "InvalidVisibility:User:Unknown:some error occurred"
 		deserializedErr := requireCapabilityError(t, caperrs.DeserializeErrorFromString(serializedError, true))
-		require.False(t, caperrs.IsSerializedCapabilityErrorString(serializedError))
 		expectedErr := caperrs.NewError(stderrors.New(serializedError), caperrs.VisibilityPrivate, caperrs.OriginSystem, caperrs.Unknown)
 		if !deserializedErr.Equals(expectedErr) {
 			t.Errorf("expected %v, got %v", expectedErr, deserializedErr)
@@ -40,7 +39,6 @@ func TestParsingWithInvalidVisibilityOriginAndErrorCodesAndBackwardsCompatibilit
 	t.Run("InvalidOrigin", func(t *testing.T) {
 		serializedError := "Public:InvalidOrigin:Unknown:some error occurred"
 		deserializedErr := requireCapabilityError(t, caperrs.DeserializeErrorFromString(serializedError, true))
-		require.False(t, caperrs.IsSerializedCapabilityErrorString(serializedError))
 		expectedErr := caperrs.NewError(stderrors.New(serializedError), caperrs.VisibilityPrivate, caperrs.OriginSystem, caperrs.Unknown)
 		if !deserializedErr.Equals(expectedErr) {
 			t.Errorf("expected %v, got %v", expectedErr, deserializedErr)
@@ -50,7 +48,6 @@ func TestParsingWithInvalidVisibilityOriginAndErrorCodesAndBackwardsCompatibilit
 	t.Run("InvalidErrorCode", func(t *testing.T) {
 		serializedError := "Public:System:InvalidErrorCode:some error occurred"
 		deserializedErr := requireCapabilityError(t, caperrs.DeserializeErrorFromString(serializedError, true))
-		require.False(t, caperrs.IsSerializedCapabilityErrorString(serializedError))
 		expectedErr := caperrs.NewError(stderrors.New(serializedError), caperrs.VisibilityPrivate, caperrs.OriginSystem, caperrs.Unknown)
 		if !deserializedErr.Equals(expectedErr) {
 			t.Errorf("expected %v, got %v", expectedErr, deserializedErr)
@@ -81,23 +78,9 @@ func TestParsingWithInvalidVisibilityOriginAndErrorCodesAndBackwardsCompatibilit
 		// Four segments with a known error code token but invalid visibility — legacy wrap.
 		msg := "failed: attempt: Unknown: details here"
 		deserializedErr := requireCapabilityError(t, caperrs.DeserializeErrorFromString(msg, true))
-		require.False(t, caperrs.IsSerializedCapabilityErrorString(msg))
 		expectedErr := caperrs.NewError(stderrors.New(msg), caperrs.VisibilityPrivate, caperrs.OriginSystem, caperrs.Unknown)
 		require.True(t, deserializedErr.Equals(expectedErr))
 	})
-}
-
-func TestIsSerializedCapabilityErrorString(t *testing.T) {
-	require.True(t, caperrs.IsSerializedCapabilityErrorString("Public:System:InvalidArgument:detail"))
-
-	require.False(t, caperrs.IsSerializedCapabilityErrorString("Public:System"))
-	require.False(t, caperrs.IsSerializedCapabilityErrorString("Public:System:Unknown"))
-	require.True(t, caperrs.IsSerializedCapabilityErrorString("Public:System:Unknown:"))
-	require.True(t, caperrs.IsSerializedCapabilityErrorString("Public:System:Unknown:x"))
-
-	require.False(t, caperrs.IsSerializedCapabilityErrorString("InvalidVisibility:User:Unknown:msg"))
-	require.False(t, caperrs.IsSerializedCapabilityErrorString("Public:InvalidOrigin:Unknown:msg"))
-	require.False(t, caperrs.IsSerializedCapabilityErrorString("Public:System:InvalidErrorCode:msg"))
 }
 
 func TestDeserializeErrorFromString_withoutCapabilityWrap(t *testing.T) {
