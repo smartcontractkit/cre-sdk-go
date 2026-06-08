@@ -8,14 +8,15 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/durationpb"
+
 	"github.com/smartcontractkit/chainlink-protos/cre/go/sdk"
 	"github.com/smartcontractkit/cre-sdk-go/capabilities/networking/http"
 	httpmock "github.com/smartcontractkit/cre-sdk-go/capabilities/networking/http/mock"
 	"github.com/smartcontractkit/cre-sdk-go/cre"
 	"github.com/smartcontractkit/cre-sdk-go/cre/testutils"
-	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/durationpb"
 )
 
 var anyResponse = &http.Response{
@@ -25,7 +26,7 @@ var anyResponse = &http.Response{
 }
 
 var anyContext = []byte{4, 5, 6}
-var anyReport = `prepended metadata: {"data": "example"}`
+var anyReport = `prepended metadata: {"data": "example", "ts": "2026-05-07T00:00:00Z", "ext": "field_value_1234567", "id":"1"}`
 var anySigs = []*sdk.AttributedSignature{
 	{
 		Signature: []byte{7, 8, 9},

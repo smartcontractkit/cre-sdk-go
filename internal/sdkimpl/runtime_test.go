@@ -10,6 +10,7 @@ import (
 	"github.com/smartcontractkit/chainlink-protos/cre/go/sdk"
 	vals "github.com/smartcontractkit/chainlink-protos/cre/go/values"
 	valuespb "github.com/smartcontractkit/chainlink-protos/cre/go/values/pb"
+	caperrs "github.com/smartcontractkit/cre-sdk-go/capabilities/errors"
 	"github.com/smartcontractkit/cre-sdk-go/cre"
 	"github.com/smartcontractkit/cre-sdk-go/cre/testutils"
 	"github.com/smartcontractkit/cre-sdk-go/internal/sdkimpl"
@@ -98,7 +99,32 @@ func TestRuntime_CallCapability(t *testing.T) {
 		}
 
 		_, err = testRuntime(t, test)
-		assert.Equal(t, expectedErr, err)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), expectedErr.Error())
+	})
+
+	t.Run("serialized capability errors are returned as typed capability errors", func(t *testing.T) {
+		action, err := basicactionmock.NewBasicActionCapability(t)
+		require.NoError(t, err)
+
+		want := caperrs.NewPublicSystemError(errors.New("typed failure detail"), caperrs.InvalidArgument)
+		wire := want.SerializeToString()
+		action.PerformAction = func(ctx context.Context, input *basicaction.Inputs) (*basicaction.Outputs, error) {
+			// The mock host puts err.Error() on the wire; capability errors use SerializeToString for that.
+			return nil, errors.New(wire)
+		}
+
+		capability := &basicaction.BasicAction{}
+		test := func(_ string, rt cre.Runtime, _ *basictrigger.Outputs) (string, error) {
+			_, err := capability.PerformAction(rt, &basicaction.Inputs{InputThing: true}).Await()
+			return "", err
+		}
+
+		_, err = testRuntime(t, test)
+		require.Error(t, err)
+		var capErr caperrs.Error
+		require.ErrorAs(t, err, &capErr)
+		assert.True(t, want.Equals(capErr), "got %#v want %#v", capErr, want)
 	})
 
 	t.Run("await errors", func(t *testing.T) {
@@ -309,8 +335,12 @@ func TestDonRuntime_RunInNodeMode(t *testing.T) {
 			return consensus.Await()
 		}
 		_, err = testRuntime(t, test)
-		assert.Equal(t, cre.DonModeCallInNodeMode(), err)
+		require.Error(t, err)
+		// DonModeCallInNodeMode is surfaced via consensus as an observation error string,
+		// then passed through ErrorFromCapabilityResponse (plain strings stay plain errors).
+		assert.ErrorContains(t, err, cre.DonModeCallInNodeMode().Error())
 	})
+
 }
 
 func testRuntime[T any](t *testing.T, testFn func(config string, rt cre.Runtime, _ *basictrigger.Outputs) (T, error)) (any, error) {

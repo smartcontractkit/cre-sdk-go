@@ -349,7 +349,7 @@ func callContract(runtime Runtime, capID string, registryAddr []byte, callData [
 
 	switch r := resp.Response.(type) {
 	case *sdk.CapabilityResponse_Error:
-		return nil, errors.New(r.Error)
+		return nil, ErrorFromCapabilityResponse(r.Error)
 	case *sdk.CapabilityResponse_Payload:
 		abiData, err := decodeCallContractReplyData(r.Payload.Value)
 		if err != nil {
