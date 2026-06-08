@@ -98,34 +98,6 @@ func NewError(err error, visibility Visibility, origin Origin, errorCode ErrorCo
 	}
 }
 
-// NewPublicSystemError indicates that the wrapped error is due to a system-level issue and does not contain any
-// sensitive information that should only be visible to the node on which it occurred, making it safe to share the full error details
-// with other nodes in the network.
-func NewPublicSystemError(err error, errorCode ErrorCode) Error {
-	return NewError(err, VisibilityPublic, OriginSystem, errorCode)
-}
-
-// NewPublicUserError indicates that the wrapped error is due to a user-level issue and does not contain any
-// information that should only be visible to the node on which it occurred, making it safe to share the full error details
-// with other nodes in the network.
-func NewPublicUserError(err error, errorCode ErrorCode) Error {
-	return NewError(err, VisibilityPublic, OriginUser, errorCode)
-}
-
-// NewPrivateSystemError indicates that the wrapped error is due to a system-level issue and may contain
-// sensitive information that should only be visible to the node on which it occurred.  The error code will still be
-// visible to other nodes in the network.
-func NewPrivateSystemError(err error, errorCode ErrorCode) Error {
-	return NewError(err, VisibilityPrivate, OriginSystem, errorCode)
-}
-
-// NewPrivateUserError indicates that the wrapped error is due to a user-level issue and may contain
-// sensitive information that should only be visible to the node on which it occurred.  The error code will still be
-// visible to other nodes in the network.
-func NewPrivateUserError(err error, errorCode ErrorCode) Error {
-	return NewError(err, VisibilityPrivate, OriginUser, errorCode)
-}
-
 func (e capabilityError) Error() string {
 	return fmt.Sprintf("[%d]%s: %s", e.errorCode, e.errorCode.String(), e.err.Error())
 }

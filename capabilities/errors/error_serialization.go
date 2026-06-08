@@ -7,10 +7,6 @@ import (
 
 const errorMessageSeparator = ":"
 
-func PrePendPrivateVisibilityIdentifier(errorMessage string) string {
-	return VisibilityPrivate.String() + errorMessageSeparator + errorMessage
-}
-
 // IsSerializedCapabilityErrorString reports whether s uses the capability error
 // wire format (Visibility:Origin:ErrorCode:detail) with known enum/code names.
 // Arbitrary text that happens to contain three colons is not treated as
