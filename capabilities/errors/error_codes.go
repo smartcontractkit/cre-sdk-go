@@ -183,10 +183,3 @@ func FromErrorCodeString(str string) ErrorCode {
 	}
 	return Unknown
 }
-
-// IsKnownErrorCodeString reports whether s is a registered ErrorCode name (the
-// inverse of FromErrorCodeString defaulting unknown strings to Unknown).
-func IsKnownErrorCodeString(s string) bool {
-	_, ok := stringToErrorCode[s]
-	return ok
-}
