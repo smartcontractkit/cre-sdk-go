@@ -21,7 +21,7 @@ func (o Origin) String() string {
 	case OriginUser:
 		return "User"
 	default:
-		return "Unknown"
+		return "UnknownOrigin"
 	}
 }
 
@@ -55,7 +55,7 @@ func (v Visibility) String() string {
 	case VisibilityPrivate:
 		return "Private"
 	default:
-		return "Unknown"
+		return "UnknownVisibility"
 	}
 }
 

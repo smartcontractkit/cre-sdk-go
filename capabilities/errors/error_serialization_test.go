@@ -33,6 +33,7 @@ func TestDeserializeErrorFromStringInvalidFields(t *testing.T) {
 		deserializedErr := requireCapabilityError(t, caperrs.DeserializeErrorFromString(serializedError))
 		expectedErr := caperrs.NewError(stderrors.New("some error occurred"), caperrs.Visibility(-1), caperrs.OriginUser, caperrs.Unknown)
 		require.True(t, capabilityErrorsEqual(deserializedErr, expectedErr))
+		require.Equal(t, "UnknownVisibility", deserializedErr.Visibility().String())
 	})
 
 	t.Run("InvalidOrigin", func(t *testing.T) {
@@ -40,6 +41,7 @@ func TestDeserializeErrorFromStringInvalidFields(t *testing.T) {
 		deserializedErr := requireCapabilityError(t, caperrs.DeserializeErrorFromString(serializedError))
 		expectedErr := caperrs.NewError(stderrors.New("some error occurred"), caperrs.VisibilityPublic, caperrs.Origin(-1), caperrs.Unknown)
 		require.True(t, capabilityErrorsEqual(deserializedErr, expectedErr))
+		require.Equal(t, "UnknownOrigin", deserializedErr.Origin().String())
 	})
 
 	t.Run("NewUnknownErrorCode", func(t *testing.T) {
@@ -47,6 +49,8 @@ func TestDeserializeErrorFromStringInvalidFields(t *testing.T) {
 		deserializedErr := requireCapabilityError(t, caperrs.DeserializeErrorFromString(serializedError))
 		expectedErr := caperrs.NewError(stderrors.New("some error occurred"), caperrs.VisibilityPublic, caperrs.OriginSystem, caperrs.ErrorCode(-1))
 		require.True(t, capabilityErrorsEqual(deserializedErr, expectedErr))
+		require.Equal(t, "UnknownErrorCode", deserializedErr.Code().String())
+		require.Equal(t, "[-1]UnknownErrorCode: some error occurred", deserializedErr.Error())
 	})
 
 	t.Run("ColonRichPlainMessageMatchingUnknownCode", func(t *testing.T) {
@@ -56,6 +60,15 @@ func TestDeserializeErrorFromStringInvalidFields(t *testing.T) {
 		expectedErr := caperrs.NewError(stderrors.New(" details here"), caperrs.Visibility(-1), caperrs.Origin(-1), caperrs.Unknown)
 		require.True(t, capabilityErrorsEqual(deserializedErr, expectedErr))
 	})
+}
+
+func TestUnknownValueStringOutput(t *testing.T) {
+	require.Equal(t, "UnknownOrigin", caperrs.Origin(-1).String())
+	require.Equal(t, "UnknownVisibility", caperrs.Visibility(-1).String())
+	require.Equal(t, "UnknownErrorCode", caperrs.ErrorCode(-1).String())
+
+	err := caperrs.NewError(stderrors.New("detail"), caperrs.Visibility(-1), caperrs.Origin(-1), caperrs.ErrorCode(-1))
+	require.Equal(t, "[-1]UnknownErrorCode: detail", err.Error())
 }
 
 func TestDeserializeErrorFromStringNonWireFormat(t *testing.T) {
