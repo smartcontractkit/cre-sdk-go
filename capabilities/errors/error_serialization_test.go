@@ -50,7 +50,7 @@ func TestDeserializeErrorFromStringInvalidFields(t *testing.T) {
 		expectedErr := caperrs.NewError(stderrors.New("some error occurred"), caperrs.VisibilityPublic, caperrs.OriginSystem, caperrs.UnrecognisedErrorCode)
 		require.True(t, capabilityErrorsEqual(deserializedErr, expectedErr))
 		require.Equal(t, "UnrecognisedErrorCode", deserializedErr.Code().String())
-		require.Equal(t, "[-1]UnrecognisedErrorCode: some error occurred", deserializedErr.Error())
+		require.Equal(t, "some error occurred", deserializedErr.Error())
 	})
 
 	t.Run("ColonRichPlainMessageMatchingUnknownCode", func(t *testing.T) {

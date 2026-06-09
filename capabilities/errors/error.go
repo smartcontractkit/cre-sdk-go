@@ -96,6 +96,9 @@ func NewError(err error, visibility Visibility, origin Origin, errorCode ErrorCo
 }
 
 func (e capabilityError) Error() string {
+	if e.errorCode == UnrecognisedErrorCode {
+		return e.err.Error()
+	}
 	return fmt.Sprintf("[%d]%s: %s", e.errorCode, e.errorCode.String(), e.err.Error())
 }
 
