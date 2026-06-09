@@ -8,6 +8,9 @@ type ErrorCode int
 // conflicts with future gRPC codes. Note: 0 (OK) is intentionally excluded
 // because capability errors must always indicate a failure condition.
 const (
+	// UnrecognisedErrorCode is the sentinel for error code strings that are not recognised.
+	UnrecognisedErrorCode ErrorCode = -1
+
 	// Canceled indicates the operation was canceled (typically by the caller).
 	Canceled ErrorCode = 1
 
@@ -134,7 +137,7 @@ func (e ErrorCode) String() string {
 	if s, ok := errorCodeToString[e]; ok {
 		return s
 	}
-	return "UnknownErrorCode"
+	return "UnrecognisedErrorCode"
 }
 
 var errorCodeToString = map[ErrorCode]string{
@@ -181,5 +184,5 @@ func FromErrorCodeString(str string) ErrorCode {
 	if code, ok := stringToErrorCode[str]; ok {
 		return code
 	}
-	return ErrorCode(-1)
+	return UnrecognisedErrorCode
 }
