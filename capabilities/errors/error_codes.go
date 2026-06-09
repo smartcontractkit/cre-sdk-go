@@ -1,6 +1,8 @@
 package errors
 
-type ErrorCode uint32
+import "fmt"
+
+type ErrorCode int
 
 // Capability error codes are primarily based on gRPC error codes:
 // https://grpc.github.io/grpc/core/md_doc_statuscodes.html
@@ -134,7 +136,7 @@ func (e ErrorCode) String() string {
 	if s, ok := errorCodeToString[e]; ok {
 		return s
 	}
-	return "Unknown"
+	return fmt.Sprintf("UnknownErrorCode[%d]", e)
 }
 
 var errorCodeToString = map[ErrorCode]string{
@@ -181,5 +183,5 @@ func FromErrorCodeString(str string) ErrorCode {
 	if code, ok := stringToErrorCode[str]; ok {
 		return code
 	}
-	return Unknown
+	return ErrorCode(-1)
 }
