@@ -24,9 +24,9 @@ func capabilityErrorsEqual(a, b caperrs.Error) bool {
 }
 
 // TestDeserializeErrorFromStringInvalidFields verifies that DeserializeErrorFromString can handle invalid visibility,
-// origin, and error code fields gracefully, defaulting to "Unknown" for unrecognized tokens and still returning a
-// capability error when the format is correct.  This ensures backwards compatibility for any new values introduced
-// in the future.
+// origin, and error code fields gracefully, preserving unrecognized tokens as typed sentinel values (-1) and still
+// returning a capability error when the format is correct. This ensures backwards compatibility for any new values
+// introduced in the future.
 func TestDeserializeErrorFromStringInvalidFields(t *testing.T) {
 	t.Run("InvalidVisibility", func(t *testing.T) {
 		serializedError := "InvalidVisibility:User:Unknown:some error occurred"
@@ -42,16 +42,16 @@ func TestDeserializeErrorFromStringInvalidFields(t *testing.T) {
 		require.True(t, capabilityErrorsEqual(deserializedErr, expectedErr))
 	})
 
-	t.Run("InvalidErrorCode", func(t *testing.T) {
-		serializedError := "Public:System:InvalidErrorCode:some error occurred"
+	t.Run("NewUnknownErrorCode", func(t *testing.T) {
+		serializedError := "Public:System:NewUnknownErrorCode:some error occurred"
 		deserializedErr := requireCapabilityError(t, caperrs.DeserializeErrorFromString(serializedError))
-		expectedErr := caperrs.NewError(stderrors.New("some error occurred"), caperrs.VisibilityPublic, caperrs.OriginSystem, caperrs.Unknown)
+		expectedErr := caperrs.NewError(stderrors.New("some error occurred"), caperrs.VisibilityPublic, caperrs.OriginSystem, caperrs.ErrorCode(-1))
 		require.True(t, capabilityErrorsEqual(deserializedErr, expectedErr))
 	})
 
 	t.Run("ColonRichPlainMessageMatchingUnknownCode", func(t *testing.T) {
 		// Four segments are always parsed as wire format; invalid visibility/origin tokens are preserved.
-		msg := "failed: attempt: Unknown: details here"
+		msg := "failed:attempt:Unknown: details here"
 		deserializedErr := requireCapabilityError(t, caperrs.DeserializeErrorFromString(msg))
 		expectedErr := caperrs.NewError(stderrors.New(" details here"), caperrs.Visibility(-1), caperrs.Origin(-1), caperrs.Unknown)
 		require.True(t, capabilityErrorsEqual(deserializedErr, expectedErr))
