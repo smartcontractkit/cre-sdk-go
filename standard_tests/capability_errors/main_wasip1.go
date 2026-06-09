@@ -1,11 +1,13 @@
 package main
 
 import (
-	"errors"
+	"fmt"
 	"log/slog"
 
+	caperrors "github.com/smartcontractkit/cre-sdk-go/capabilities/errors"
 	"github.com/smartcontractkit/cre-sdk-go/cre"
 	"github.com/smartcontractkit/cre-sdk-go/cre/wasm"
+	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basicaction"
 	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/basictrigger"
 )
 
@@ -20,11 +22,30 @@ func initFn([]byte, *slog.Logger, cre.SecretsProvider) (cre.Workflow[[]byte], er
 	return cre.Workflow[[]byte]{
 		cre.Handler(
 			basictrigger.Trigger(&basictrigger.Config{}),
-			returnConfig,
+			checkCapabilityErrors,
 		),
 	}, nil
 }
 
-func returnConfig([]byte, cre.Runtime, *basictrigger.Outputs) ([]byte, error) {
-	return nil, errors.New("workflow execution failure")
+func checkCapabilityErrors(_ []byte, rt cre.Runtime, _ *basictrigger.Outputs) (string, error) {
+	action := basicaction.BasicAction{}
+	input := &basicaction.Inputs{InputThing: true}
+
+	for {
+		output, err := action.PerformAction(rt, input).Await()
+		if err == nil {
+			if output.AdaptedThing != "Done" {
+				return "", fmt.Errorf("expected Done response, got %s", output.AdaptedThing)
+			}
+			return "Done", nil
+		}
+
+		capErr, ok := err.(caperrors.Error)
+		if !ok {
+			return "", fmt.Errorf("expected capability error, got %T: %v", err, err)
+		}
+		if capErr.Code() == caperrors.UnrecognisedErrorCode {
+			return "", fmt.Errorf("expected recognised error code, got UnrecognisedErrorCode")
+		}
+	}
 }
