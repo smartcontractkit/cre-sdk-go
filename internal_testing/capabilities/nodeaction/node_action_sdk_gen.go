@@ -10,6 +10,7 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 
 	sdkpb "github.com/smartcontractkit/chainlink-protos/cre/go/sdk"
+	caperrors "github.com/smartcontractkit/cre-sdk-go/capabilities/errors"
 	"github.com/smartcontractkit/cre-sdk-go/cre"
 )
 
@@ -55,7 +56,7 @@ func (c *BasicAction) PerformAction(runtime cre.NodeRuntime, input *NodeInputs) 
 	}), func(i *sdkpb.CapabilityResponse) (*NodeOutputs, error) {
 		switch payload := i.Response.(type) {
 		case *sdkpb.CapabilityResponse_Error:
-			return nil, errors.New(payload.Error)
+			return nil, caperrors.DeserializeErrorFromString(payload.Error)
 		case *sdkpb.CapabilityResponse_Payload:
 			output := &NodeOutputs{}
 			err = payload.Payload.UnmarshalTo(output)
