@@ -3,6 +3,7 @@ package bindings
 import (
 	"crypto/sha256"
 	"encoding/binary"
+	"math"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -129,5 +130,77 @@ func TestCalculateAccountsHash(t *testing.T) {
 		})
 
 		assert.NotEqual(t, hash12, hash21, "hash should depend on account order")
+	})
+}
+
+func TestPrepareSubkeyValue(t *testing.T) {
+	t.Run("string", func(t *testing.T) {
+		got, err := PrepareSubkeyValue("hello")
+		require.NoError(t, err)
+		assert.Equal(t, []byte("hello"), got)
+	})
+
+	t.Run("bytes", func(t *testing.T) {
+		input := []byte{1, 2, 3}
+		got, err := PrepareSubkeyValue(input)
+		require.NoError(t, err)
+		assert.Equal(t, input, got)
+	})
+
+	t.Run("bool true", func(t *testing.T) {
+		got, err := PrepareSubkeyValue(true)
+		require.NoError(t, err)
+		assert.Equal(t, []byte{1}, got)
+	})
+
+	t.Run("bool false", func(t *testing.T) {
+		got, err := PrepareSubkeyValue(false)
+		require.NoError(t, err)
+		assert.Equal(t, []byte{0}, got)
+	})
+
+	t.Run("uint64 big endian", func(t *testing.T) {
+		got, err := PrepareSubkeyValue(uint64(1000))
+		require.NoError(t, err)
+		expected := make([]byte, 8)
+		binary.BigEndian.PutUint64(expected, 1000)
+		assert.Equal(t, expected, got)
+	})
+
+	t.Run("int64 two's complement", func(t *testing.T) {
+		got, err := PrepareSubkeyValue(int64(-1))
+		require.NoError(t, err)
+		expected := make([]byte, 8)
+		binary.BigEndian.PutUint64(expected, uint64(math.MaxUint64)) //nolint:gosec
+		assert.Equal(t, expected, got)
+	})
+
+	t.Run("byte array", func(t *testing.T) {
+		var arr [32]byte
+		for i := range arr {
+			arr[i] = byte(i)
+		}
+		got, err := PrepareSubkeyValue(arr)
+		require.NoError(t, err)
+		assert.Equal(t, arr[:], got)
+	})
+
+	t.Run("pointer dereference", func(t *testing.T) {
+		val := uint64(42)
+		got, err := PrepareSubkeyValue(&val)
+		require.NoError(t, err)
+		expected := make([]byte, 8)
+		binary.BigEndian.PutUint64(expected, 42)
+		assert.Equal(t, expected, got)
+	})
+
+	t.Run("nil error", func(t *testing.T) {
+		_, err := PrepareSubkeyValue(nil)
+		require.Error(t, err)
+	})
+
+	t.Run("unsupported type", func(t *testing.T) {
+		_, err := PrepareSubkeyValue([]string{"a"})
+		require.Error(t, err)
 	})
 }
