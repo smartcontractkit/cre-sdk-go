@@ -93,10 +93,14 @@ func (c *Client) WriteReport(runtime cre.Runtime, input *WriteCreReportRequest) 
 
 const SolanaDevnet = 16423721717087811551
 
+const SolanaMainnet = 124615329519749607
+
 func ChainSelectorFromName(name string) (uint64, error) {
 	switch name {
 	case "solana-devnet":
 		return SolanaDevnet, nil
+	case "solana-mainnet":
+		return SolanaMainnet, nil
 	default:
 		return 0, errors.New("unknown ChainSelector" + name)
 	}
