@@ -16,9 +16,17 @@ type DecodedLog[T any] struct {
 	Data T
 }
 
-// LogTriggerOptions holds optional configuration for log trigger registration.
+const anchorCPIMethodName = "anchor:event"
+
 type LogTriggerOptions struct {
-	CpiFilterConfig *solana.CPIFilterConfig
+	CPI bool
+}
+
+func AnchorCPILogTriggerConfig(programID []byte) *solana.CPIFilterConfig {
+	return &solana.CPIFilterConfig{
+		DestAddress: programID,
+		MethodName:  []byte(anchorCPIMethodName),
+	}
 }
 
 // ForwarderReport represents the Borsh-serialized report format expected by

@@ -240,3 +240,14 @@ func TestEncodeIndexedValueMatchesPrepareSubkeyValue(t *testing.T) {
 		})
 	}
 }
+
+func TestAnchorCPILogTriggerConfig(t *testing.T) {
+	programID := make([]byte, 32)
+	for i := range programID {
+		programID[i] = byte(i)
+	}
+
+	cfg := AnchorCPILogTriggerConfig(programID)
+	require.Equal(t, programID, cfg.DestAddress)
+	require.Equal(t, []byte("anchor:event"), cfg.MethodName)
+}
