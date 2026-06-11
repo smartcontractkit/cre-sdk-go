@@ -3,10 +3,7 @@ package bindings
 import (
 	"bytes"
 	"crypto/sha256"
-	encbinary "encoding/binary"
 	"fmt"
-	"math"
-	"reflect"
 
 	binary "github.com/gagliardetto/binary"
 
@@ -71,61 +68,6 @@ func CalculateAccountsHash(accs []*solana.AccountMeta) [32]byte {
 }
 
 // PrepareSubkeyValue encodes a filter value for use in a SubkeyConfig ValueComparator.
-// Encoding rules match the Solana log poller IndexedValue format.
 func PrepareSubkeyValue(value any) ([]byte, error) {
-	if value == nil {
-		return nil, fmt.Errorf("subkey value cannot be nil")
-	}
-
-	switch v := value.(type) {
-	case []byte:
-		return v, nil
-	case string:
-		return []byte(v), nil
-	case bool:
-		if v {
-			return []byte{1}, nil
-		}
-		return []byte{0}, nil
-	}
-
-	rv := reflect.ValueOf(value)
-	if rv.Kind() == reflect.Ptr {
-		if rv.IsNil() {
-			return nil, fmt.Errorf("subkey value cannot be nil")
-		}
-		return PrepareSubkeyValue(rv.Elem().Interface())
-	}
-
-	// byte arrays (e.g. solana.PublicKey / [32]byte)
-	if rv.Kind() == reflect.Array && rv.Type().Elem().Kind() == reflect.Uint8 {
-		result := make([]byte, rv.Len())
-		for i := 0; i < rv.Len(); i++ {
-			result[i] = byte(rv.Index(i).Uint())
-		}
-		return result, nil
-	}
-
-	if rv.CanUint() {
-		buf := make([]byte, 8)
-		encbinary.BigEndian.PutUint64(buf, rv.Uint())
-		return buf, nil
-	}
-	if rv.CanInt() {
-		buf := make([]byte, 8)
-		encbinary.BigEndian.PutUint64(buf, uint64(rv.Int())) //nolint:gosec // two's complement encoding
-		return buf, nil
-	}
-	if rv.CanFloat() {
-		buf := make([]byte, 8)
-		f := rv.Float()
-		if f > 0 {
-			encbinary.BigEndian.PutUint64(buf, math.Float64bits(f)+math.MaxInt64+1)
-		} else {
-			encbinary.BigEndian.PutUint64(buf, math.MaxInt64+1-math.Float64bits(f))
-		}
-		return buf, nil
-	}
-
-	return nil, fmt.Errorf("unsupported subkey value type %T", value)
+	return EncodeIndexedValue(value)
 }

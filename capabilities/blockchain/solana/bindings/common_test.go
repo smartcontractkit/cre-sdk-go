@@ -3,9 +3,11 @@ package bindings
 import (
 	"crypto/sha256"
 	"encoding/binary"
+	"fmt"
 	"math"
 	"testing"
 
+	bin "github.com/gagliardetto/binary"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -147,18 +149,6 @@ func TestPrepareSubkeyValue(t *testing.T) {
 		assert.Equal(t, input, got)
 	})
 
-	t.Run("bool true", func(t *testing.T) {
-		got, err := PrepareSubkeyValue(true)
-		require.NoError(t, err)
-		assert.Equal(t, []byte{1}, got)
-	})
-
-	t.Run("bool false", func(t *testing.T) {
-		got, err := PrepareSubkeyValue(false)
-		require.NoError(t, err)
-		assert.Equal(t, []byte{0}, got)
-	})
-
 	t.Run("uint64 big endian", func(t *testing.T) {
 		got, err := PrepareSubkeyValue(uint64(1000))
 		require.NoError(t, err)
@@ -194,6 +184,22 @@ func TestPrepareSubkeyValue(t *testing.T) {
 		assert.Equal(t, expected, got)
 	})
 
+	t.Run("uint8 widened to 8 bytes", func(t *testing.T) {
+		got, err := PrepareSubkeyValue(uint8(5))
+		require.NoError(t, err)
+		expected := make([]byte, 8)
+		binary.BigEndian.PutUint64(expected, 5)
+		assert.Equal(t, expected, got)
+	})
+
+	t.Run("float32 widened to float64 encoding", func(t *testing.T) {
+		got, err := PrepareSubkeyValue(float32(1.5))
+		require.NoError(t, err)
+		expected, err := PrepareSubkeyValue(float64(1.5))
+		require.NoError(t, err)
+		assert.Equal(t, expected, got)
+	})
+
 	t.Run("nil error", func(t *testing.T) {
 		_, err := PrepareSubkeyValue(nil)
 		require.Error(t, err)
@@ -203,4 +209,34 @@ func TestPrepareSubkeyValue(t *testing.T) {
 		_, err := PrepareSubkeyValue([]string{"a"})
 		require.Error(t, err)
 	})
+
+	t.Run("bool unsupported", func(t *testing.T) {
+		_, err := PrepareSubkeyValue(true)
+		require.Error(t, err)
+	})
+
+	t.Run("uint128 unsupported", func(t *testing.T) {
+		_, err := PrepareSubkeyValue(bin.Uint128{Lo: 1000, Hi: 0})
+		require.Error(t, err)
+	})
+}
+
+func TestEncodeIndexedValueMatchesPrepareSubkeyValue(t *testing.T) {
+	values := []any{
+		"hello",
+		[]byte{1, 2, 3},
+		uint64(1000),
+		int64(-1),
+		uint8(5),
+		float32(1.5),
+	}
+	for _, value := range values {
+		t.Run(fmt.Sprintf("%T", value), func(t *testing.T) {
+			prepared, err := PrepareSubkeyValue(value)
+			require.NoError(t, err)
+			encoded, err := EncodeIndexedValue(value)
+			require.NoError(t, err)
+			assert.Equal(t, prepared, encoded)
+		})
+	}
 }
