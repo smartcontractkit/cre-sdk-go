@@ -10,6 +10,25 @@ import (
 	"github.com/smartcontractkit/cre-sdk-go/capabilities/blockchain/solana"
 )
 
+// DecodedLog wraps a Solana log with its decoded event data.
+type DecodedLog[T any] struct {
+	*solana.Log
+	Data T
+}
+
+const anchorCPIMethodName = "anchor:event"
+
+type LogTriggerOptions struct {
+	CPI bool
+}
+
+func AnchorCPILogTriggerConfig(programID []byte) *solana.CPIFilterConfig {
+	return &solana.CPIFilterConfig{
+		DestAddress: programID,
+		MethodName:  []byte(anchorCPIMethodName),
+	}
+}
+
 // ForwarderReport represents the Borsh-serialized report format expected by
 // the Solana keystone-forwarder program's on_report instruction.
 type ForwarderReport struct {
@@ -54,4 +73,9 @@ func CalculateAccountsHash(accs []*solana.AccountMeta) [32]byte {
 		accounts = append(accounts, acc.PublicKey...)
 	}
 	return sha256.Sum256(accounts)
+}
+
+// PrepareSubkeyValue encodes a filter value for use in a SubkeyConfig ValueComparator.
+func PrepareSubkeyValue(value any) ([]byte, error) {
+	return EncodeIndexedValue(value)
 }
