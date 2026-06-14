@@ -12,3 +12,5 @@ require (
 	github.com/shopspring/decimal v1.4.0 // indirect
 	google.golang.org/protobuf v1.36.8
 )
+
+replace github.com/smartcontractkit/chainlink-protos/cre/go => ../../../../chainlink-protos/cre/go
