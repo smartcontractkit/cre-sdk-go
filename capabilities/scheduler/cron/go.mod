@@ -3,8 +3,8 @@ module github.com/smartcontractkit/cre-sdk-go/capabilities/scheduler/cron
 go 1.25.3
 
 require (
-	github.com/smartcontractkit/chainlink-protos/cre/go v0.0.0-20260611014504-5f00275cf10d
-	github.com/smartcontractkit/cre-sdk-go v1.12.1-0.20260615155415-b9580b751cd4
+	github.com/smartcontractkit/chainlink-protos/cre/go v0.0.0-20260615191028-c2b8c77fd0d6
+	github.com/smartcontractkit/cre-sdk-go v1.12.1-0.20260616122152-41e074085729
 	google.golang.org/protobuf v1.36.11
 )
 
