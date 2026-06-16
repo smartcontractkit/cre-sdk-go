@@ -4,16 +4,20 @@ go 1.25.3
 
 require (
 	github.com/gagliardetto/binary v0.8.0
-	github.com/smartcontractkit/chainlink-protos/cre/go v0.0.0-20260611014504-5f00275cf10d
-	github.com/smartcontractkit/cre-sdk-go v1.0.1-0.20251111122439-00032d582c18
+	github.com/smartcontractkit/chainlink-protos/cre/go v0.0.0-20260615191028-c2b8c77fd0d6
+	github.com/smartcontractkit/cre-sdk-go v1.12.1-0.20260616122152-41e074085729
 	github.com/stretchr/testify v1.11.1
-	google.golang.org/protobuf v1.36.8
+	google.golang.org/protobuf v1.36.11
 )
 
 require (
+	github.com/ProjectZKM/Ziren/crates/go-runtime/zkvm_runtime v0.0.0-20251001021608-1fe7b43fc4d6 // indirect
 	github.com/blendle/zapdriver v1.3.1 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
+	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.0.1 // indirect
+	github.com/ethereum/go-ethereum v1.17.2 // indirect
 	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
+	github.com/holiman/uint256 v1.3.2 // indirect
 	github.com/logrusorgru/aurora v2.0.3+incompatible // indirect
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
