@@ -1,4 +1,4 @@
-module github.com/smartcontractkit/cre-sdk-go/capabilities/scheduler/cron
+module github.com/smartcontractkit/cre-sdk-go/capabilities/blockchain/aptos
 
 go 1.25.3
 

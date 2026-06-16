@@ -5,10 +5,11 @@ on:
     branches:
       - capabilities-development
   pull_request:
+    branches:
+      - capabilities-development
 
 jobs:
   validate-protos-version:
-    if: github.event_name == 'push' || github.base_ref == 'capabilities-development'
     permissions:
       contents: read
     runs-on: ubuntu-latest

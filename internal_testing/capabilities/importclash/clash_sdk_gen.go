@@ -9,6 +9,7 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 
 	sdkpb "github.com/smartcontractkit/chainlink-protos/cre/go/sdk"
+	caperrors "github.com/smartcontractkit/cre-sdk-go/capabilities/errors"
 	"github.com/smartcontractkit/cre-sdk-go/cre"
 	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/importclash/p1"
 	"github.com/smartcontractkit/cre-sdk-go/internal_testing/capabilities/importclash/p2"
@@ -36,7 +37,7 @@ func (c *BasicAction) performAction(runtime cre.RuntimeBase, input *p1.Item) cre
 	}), func(i *sdkpb.CapabilityResponse) (*p2.Item, error) {
 		switch payload := i.Response.(type) {
 		case *sdkpb.CapabilityResponse_Error:
-			return nil, errors.New(payload.Error)
+			return nil, caperrors.DeserializeErrorFromString(payload.Error)
 		case *sdkpb.CapabilityResponse_Payload:
 			output := &p2.Item{}
 			err = payload.Payload.UnmarshalTo(output)

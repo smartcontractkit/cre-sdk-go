@@ -350,105 +350,9 @@ func (c *Client) writeReport(runtime cre.RuntimeBase, input *WriteCreReportReque
 
 }
 
-type ClientRestrictor struct {
-	ChainSelector uint64
-}
+const AdiMainnet = 4059281736450291836
 
-func (c *ClientRestrictor) LimitCallContract(maxCalls int32) *sdkpb.CapabilityRestriction {
-	return &sdkpb.CapabilityRestriction{
-		Restriction: &sdkpb.CapabilityRestriction_Method{
-			Method: &sdkpb.MethodRestriction{
-				Id:       "evm" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
-				Method:   "CallContract",
-				MaxCalls: maxCalls,
-			},
-		},
-	}
-}
-
-func (c *ClientRestrictor) LimitFilterLogs(maxCalls int32) *sdkpb.CapabilityRestriction {
-	return &sdkpb.CapabilityRestriction{
-		Restriction: &sdkpb.CapabilityRestriction_Method{
-			Method: &sdkpb.MethodRestriction{
-				Id:       "evm" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
-				Method:   "FilterLogs",
-				MaxCalls: maxCalls,
-			},
-		},
-	}
-}
-
-func (c *ClientRestrictor) LimitBalanceAt(maxCalls int32) *sdkpb.CapabilityRestriction {
-	return &sdkpb.CapabilityRestriction{
-		Restriction: &sdkpb.CapabilityRestriction_Method{
-			Method: &sdkpb.MethodRestriction{
-				Id:       "evm" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
-				Method:   "BalanceAt",
-				MaxCalls: maxCalls,
-			},
-		},
-	}
-}
-
-func (c *ClientRestrictor) LimitEstimateGas(maxCalls int32) *sdkpb.CapabilityRestriction {
-	return &sdkpb.CapabilityRestriction{
-		Restriction: &sdkpb.CapabilityRestriction_Method{
-			Method: &sdkpb.MethodRestriction{
-				Id:       "evm" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
-				Method:   "EstimateGas",
-				MaxCalls: maxCalls,
-			},
-		},
-	}
-}
-
-func (c *ClientRestrictor) LimitGetTransactionByHash(maxCalls int32) *sdkpb.CapabilityRestriction {
-	return &sdkpb.CapabilityRestriction{
-		Restriction: &sdkpb.CapabilityRestriction_Method{
-			Method: &sdkpb.MethodRestriction{
-				Id:       "evm" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
-				Method:   "GetTransactionByHash",
-				MaxCalls: maxCalls,
-			},
-		},
-	}
-}
-
-func (c *ClientRestrictor) LimitGetTransactionReceipt(maxCalls int32) *sdkpb.CapabilityRestriction {
-	return &sdkpb.CapabilityRestriction{
-		Restriction: &sdkpb.CapabilityRestriction_Method{
-			Method: &sdkpb.MethodRestriction{
-				Id:       "evm" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
-				Method:   "GetTransactionReceipt",
-				MaxCalls: maxCalls,
-			},
-		},
-	}
-}
-
-func (c *ClientRestrictor) LimitHeaderByNumber(maxCalls int32) *sdkpb.CapabilityRestriction {
-	return &sdkpb.CapabilityRestriction{
-		Restriction: &sdkpb.CapabilityRestriction_Method{
-			Method: &sdkpb.MethodRestriction{
-				Id:       "evm" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
-				Method:   "HeaderByNumber",
-				MaxCalls: maxCalls,
-			},
-		},
-	}
-}
-
-func (c *ClientRestrictor) LimitWriteReport(maxCalls int32) *sdkpb.CapabilityRestriction {
-	return &sdkpb.CapabilityRestriction{
-		Restriction: &sdkpb.CapabilityRestriction_Method{
-			Method: &sdkpb.MethodRestriction{
-				Id:       "evm" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
-				Method:   "WriteReport",
-				MaxCalls: maxCalls,
-			},
-		},
-	}
-}
+const AdiTestnet = 9418205736192840573
 
 const ApechainTestnetCurtis = 9900119385908781505
 
@@ -463,6 +367,8 @@ const BinanceSmartChainMainnet = 11344663589394136015
 const BinanceSmartChainTestnet = 13264668187771770619
 
 const CeloMainnet = 1346049177634351622
+
+const CeloSepolia = 3761762704474186180
 
 const CronosTestnet = 2995292832068775165
 
@@ -542,6 +448,8 @@ const PolygonTestnetAmoy = 16281711391670634445
 
 const PrivateTestnetAndesite = 6915682381028791124
 
+const PrivateTestnetRhyolite = 604447335222770945
+
 const SonicMainnet = 1673871237479749969
 
 const SonicTestnet = 1763698235108410440
@@ -552,6 +460,10 @@ const XlayerTestnet = 10212741611335999305
 
 func ChainSelectorFromName(name string) (uint64, error) {
 	switch name {
+	case "adi-mainnet":
+		return AdiMainnet, nil
+	case "adi-testnet":
+		return AdiTestnet, nil
 	case "apechain-testnet-curtis":
 		return ApechainTestnetCurtis, nil
 	case "arc-testnet":
@@ -566,6 +478,8 @@ func ChainSelectorFromName(name string) (uint64, error) {
 		return BinanceSmartChainTestnet, nil
 	case "celo-mainnet":
 		return CeloMainnet, nil
+	case "celo-sepolia":
+		return CeloSepolia, nil
 	case "cronos-testnet":
 		return CronosTestnet, nil
 	case "dtcc-testnet-andesite":
@@ -644,6 +558,8 @@ func ChainSelectorFromName(name string) (uint64, error) {
 		return PolygonTestnetAmoy, nil
 	case "private-testnet-andesite":
 		return PrivateTestnetAndesite, nil
+	case "private-testnet-rhyolite":
+		return PrivateTestnetRhyolite, nil
 	case "sonic-mainnet":
 		return SonicMainnet, nil
 	case "sonic-testnet":

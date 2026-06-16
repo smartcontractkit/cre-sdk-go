@@ -11,6 +11,7 @@ import (
 	"github.com/smartcontractkit/chainlink-protos/cre/go/sdk"
 	sdkpb "github.com/smartcontractkit/chainlink-protos/cre/go/sdk"
 	"github.com/smartcontractkit/chainlink-protos/cre/go/values/pb"
+	caperrors "github.com/smartcontractkit/cre-sdk-go/capabilities/errors"
 	"github.com/smartcontractkit/cre-sdk-go/cre"
 )
 
@@ -36,7 +37,7 @@ func (c *Consensus) simple(runtime cre.RuntimeBase, input *sdk.SimpleConsensusIn
 	}), func(i *sdkpb.CapabilityResponse) (*pb.Value, error) {
 		switch payload := i.Response.(type) {
 		case *sdkpb.CapabilityResponse_Error:
-			return nil, errors.New(payload.Error)
+			return nil, caperrors.DeserializeErrorFromString(payload.Error)
 		case *sdkpb.CapabilityResponse_Payload:
 			output := &pb.Value{}
 			err = payload.Payload.UnmarshalTo(output)
@@ -68,7 +69,7 @@ func (c *Consensus) report(runtime cre.RuntimeBase, input *sdk.ReportRequest) cr
 	}), func(i *sdkpb.CapabilityResponse) (*sdk.ReportResponse, error) {
 		switch payload := i.Response.(type) {
 		case *sdkpb.CapabilityResponse_Error:
-			return nil, errors.New(payload.Error)
+			return nil, caperrors.DeserializeErrorFromString(payload.Error)
 		case *sdkpb.CapabilityResponse_Payload:
 			output := &sdk.ReportResponse{}
 			err = payload.Payload.UnmarshalTo(output)
