@@ -11,6 +11,7 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 
 	sdkpb "github.com/smartcontractkit/chainlink-protos/cre/go/sdk"
+	caperrors "github.com/smartcontractkit/cre-sdk-go/capabilities/errors"
 	"github.com/smartcontractkit/cre-sdk-go/cre"
 )
 
@@ -37,7 +38,7 @@ func (c *Client) accountAPTBalance(runtime cre.RuntimeBase, input *AccountAPTBal
 	}), func(i *sdkpb.CapabilityResponse) (*AccountAPTBalanceReply, error) {
 		switch payload := i.Response.(type) {
 		case *sdkpb.CapabilityResponse_Error:
-			return nil, errors.New(payload.Error)
+			return nil, caperrors.DeserializeErrorFromString(payload.Error)
 		case *sdkpb.CapabilityResponse_Payload:
 			output := &AccountAPTBalanceReply{}
 			err = payload.Payload.UnmarshalTo(output)
@@ -69,7 +70,7 @@ func (c *Client) view(runtime cre.RuntimeBase, input *ViewRequest) cre.Promise[*
 	}), func(i *sdkpb.CapabilityResponse) (*ViewReply, error) {
 		switch payload := i.Response.(type) {
 		case *sdkpb.CapabilityResponse_Error:
-			return nil, errors.New(payload.Error)
+			return nil, caperrors.DeserializeErrorFromString(payload.Error)
 		case *sdkpb.CapabilityResponse_Payload:
 			output := &ViewReply{}
 			err = payload.Payload.UnmarshalTo(output)
@@ -101,7 +102,7 @@ func (c *Client) transactionByHash(runtime cre.RuntimeBase, input *TransactionBy
 	}), func(i *sdkpb.CapabilityResponse) (*TransactionByHashReply, error) {
 		switch payload := i.Response.(type) {
 		case *sdkpb.CapabilityResponse_Error:
-			return nil, errors.New(payload.Error)
+			return nil, caperrors.DeserializeErrorFromString(payload.Error)
 		case *sdkpb.CapabilityResponse_Payload:
 			output := &TransactionByHashReply{}
 			err = payload.Payload.UnmarshalTo(output)
@@ -133,7 +134,7 @@ func (c *Client) accountTransactions(runtime cre.RuntimeBase, input *AccountTran
 	}), func(i *sdkpb.CapabilityResponse) (*AccountTransactionsReply, error) {
 		switch payload := i.Response.(type) {
 		case *sdkpb.CapabilityResponse_Error:
-			return nil, errors.New(payload.Error)
+			return nil, caperrors.DeserializeErrorFromString(payload.Error)
 		case *sdkpb.CapabilityResponse_Payload:
 			output := &AccountTransactionsReply{}
 			err = payload.Payload.UnmarshalTo(output)
@@ -204,7 +205,7 @@ func (c *Client) writeReport(runtime cre.RuntimeBase, input *WriteCreReportReque
 	}), func(i *sdkpb.CapabilityResponse) (*WriteReportReply, error) {
 		switch payload := i.Response.(type) {
 		case *sdkpb.CapabilityResponse_Error:
-			return nil, errors.New(payload.Error)
+			return nil, caperrors.DeserializeErrorFromString(payload.Error)
 		case *sdkpb.CapabilityResponse_Payload:
 			output := &WriteReportReply{}
 			err = payload.Payload.UnmarshalTo(output)

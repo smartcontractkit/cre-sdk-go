@@ -11,6 +11,7 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 
 	sdkpb "github.com/smartcontractkit/chainlink-protos/cre/go/sdk"
+	caperrors "github.com/smartcontractkit/cre-sdk-go/capabilities/errors"
 	"github.com/smartcontractkit/cre-sdk-go/cre"
 )
 
@@ -37,7 +38,7 @@ func (c *Client) callContract(runtime cre.RuntimeBase, input *CallContractReques
 	}), func(i *sdkpb.CapabilityResponse) (*CallContractReply, error) {
 		switch payload := i.Response.(type) {
 		case *sdkpb.CapabilityResponse_Error:
-			return nil, errors.New(payload.Error)
+			return nil, caperrors.DeserializeErrorFromString(payload.Error)
 		case *sdkpb.CapabilityResponse_Payload:
 			output := &CallContractReply{}
 			err = payload.Payload.UnmarshalTo(output)
@@ -69,7 +70,7 @@ func (c *Client) filterLogs(runtime cre.RuntimeBase, input *FilterLogsRequest) c
 	}), func(i *sdkpb.CapabilityResponse) (*FilterLogsReply, error) {
 		switch payload := i.Response.(type) {
 		case *sdkpb.CapabilityResponse_Error:
-			return nil, errors.New(payload.Error)
+			return nil, caperrors.DeserializeErrorFromString(payload.Error)
 		case *sdkpb.CapabilityResponse_Payload:
 			output := &FilterLogsReply{}
 			err = payload.Payload.UnmarshalTo(output)
@@ -101,7 +102,7 @@ func (c *Client) balanceAt(runtime cre.RuntimeBase, input *BalanceAtRequest) cre
 	}), func(i *sdkpb.CapabilityResponse) (*BalanceAtReply, error) {
 		switch payload := i.Response.(type) {
 		case *sdkpb.CapabilityResponse_Error:
-			return nil, errors.New(payload.Error)
+			return nil, caperrors.DeserializeErrorFromString(payload.Error)
 		case *sdkpb.CapabilityResponse_Payload:
 			output := &BalanceAtReply{}
 			err = payload.Payload.UnmarshalTo(output)
@@ -133,7 +134,7 @@ func (c *Client) estimateGas(runtime cre.RuntimeBase, input *EstimateGasRequest)
 	}), func(i *sdkpb.CapabilityResponse) (*EstimateGasReply, error) {
 		switch payload := i.Response.(type) {
 		case *sdkpb.CapabilityResponse_Error:
-			return nil, errors.New(payload.Error)
+			return nil, caperrors.DeserializeErrorFromString(payload.Error)
 		case *sdkpb.CapabilityResponse_Payload:
 			output := &EstimateGasReply{}
 			err = payload.Payload.UnmarshalTo(output)
@@ -165,7 +166,7 @@ func (c *Client) getTransactionByHash(runtime cre.RuntimeBase, input *GetTransac
 	}), func(i *sdkpb.CapabilityResponse) (*GetTransactionByHashReply, error) {
 		switch payload := i.Response.(type) {
 		case *sdkpb.CapabilityResponse_Error:
-			return nil, errors.New(payload.Error)
+			return nil, caperrors.DeserializeErrorFromString(payload.Error)
 		case *sdkpb.CapabilityResponse_Payload:
 			output := &GetTransactionByHashReply{}
 			err = payload.Payload.UnmarshalTo(output)
@@ -197,7 +198,7 @@ func (c *Client) getTransactionReceipt(runtime cre.RuntimeBase, input *GetTransa
 	}), func(i *sdkpb.CapabilityResponse) (*GetTransactionReceiptReply, error) {
 		switch payload := i.Response.(type) {
 		case *sdkpb.CapabilityResponse_Error:
-			return nil, errors.New(payload.Error)
+			return nil, caperrors.DeserializeErrorFromString(payload.Error)
 		case *sdkpb.CapabilityResponse_Payload:
 			output := &GetTransactionReceiptReply{}
 			err = payload.Payload.UnmarshalTo(output)
@@ -229,7 +230,7 @@ func (c *Client) headerByNumber(runtime cre.RuntimeBase, input *HeaderByNumberRe
 	}), func(i *sdkpb.CapabilityResponse) (*HeaderByNumberReply, error) {
 		switch payload := i.Response.(type) {
 		case *sdkpb.CapabilityResponse_Error:
-			return nil, errors.New(payload.Error)
+			return nil, caperrors.DeserializeErrorFromString(payload.Error)
 		case *sdkpb.CapabilityResponse_Payload:
 			output := &HeaderByNumberReply{}
 			err = payload.Payload.UnmarshalTo(output)
@@ -336,7 +337,7 @@ func (c *Client) writeReport(runtime cre.RuntimeBase, input *WriteCreReportReque
 	}), func(i *sdkpb.CapabilityResponse) (*WriteReportReply, error) {
 		switch payload := i.Response.(type) {
 		case *sdkpb.CapabilityResponse_Error:
-			return nil, errors.New(payload.Error)
+			return nil, caperrors.DeserializeErrorFromString(payload.Error)
 		case *sdkpb.CapabilityResponse_Payload:
 			output := &WriteReportReply{}
 			err = payload.Payload.UnmarshalTo(output)
