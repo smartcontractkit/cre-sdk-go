@@ -25,14 +25,7 @@ var anyResponse = &http.Response{
 }
 
 var anyContext = []byte{4, 5, 6}
-var anyReportBody = []byte(`{"data": "example"}`)
-var anyReport = func() []byte {
-	metadata := make([]byte, cre.ReportMetadataHeaderLength)
-	for i := range cre.ReportMetadataHeaderLength {
-		metadata[i] = byte(i % 256)
-	}
-	return append(metadata, anyReportBody...)
-}()
+var anyReport = `prepended metadata: {"data": "example"}`
 var anySigs = []*sdk.AttributedSignature{
 	{
 		Signature: []byte{7, 8, 9},
@@ -47,7 +40,7 @@ var anyReportResponse = &sdk.ReportResponse{
 	ConfigDigest:  []byte{1, 2, 3},
 	SeqNr:         112,
 	ReportContext: anyContext,
-	RawReport:     anyReport,
+	RawReport:     []byte(anyReport),
 	Sigs:          anySigs,
 }
 
