@@ -5,7 +5,7 @@ go 1.25.3
 require (
 	github.com/ethereum/go-ethereum v1.17.2
 	github.com/shopspring/decimal v1.4.0
-	github.com/smartcontractkit/chainlink-protos/cre/go v0.0.0-20260611014504-5f00275cf10d
+	github.com/smartcontractkit/chainlink-protos/cre/go v0.0.0-20260616233142-e7de09d4f553
 	github.com/stretchr/testify v1.11.1
 	google.golang.org/protobuf v1.36.11
 )
