@@ -5,7 +5,7 @@ go 1.25.3
 require (
 	github.com/gagliardetto/binary v0.8.0
 	github.com/smartcontractkit/chainlink-protos/cre/go v0.0.0-20260605145520-8da72855a204
-	github.com/smartcontractkit/cre-sdk-go v1.9.0-capdev.1.0.20260604141302-cab1886c5f34
+	github.com/smartcontractkit/cre-sdk-go v1.12.1-0.20260617132837-bf9cf9ae7aaa
 	github.com/stretchr/testify v1.11.1
 	google.golang.org/protobuf v1.36.11
 )
