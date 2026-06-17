@@ -4,8 +4,8 @@ go 1.25.3
 
 require (
 	github.com/ethereum/go-ethereum v1.17.2
-	github.com/smartcontractkit/chainlink-protos/cre/go v0.0.0-20260615191028-c2b8c77fd0d6
-	github.com/smartcontractkit/cre-sdk-go v1.12.1-0.20260616122152-41e074085729
+	github.com/smartcontractkit/chainlink-protos/cre/go v0.0.0-20260611014504-5f00275cf10d
+	github.com/smartcontractkit/cre-sdk-go v1.12.1-0.20260611161230-05e667f70291
 	github.com/stretchr/testify v1.11.1
 	google.golang.org/protobuf v1.36.11
 )
@@ -30,9 +30,9 @@ require (
 	github.com/tklauser/go-sysconf v0.3.12 // indirect
 	github.com/tklauser/numcpus v0.6.1 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
-	go.opentelemetry.io/otel v1.44.0 // indirect
-	go.opentelemetry.io/otel/metric v1.44.0 // indirect
-	go.opentelemetry.io/otel/trace v1.44.0 // indirect
+	go.opentelemetry.io/otel v1.40.0 // indirect
+	go.opentelemetry.io/otel/metric v1.40.0 // indirect
+	go.opentelemetry.io/otel/trace v1.40.0 // indirect
 	golang.org/x/sys v0.41.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
