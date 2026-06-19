@@ -58,8 +58,8 @@ github.com/shopspring/decimal v1.4.0 h1:bxl37RwXBklmTi0C79JfXCEBD1cqqHt0bbgBAGFp
 github.com/shopspring/decimal v1.4.0/go.mod h1:gawqmDU56v4yIKSwfBSFip1HdCCXN8/+DMd9qYNcwME=
 github.com/smartcontractkit/chainlink-protos/cre/go v0.0.0-20260526195338-adcf8013a1b7 h1:iljEJss3WOwcsMkWy72Yn2zvjw7Gyxc+RXL7r8YKM6g=
 github.com/smartcontractkit/chainlink-protos/cre/go v0.0.0-20260526195338-adcf8013a1b7/go.mod h1:vTFHTCbLui4Vn8fTmAadfE3rdnvfrDwOmMujmW857D0=
-github.com/smartcontractkit/cre-sdk-go v1.12.1-0.20260617132837-bf9cf9ae7aaa h1:46A8mQp1JLEaiSD4l2unCxSwtDprKf1JKSe5CHkyTwk=
-github.com/smartcontractkit/cre-sdk-go v1.12.1-0.20260617132837-bf9cf9ae7aaa/go.mod h1:B9bBug58zdooG8ylplFLDnto1hapkCYyVO+FZar0hTM=
+github.com/smartcontractkit/cre-sdk-go v1.9.0-capdev.1.0.20260617135440-26de2b63ee4e h1:2ki5EfvtBYDFW0ayYqFPS9sFGNOoMYaOhrI2oSO4gKU=
+github.com/smartcontractkit/cre-sdk-go v1.9.0-capdev.1.0.20260617135440-26de2b63ee4e/go.mod h1:B9bBug58zdooG8ylplFLDnto1hapkCYyVO+FZar0hTM=
 github.com/stretchr/testify v1.11.1 h1:7s2iGBzp5EwR7/aIZr8ao5+dra3wiQyKjjFuvgVKu7U=
 github.com/stretchr/testify v1.11.1/go.mod h1:wZwfW3scLgRK+23gO65QZefKpKQRnfz6sD981Nm4B6U=
 github.com/supranational/blst v0.3.16 h1:bTDadT+3fK497EvLdWRQEjiGnUtzJ7jjIUMF0jqwYhE=
