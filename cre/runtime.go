@@ -14,6 +14,8 @@ import (
 type SecretRequest = sdk.SecretRequest
 type Secret = sdk.Secret
 
+const DefaultSecretNamespace = "main"
+
 // RuntimeBase provides the basic functionality of a CRE runtime.
 // It is not thread safe and must not be used concurrently.
 type RuntimeBase interface {
@@ -35,6 +37,10 @@ type RuntimeBase interface {
 type SecretsProvider interface {
 	// GetSecret retrieves a secret by its request.
 	GetSecret(*SecretRequest) Promise[*Secret]
+
+	// GetSecrets retrieves multiple secrets in a single batch call.
+	// Returns an error if any secret in the batch fails.
+	GetSecrets([]*SecretRequest) Promise[[]*Secret]
 }
 
 // NodeRuntime provides access to Node capabilities
