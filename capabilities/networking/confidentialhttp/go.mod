@@ -4,7 +4,7 @@ go 1.25.3
 
 require (
 	github.com/smartcontractkit/chainlink-protos/cre/go v0.0.0-20260526195338-adcf8013a1b7
-	github.com/smartcontractkit/cre-sdk-go v1.9.0-capdev.1.0.20260604141302-cab1886c5f34
+	github.com/smartcontractkit/cre-sdk-go v1.9.0-capdev.1.0.20260617135440-26de2b63ee4e
 )
 
 require (
