@@ -36,7 +36,7 @@ func ConsensusIdenticalAggregation[T any]() ConsensusAggregation[T] {
 		return &consensusDescriptor[T]{Descriptor_: &sdk.ConsensusDescriptor_Aggregation{Aggregation: sdk.AggregationType_AGGREGATION_TYPE_IDENTICAL}}
 	}
 
-	return &consensusDescriptorError[T]{Error: fmt.Errorf("%T is not a valid type for identical consensus", t)}
+	return &consensusDescriptorError[T]{Error: fmt.Errorf("consensus configuration error: type %T is not valid for identical consensus aggregation. Identical consensus requires primitive types (string, bool, numeric), maps with string keys, structs with exported fields, or slices/arrays of these types", t)}
 }
 
 // ConsensusCommonPrefixAggregation uses the longest common prefix across nodes.
@@ -48,7 +48,7 @@ func ConsensusCommonPrefixAggregation[T any]() func() (ConsensusAggregation[[]T]
 			return &consensusDescriptor[[]T]{Descriptor_: &sdk.ConsensusDescriptor_Aggregation{Aggregation: sdk.AggregationType_AGGREGATION_TYPE_COMMON_PREFIX}}, nil
 		}
 
-		return &consensusDescriptor[[]T]{}, fmt.Errorf("%T is not a valid type for common prefix consensus", t)
+		return &consensusDescriptor[[]T]{}, fmt.Errorf("consensus configuration error: type %T is not valid for common prefix consensus aggregation. Common prefix requires slices or arrays of primitive types", t)
 	}
 }
 
@@ -61,7 +61,7 @@ func ConsensusCommonSuffixAggregation[T any]() func() (ConsensusAggregation[[]T]
 			return &consensusDescriptor[[]T]{Descriptor_: &sdk.ConsensusDescriptor_Aggregation{Aggregation: sdk.AggregationType_AGGREGATION_TYPE_COMMON_SUFFIX}}, nil
 		}
 
-		return &consensusDescriptor[[]T]{}, fmt.Errorf("%T is not a valid type for common prefix consensus", t)
+		return &consensusDescriptor[[]T]{}, fmt.Errorf("consensus configuration error: type %T is not valid for common suffix consensus aggregation. Common suffix requires slices or arrays of primitive types", t)
 	}
 }
 
@@ -96,7 +96,7 @@ func parseConsensusTag(t reflect.Type, path string) (*sdk.ConsensusDescriptor, e
 	}
 
 	if t.Kind() != reflect.Struct {
-		return nil, fmt.Errorf("ConsensusAggregationFromTags expects a struct type, got %s", t.Kind())
+		return nil, fmt.Errorf("consensus configuration error: ConsensusAggregationFromTags expects a struct type, got %s. Define your consensus output as a struct with consensus_aggregation tags on each field", t.Kind())
 	}
 
 	descriptors := make(map[string]*sdk.ConsensusDescriptor)
@@ -105,7 +105,7 @@ func parseConsensusTag(t reflect.Type, path string) (*sdk.ConsensusDescriptor, e
 		tag := field.Tag.Get("consensus_aggregation")
 		if tag == "" {
 			if field.IsExported() {
-				return nil, fmt.Errorf("missing consensus tag on type %s accessed via %s", t.Name(), path+field.Name)
+				return nil, fmt.Errorf("consensus configuration error: missing consensus_aggregation tag on exported field %q of type %s (accessed via %s). Add a tag like `consensus_aggregation:\"median\"` or `consensus_aggregation:\"identical\"`, or use `consensus_aggregation:\"ignore\"` to skip this field", field.Name, t.Name(), path+field.Name)
 			}
 
 			continue
@@ -115,7 +115,7 @@ func parseConsensusTag(t reflect.Type, path string) (*sdk.ConsensusDescriptor, e
 		}
 
 		if !field.IsExported() {
-			return nil, fmt.Errorf("unexported field %s with consensus tag on type %s accessed via %s", field.Name, t.Name(), path)
+			return nil, fmt.Errorf("consensus configuration error: unexported field %q on type %s (accessed via %s) has a consensus_aggregation tag, but only exported fields can participate in consensus. Either export the field or remove the tag", field.Name, t.Name(), path)
 		}
 
 		serializedName := field.Name
@@ -145,22 +145,22 @@ func parseConsensusTag(t reflect.Type, path string) (*sdk.ConsensusDescriptor, e
 		switch tag {
 		case "median":
 			if !isNumeric(tpe) {
-				return nil, fmt.Errorf("field %s marked as median but is not a numeric type", field.Name)
+				return nil, fmt.Errorf("consensus configuration error: field %q is tagged as \"median\" but has non-numeric type %s. Median aggregation requires a numeric type (int, uint, float, big.Int, decimal.Decimal, or time.Time)", field.Name, tpe)
 			}
 			descriptors[serializedName] = &sdk.ConsensusDescriptor{Descriptor_: &sdk.ConsensusDescriptor_Aggregation{Aggregation: sdk.AggregationType_AGGREGATION_TYPE_MEDIAN}}
 		case "identical":
 			if !isIdenticalType(tpe) {
-				return nil, fmt.Errorf("field %s marked as identical but is not a valid type", field.Name)
+				return nil, fmt.Errorf("consensus configuration error: field %q is tagged as \"identical\" but has unsupported type %s. Identical aggregation requires primitive types (string, bool, numeric), maps with string keys, or structs with exported fields", field.Name, tpe)
 			}
 			descriptors[serializedName] = &sdk.ConsensusDescriptor{Descriptor_: &sdk.ConsensusDescriptor_Aggregation{Aggregation: sdk.AggregationType_AGGREGATION_TYPE_IDENTICAL}}
 		case "common_prefix":
 			if !isIdenticalSliceOrArray(tpe) {
-				return nil, fmt.Errorf("field %s marked as common_prefix but is not slice/array", field.Name)
+				return nil, fmt.Errorf("consensus configuration error: field %q is tagged as \"common_prefix\" but has type %s. Common prefix aggregation requires a slice or array of primitive types", field.Name, tpe)
 			}
 			descriptors[serializedName] = &sdk.ConsensusDescriptor{Descriptor_: &sdk.ConsensusDescriptor_Aggregation{Aggregation: sdk.AggregationType_AGGREGATION_TYPE_COMMON_PREFIX}}
 		case "common_suffix":
 			if !isIdenticalSliceOrArray(field.Type) {
-				return nil, fmt.Errorf("field %s marked as common_suffix but is not slice/array", field.Name)
+				return nil, fmt.Errorf("consensus configuration error: field %q is tagged as \"common_suffix\" but has type %s. Common suffix aggregation requires a slice or array of primitive types", field.Name, tpe)
 			}
 			descriptors[serializedName] = &sdk.ConsensusDescriptor{Descriptor_: &sdk.ConsensusDescriptor_Aggregation{Aggregation: sdk.AggregationType_AGGREGATION_TYPE_COMMON_SUFFIX}}
 		case "nested":
@@ -169,7 +169,7 @@ func parseConsensusTag(t reflect.Type, path string) (*sdk.ConsensusDescriptor, e
 				return nil, fmt.Errorf("nested field %s: %w", field.Name, err)
 			}
 		default:
-			return nil, fmt.Errorf("unknown consensus tag: %s on field %s", tag, field.Name)
+			return nil, fmt.Errorf("consensus configuration error: unknown consensus_aggregation tag %q on field %q. Valid tags are: \"median\", \"identical\", \"common_prefix\", \"common_suffix\", \"nested\", \"ignore\"", tag, field.Name)
 		}
 	}
 
