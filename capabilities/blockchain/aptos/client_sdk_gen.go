@@ -219,6 +219,70 @@ func (c *Client) writeReport(runtime cre.RuntimeBase, input *WriteCreReportReque
 
 }
 
+type ClientRestrictor struct {
+	ChainSelector uint64
+}
+
+func (c *ClientRestrictor) LimitAccountAPTBalance(maxCalls int32) *sdkpb.CapabilityRestriction {
+	return &sdkpb.CapabilityRestriction{
+		Restriction: &sdkpb.CapabilityRestriction_Method{
+			Method: &sdkpb.MethodRestriction{
+				Id:       "aptos" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
+				Method:   "AccountAPTBalance",
+				MaxCalls: maxCalls,
+			},
+		},
+	}
+}
+
+func (c *ClientRestrictor) LimitView(maxCalls int32) *sdkpb.CapabilityRestriction {
+	return &sdkpb.CapabilityRestriction{
+		Restriction: &sdkpb.CapabilityRestriction_Method{
+			Method: &sdkpb.MethodRestriction{
+				Id:       "aptos" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
+				Method:   "View",
+				MaxCalls: maxCalls,
+			},
+		},
+	}
+}
+
+func (c *ClientRestrictor) LimitTransactionByHash(maxCalls int32) *sdkpb.CapabilityRestriction {
+	return &sdkpb.CapabilityRestriction{
+		Restriction: &sdkpb.CapabilityRestriction_Method{
+			Method: &sdkpb.MethodRestriction{
+				Id:       "aptos" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
+				Method:   "TransactionByHash",
+				MaxCalls: maxCalls,
+			},
+		},
+	}
+}
+
+func (c *ClientRestrictor) LimitAccountTransactions(maxCalls int32) *sdkpb.CapabilityRestriction {
+	return &sdkpb.CapabilityRestriction{
+		Restriction: &sdkpb.CapabilityRestriction_Method{
+			Method: &sdkpb.MethodRestriction{
+				Id:       "aptos" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
+				Method:   "AccountTransactions",
+				MaxCalls: maxCalls,
+			},
+		},
+	}
+}
+
+func (c *ClientRestrictor) LimitWriteReport(maxCalls int32) *sdkpb.CapabilityRestriction {
+	return &sdkpb.CapabilityRestriction{
+		Restriction: &sdkpb.CapabilityRestriction_Method{
+			Method: &sdkpb.MethodRestriction{
+				Id:       "aptos" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
+				Method:   "WriteReport",
+				MaxCalls: maxCalls,
+			},
+		},
+	}
+}
+
 const AptosMainnet = 4741433654826277614
 
 const AptosTestnet = 743186221051783445
