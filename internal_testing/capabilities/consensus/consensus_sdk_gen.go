@@ -81,3 +81,30 @@ func (c *Consensus) report(runtime cre.RuntimeBase, input *sdk.ReportRequest) cr
 	return cre.Then(capCallResponse, cre.X_GeneratedCodeOnly_WrapReport)
 
 }
+
+type ConsensusRestrictor struct {
+}
+
+func (c *ConsensusRestrictor) LimitSimple(maxCalls int32) *sdkpb.CapabilityRestriction {
+	return &sdkpb.CapabilityRestriction{
+		Restriction: &sdkpb.CapabilityRestriction_Method{
+			Method: &sdkpb.MethodRestriction{
+				Id:       "consensus@1.0.0-alpha",
+				Method:   "Simple",
+				MaxCalls: maxCalls,
+			},
+		},
+	}
+}
+
+func (c *ConsensusRestrictor) LimitReport(maxCalls int32) *sdkpb.CapabilityRestriction {
+	return &sdkpb.CapabilityRestriction{
+		Restriction: &sdkpb.CapabilityRestriction_Method{
+			Method: &sdkpb.MethodRestriction{
+				Id:       "consensus@1.0.0-alpha",
+				Method:   "Report",
+				MaxCalls: maxCalls,
+			},
+		},
+	}
+}
