@@ -21,6 +21,9 @@ var triggerMethodTemplate string
 //go:embed templates/sdk_action.go.tmpl
 var actionMethodTemplate string
 
+//go:embed templates/sdk_restrictor.go.tmpl
+var restrictorTemplate string
+
 //go:embed templates/wrap_report.go.tmpl
 var wrapReportTemplate string
 
@@ -43,6 +46,7 @@ var clientTemplates = []*pkg.TemplateGenerator{
 		Partials: map[string]string{
 			"trigger_method": triggerMethodTemplate,
 			"action_method":  actionMethodTemplate,
+			"restrictor":     restrictorTemplate,
 			"wrap_report":    wrapReportTemplate,
 		},
 		ExtraFns: map[string]any{

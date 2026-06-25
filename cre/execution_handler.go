@@ -20,16 +20,52 @@ type ExecutionHandlerWithRequirements[C, R any] interface {
 	Requirements() *sdk.Requirements
 }
 
+// ExecutionHandlerWithPreHook is an ExecutionHandler that also exposes a PreHook callback
+// and any underlying Requirements. The PreHook is invoked before the workflow runs and
+// returns the restrictions that should be applied to that execution.
+type ExecutionHandlerWithPreHook[C, R any] interface {
+	ExecutionHandler[C, R]
+	PreHook(config C, payload *anypb.Any) (*sdk.Restrictions, error)
+}
+
 // Handler creates a coupling of a Trigger and a callback function to be used by the SDK.
 // The coupling ensures that when the Trigger is invoked, the callback function is called with the appropriate parameters.
 func Handler[C any, M proto.Message, T any, O any](trigger Trigger[M, T], callback func(config C, runtime Runtime, payload T) (O, error)) ExecutionHandler[C, Runtime] {
 	return handler(trigger, callback, nil)
 }
 
+// HandlerWithPreHook is like Handler but also registers a PreHook that runs before the
+// workflow execution. The PreHook receives the workflow config and the adapted trigger
+// payload and returns the restrictions to apply for that execution.
+func HandlerWithPreHook[C any, M proto.Message, T any, O any](
+	trigger Trigger[M, T],
+	callback func(config C, runtime Runtime, payload T) (O, error),
+	preHook func(config C, payload T) (*sdk.Restrictions, error),
+) ExecutionHandler[C, Runtime] {
+	return &executionHandlerWithPreHookImpl[C, Runtime]{
+		ExecutionHandler: handler(trigger, callback, nil),
+		preHook:          wrapTypedPreHook(trigger, preHook),
+	}
+}
+
 // HandlerInTee creates a coupling of a Trigger and a callback function to be used in TEE (Trusted Execution Environment) mode.
 // The coupling ensures that when the Trigger is invoked, the callback function is called with a TeeRuntime.
 func HandlerInTee[C any, M proto.Message, T any, O any](trigger Trigger[M, T], callback func(config C, runtime TeeRuntime, payload T) (O, error), tees TeeConstraint) ExecutionHandler[C, Runtime] {
 	return handler(trigger, wrapTeeCallback(callback), tees.toRequirements())
+}
+
+// HandlerInTeeWithPreHook is like HandlerInTee but also registers a PreHook that runs
+// in the DON before the workflow execution to produce the restrictions for that execution.
+func HandlerInTeeWithPreHook[C any, M proto.Message, T any, O any](
+	trigger Trigger[M, T],
+	callback func(config C, runtime TeeRuntime, payload T) (O, error),
+	tees TeeConstraint,
+	preHook func(config C, payload T) (*sdk.Restrictions, error),
+) ExecutionHandler[C, Runtime] {
+	return &executionHandlerWithPreHookImpl[C, Runtime]{
+		ExecutionHandler: handler(trigger, wrapTeeCallback(callback), tees.toRequirements()),
+		preHook:          wrapTypedPreHook(trigger, preHook),
+	}
 }
 
 func wrapTeeCallback[C any, T any, O any](callback func(config C, runtime TeeRuntime, payload T) (O, error)) func(config C, runtime Runtime, payload T) (O, error) {
@@ -39,6 +75,20 @@ func wrapTeeCallback[C any, T any, O any](callback func(config C, runtime TeeRun
 			panic("Runner did not provide an extractable TEERuntime. If you wrapped the runtime, wrap the method Tee() TeeRuntime instead.")
 		}
 		return callback(config, helper.Tee(), t)
+	}
+}
+
+func wrapTypedPreHook[C any, M proto.Message, T any](trigger Trigger[M, T], preHook func(config C, payload T) (*sdk.Restrictions, error)) func(C, *anypb.Any) (*sdk.Restrictions, error) {
+	return func(config C, payload *anypb.Any) (*sdk.Restrictions, error) {
+		unwrapped := trigger.NewT()
+		if err := payload.UnmarshalTo(unwrapped); err != nil {
+			return nil, err
+		}
+		input, err := trigger.Adapt(unwrapped)
+		if err != nil {
+			return nil, err
+		}
+		return preHook(config, input)
 	}
 }
 
@@ -88,7 +138,26 @@ type executionHandlerWithRequirementsImpl[C, R any] struct {
 }
 
 var _ ExecutionHandlerWithRequirements[any, any] = (*executionHandlerWithRequirementsImpl[any, any])(nil)
+var _ ExecutionHandlerWithPreHook[any, any] = (*executionHandlerWithPreHookImpl[any, any])(nil)
 
 func (h *executionHandlerWithRequirementsImpl[C, R]) Requirements() *sdk.Requirements {
 	return h.requirements
+}
+
+type executionHandlerWithPreHookImpl[C, R any] struct {
+	ExecutionHandler[C, R]
+	preHook func(config C, payload *anypb.Any) (*sdk.Restrictions, error)
+}
+
+func (h *executionHandlerWithPreHookImpl[C, R]) PreHook(config C, payload *anypb.Any) (*sdk.Restrictions, error) {
+	return h.preHook(config, payload)
+}
+
+// Requirements forwards to the wrapped handler when it implements ExecutionHandlerWithRequirements,
+// otherwise returns nil. This lets a single decorator type cover both PreHook and Requirements.
+func (h *executionHandlerWithPreHookImpl[C, R]) Requirements() *sdk.Requirements {
+	if reqs, ok := h.ExecutionHandler.(ExecutionHandlerWithRequirements[C, R]); ok {
+		return reqs.Requirements()
+	}
+	return nil
 }
