@@ -32,7 +32,7 @@ type runtimeInternalsTestHook struct {
 
 func secretKey(namespace, id string) string {
 	if namespace == "" {
-		namespace = "default"
+		namespace = cre.DefaultSecretNamespace
 	}
 	return fmt.Sprintf("%s.%s", namespace, id)
 }

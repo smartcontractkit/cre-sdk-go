@@ -131,6 +131,62 @@ func TestRuntime_CallsReportMethod(t *testing.T) {
 	assert.Equal(t, []byte("default_signature_2"), unwrapped.Sigs[1].Signature)
 }
 
+func TestRuntime_GetSecrets(t *testing.T) {
+	t.Run("returns multiple secrets", func(t *testing.T) {
+		rt := testutils.NewRuntime(t, map[testutils.Namespace]map[testutils.ID]string{
+			"main": {
+				"secret1": "value1",
+				"secret2": "value2",
+			},
+		})
+
+		secrets, err := rt.GetSecrets([]*sdk.SecretRequest{
+			{Id: "secret1"},
+			{Id: "secret2"},
+		}).Await()
+		require.NoError(t, err)
+		require.Len(t, secrets, 2)
+		assert.Equal(t, "value1", secrets[0].Value)
+		assert.Equal(t, "value2", secrets[1].Value)
+	})
+
+	t.Run("returns empty slice for empty input", func(t *testing.T) {
+		rt := testutils.NewRuntime(t, nil)
+
+		secrets, err := rt.GetSecrets(nil).Await()
+		require.NoError(t, err)
+		assert.Empty(t, secrets)
+	})
+
+	t.Run("returns error when any secret fails", func(t *testing.T) {
+		rt := testutils.NewRuntime(t, map[testutils.Namespace]map[testutils.ID]string{
+			"main": {
+				"secret1": "value1",
+			},
+		})
+
+		_, err := rt.GetSecrets([]*sdk.SecretRequest{
+			{Id: "secret1"},
+			{Id: "missing"},
+		}).Await()
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "missing")
+	})
+
+	t.Run("defaults namespace to main", func(t *testing.T) {
+		rt := testutils.NewRuntime(t, map[testutils.Namespace]map[testutils.ID]string{
+			"main": {
+				"secret1": "value1",
+			},
+		})
+
+		secret, err := rt.GetSecret(&sdk.SecretRequest{Id: "secret1"}).Await()
+		require.NoError(t, err)
+		assert.Equal(t, "value1", secret.Value)
+		assert.Equal(t, cre.DefaultSecretNamespace, secret.Namespace)
+	})
+}
+
 func TestRuntime_Now(t *testing.T) {
 	rt := testutils.NewRuntime(t, nil)
 
