@@ -78,3 +78,18 @@ func (c *Client) sendRequest(runtime cre.RuntimeBase, input *Request) cre.Promis
 	return capCallResponse
 
 }
+
+type ClientRestrictor struct {
+}
+
+func (c *ClientRestrictor) LimitSendRequest(maxCalls int32) *sdkpb.CapabilityRestriction {
+	return &sdkpb.CapabilityRestriction{
+		Restriction: &sdkpb.CapabilityRestriction_Method{
+			Method: &sdkpb.MethodRestriction{
+				Id:       "http-actions@1.0.0-alpha",
+				Method:   "SendRequest",
+				MaxCalls: maxCalls,
+			},
+		},
+	}
+}

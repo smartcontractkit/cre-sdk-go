@@ -421,12 +421,140 @@ func (c *Client) writeReport(runtime cre.RuntimeBase, input *WriteCreReportReque
 
 }
 
+type ClientRestrictor struct {
+	ChainSelector uint64
+}
+
+func (c *ClientRestrictor) LimitGetAccountInfoWithOpts(maxCalls int32) *sdkpb.CapabilityRestriction {
+	return &sdkpb.CapabilityRestriction{
+		Restriction: &sdkpb.CapabilityRestriction_Method{
+			Method: &sdkpb.MethodRestriction{
+				Id:       "solana" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
+				Method:   "GetAccountInfoWithOpts",
+				MaxCalls: maxCalls,
+			},
+		},
+	}
+}
+
+func (c *ClientRestrictor) LimitGetBalance(maxCalls int32) *sdkpb.CapabilityRestriction {
+	return &sdkpb.CapabilityRestriction{
+		Restriction: &sdkpb.CapabilityRestriction_Method{
+			Method: &sdkpb.MethodRestriction{
+				Id:       "solana" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
+				Method:   "GetBalance",
+				MaxCalls: maxCalls,
+			},
+		},
+	}
+}
+
+func (c *ClientRestrictor) LimitGetBlock(maxCalls int32) *sdkpb.CapabilityRestriction {
+	return &sdkpb.CapabilityRestriction{
+		Restriction: &sdkpb.CapabilityRestriction_Method{
+			Method: &sdkpb.MethodRestriction{
+				Id:       "solana" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
+				Method:   "GetBlock",
+				MaxCalls: maxCalls,
+			},
+		},
+	}
+}
+
+func (c *ClientRestrictor) LimitGetFeeForMessage(maxCalls int32) *sdkpb.CapabilityRestriction {
+	return &sdkpb.CapabilityRestriction{
+		Restriction: &sdkpb.CapabilityRestriction_Method{
+			Method: &sdkpb.MethodRestriction{
+				Id:       "solana" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
+				Method:   "GetFeeForMessage",
+				MaxCalls: maxCalls,
+			},
+		},
+	}
+}
+
+func (c *ClientRestrictor) LimitGetMultipleAccountsWithOpts(maxCalls int32) *sdkpb.CapabilityRestriction {
+	return &sdkpb.CapabilityRestriction{
+		Restriction: &sdkpb.CapabilityRestriction_Method{
+			Method: &sdkpb.MethodRestriction{
+				Id:       "solana" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
+				Method:   "GetMultipleAccountsWithOpts",
+				MaxCalls: maxCalls,
+			},
+		},
+	}
+}
+
+func (c *ClientRestrictor) LimitGetProgramAccounts(maxCalls int32) *sdkpb.CapabilityRestriction {
+	return &sdkpb.CapabilityRestriction{
+		Restriction: &sdkpb.CapabilityRestriction_Method{
+			Method: &sdkpb.MethodRestriction{
+				Id:       "solana" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
+				Method:   "GetProgramAccounts",
+				MaxCalls: maxCalls,
+			},
+		},
+	}
+}
+
+func (c *ClientRestrictor) LimitGetSignatureStatuses(maxCalls int32) *sdkpb.CapabilityRestriction {
+	return &sdkpb.CapabilityRestriction{
+		Restriction: &sdkpb.CapabilityRestriction_Method{
+			Method: &sdkpb.MethodRestriction{
+				Id:       "solana" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
+				Method:   "GetSignatureStatuses",
+				MaxCalls: maxCalls,
+			},
+		},
+	}
+}
+
+func (c *ClientRestrictor) LimitGetSlotHeight(maxCalls int32) *sdkpb.CapabilityRestriction {
+	return &sdkpb.CapabilityRestriction{
+		Restriction: &sdkpb.CapabilityRestriction_Method{
+			Method: &sdkpb.MethodRestriction{
+				Id:       "solana" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
+				Method:   "GetSlotHeight",
+				MaxCalls: maxCalls,
+			},
+		},
+	}
+}
+
+func (c *ClientRestrictor) LimitGetTransaction(maxCalls int32) *sdkpb.CapabilityRestriction {
+	return &sdkpb.CapabilityRestriction{
+		Restriction: &sdkpb.CapabilityRestriction_Method{
+			Method: &sdkpb.MethodRestriction{
+				Id:       "solana" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
+				Method:   "GetTransaction",
+				MaxCalls: maxCalls,
+			},
+		},
+	}
+}
+
+func (c *ClientRestrictor) LimitWriteReport(maxCalls int32) *sdkpb.CapabilityRestriction {
+	return &sdkpb.CapabilityRestriction{
+		Restriction: &sdkpb.CapabilityRestriction_Method{
+			Method: &sdkpb.MethodRestriction{
+				Id:       "solana" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
+				Method:   "WriteReport",
+				MaxCalls: maxCalls,
+			},
+		},
+	}
+}
+
 const SolanaDevnet = 16423721717087811551
+
+const SolanaMainnet = 124615329519749607
 
 func ChainSelectorFromName(name string) (uint64, error) {
 	switch name {
 	case "solana-devnet":
 		return SolanaDevnet, nil
+	case "solana-mainnet":
+		return SolanaMainnet, nil
 	default:
 		return 0, errors.New("unknown ChainSelector" + name)
 	}

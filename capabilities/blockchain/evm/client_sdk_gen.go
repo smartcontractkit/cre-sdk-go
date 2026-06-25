@@ -351,6 +351,106 @@ func (c *Client) writeReport(runtime cre.RuntimeBase, input *WriteCreReportReque
 
 }
 
+type ClientRestrictor struct {
+	ChainSelector uint64
+}
+
+func (c *ClientRestrictor) LimitCallContract(maxCalls int32) *sdkpb.CapabilityRestriction {
+	return &sdkpb.CapabilityRestriction{
+		Restriction: &sdkpb.CapabilityRestriction_Method{
+			Method: &sdkpb.MethodRestriction{
+				Id:       "evm" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
+				Method:   "CallContract",
+				MaxCalls: maxCalls,
+			},
+		},
+	}
+}
+
+func (c *ClientRestrictor) LimitFilterLogs(maxCalls int32) *sdkpb.CapabilityRestriction {
+	return &sdkpb.CapabilityRestriction{
+		Restriction: &sdkpb.CapabilityRestriction_Method{
+			Method: &sdkpb.MethodRestriction{
+				Id:       "evm" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
+				Method:   "FilterLogs",
+				MaxCalls: maxCalls,
+			},
+		},
+	}
+}
+
+func (c *ClientRestrictor) LimitBalanceAt(maxCalls int32) *sdkpb.CapabilityRestriction {
+	return &sdkpb.CapabilityRestriction{
+		Restriction: &sdkpb.CapabilityRestriction_Method{
+			Method: &sdkpb.MethodRestriction{
+				Id:       "evm" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
+				Method:   "BalanceAt",
+				MaxCalls: maxCalls,
+			},
+		},
+	}
+}
+
+func (c *ClientRestrictor) LimitEstimateGas(maxCalls int32) *sdkpb.CapabilityRestriction {
+	return &sdkpb.CapabilityRestriction{
+		Restriction: &sdkpb.CapabilityRestriction_Method{
+			Method: &sdkpb.MethodRestriction{
+				Id:       "evm" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
+				Method:   "EstimateGas",
+				MaxCalls: maxCalls,
+			},
+		},
+	}
+}
+
+func (c *ClientRestrictor) LimitGetTransactionByHash(maxCalls int32) *sdkpb.CapabilityRestriction {
+	return &sdkpb.CapabilityRestriction{
+		Restriction: &sdkpb.CapabilityRestriction_Method{
+			Method: &sdkpb.MethodRestriction{
+				Id:       "evm" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
+				Method:   "GetTransactionByHash",
+				MaxCalls: maxCalls,
+			},
+		},
+	}
+}
+
+func (c *ClientRestrictor) LimitGetTransactionReceipt(maxCalls int32) *sdkpb.CapabilityRestriction {
+	return &sdkpb.CapabilityRestriction{
+		Restriction: &sdkpb.CapabilityRestriction_Method{
+			Method: &sdkpb.MethodRestriction{
+				Id:       "evm" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
+				Method:   "GetTransactionReceipt",
+				MaxCalls: maxCalls,
+			},
+		},
+	}
+}
+
+func (c *ClientRestrictor) LimitHeaderByNumber(maxCalls int32) *sdkpb.CapabilityRestriction {
+	return &sdkpb.CapabilityRestriction{
+		Restriction: &sdkpb.CapabilityRestriction_Method{
+			Method: &sdkpb.MethodRestriction{
+				Id:       "evm" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
+				Method:   "HeaderByNumber",
+				MaxCalls: maxCalls,
+			},
+		},
+	}
+}
+
+func (c *ClientRestrictor) LimitWriteReport(maxCalls int32) *sdkpb.CapabilityRestriction {
+	return &sdkpb.CapabilityRestriction{
+		Restriction: &sdkpb.CapabilityRestriction_Method{
+			Method: &sdkpb.MethodRestriction{
+				Id:       "evm" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
+				Method:   "WriteReport",
+				MaxCalls: maxCalls,
+			},
+		},
+	}
+}
+
 const AdiMainnet = 4059281736450291836
 
 const AdiTestnet = 9418205736192840573
