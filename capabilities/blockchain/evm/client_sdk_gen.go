@@ -473,6 +473,8 @@ const CeloSepolia = 3761762704474186180
 
 const CronosTestnet = 2995292832068775165
 
+const DtccMainnetAppchain = 13879014182901017172
+
 const DtccTestnetAndesite = 15513093881969820114
 
 const EthereumMainnet = 5009297550715157269
@@ -587,6 +589,8 @@ func ChainSelectorFromName(name string) (uint64, error) {
 		return CeloSepolia, nil
 	case "cronos-testnet":
 		return CronosTestnet, nil
+	case "dtcc-mainnet-appchain":
+		return DtccMainnetAppchain, nil
 	case "dtcc-testnet-andesite":
 		return DtccTestnetAndesite, nil
 	case "ethereum-mainnet":
