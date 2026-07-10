@@ -22,6 +22,12 @@ type Primitive interface {
 	NumericType | ~string | ~bool
 }
 
+// FrequencyListEntry pairs a distinct observation value with how many times it was seen.
+type FrequencyListEntry[T any] struct {
+	Value T     `mapstructure:"value"`
+	Count int64 `mapstructure:"count"`
+}
+
 // ConsensusMedianAggregation takes a median of all node observations.
 // The median is Byzantine fault-tolerant and is guaranteed to be within the range of valid observations.
 func ConsensusMedianAggregation[T NumericType]() ConsensusAggregation[T] {
@@ -65,12 +71,19 @@ func ConsensusCommonSuffixAggregation[T any]() func() (ConsensusAggregation[[]T]
 	}
 }
 
+// ConsensusFrequencyListAggregation returns all distinct observation values together
+// with how many times each was seen.
+func ConsensusFrequencyListAggregation[T any]() ConsensusAggregation[[]FrequencyListEntry[T]] {
+	return &consensusDescriptor[[]FrequencyListEntry[T]]{Descriptor_: &sdk.ConsensusDescriptor_Aggregation{Aggregation: sdk.AggregationType_AGGREGATION_TYPE_FREQUENCY_LIST}}
+}
+
 // ConsensusAggregationFromTags works with structs using the `consensus_aggregation` tag to define how to aggregate each field.
 // It supports the following tags:
 // - `median`: for numeric types, it will take the median in the same manner as `ConsensusMedianAggregation` does for numeric types, but for a field on a struct.
 // - `identical`: for primitive types, it will check if all values are identical in the same manner as `ConsensusIdenticalAggregation` does for primitive types, but for a field on a struct.
 // - `common_prefix`: for slices or arrays of primitive types, it will take the longest common prefix in the same manner as `ConsensusCommonPrefixAggregation` does for slices or arrays.
 // - `common_suffix`: for slices or arrays of primitive types, it will take the longest common suffix in the same manner as `ConsensusCommonSuffixAggregation` does for slices or arrays.
+// - `frequency_list`: for primitive types, it will return all distinct observation values together with how many times each was seen.
 // - `nested`: for nested structs, it will recursively parse the struct and aggregate its fields using the same rules as above.
 // - `ignore`: to ignore a field in the struct.
 // If a field is not tagged or is not a valid type for the tag, it will return an error.
@@ -163,6 +176,11 @@ func parseConsensusTag(t reflect.Type, path string) (*sdk.ConsensusDescriptor, e
 				return nil, fmt.Errorf("field %s marked as common_suffix but is not slice/array", field.Name)
 			}
 			descriptors[serializedName] = &sdk.ConsensusDescriptor{Descriptor_: &sdk.ConsensusDescriptor_Aggregation{Aggregation: sdk.AggregationType_AGGREGATION_TYPE_COMMON_SUFFIX}}
+		case "frequency_list":
+			if !isIdenticalType(tpe) {
+				return nil, fmt.Errorf("field %s marked as frequency_list but is not a valid type", field.Name)
+			}
+			descriptors[serializedName] = &sdk.ConsensusDescriptor{Descriptor_: &sdk.ConsensusDescriptor_Aggregation{Aggregation: sdk.AggregationType_AGGREGATION_TYPE_FREQUENCY_LIST}}
 		case "nested":
 			descriptors[serializedName], err = parseConsensusTag(field.Type, path+field.Name+".")
 			if err != nil {
