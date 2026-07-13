@@ -1,11 +1,10 @@
-module github.com/smartcontractkit/cre-sdk-go/capabilities/scheduler/cron
+module github.com/smartcontractkit/cre-sdk-go/capabilities/blockchain/stellar
 
-go 1.25.3
+go 1.26.3
 
 require (
 	github.com/smartcontractkit/chainlink-protos/cre/go v0.0.0-20260623200841-e0322b819f62
 	github.com/smartcontractkit/cre-sdk-go v1.9.0-capdev.1.0.20260625132924-dcceeb57cf3c
-	google.golang.org/protobuf v1.36.11
 )
 
 require (
@@ -16,4 +15,5 @@ require (
 	github.com/holiman/uint256 v1.3.2 // indirect
 	github.com/shopspring/decimal v1.4.0 // indirect
 	golang.org/x/sys v0.40.0 // indirect
+	google.golang.org/protobuf v1.36.11
 )

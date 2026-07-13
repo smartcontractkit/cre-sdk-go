@@ -37,6 +37,8 @@ flowchart LR
 	click cre-sdk-go/capabilities/blockchain/evm href "https://github.com/smartcontractkit/cre-sdk-go"
 	cre-sdk-go/capabilities/blockchain/solana --> cre-sdk-go
 	click cre-sdk-go/capabilities/blockchain/solana href "https://github.com/smartcontractkit/cre-sdk-go"
+	cre-sdk-go/capabilities/blockchain/stellar --> cre-sdk-go
+	click cre-sdk-go/capabilities/blockchain/stellar href "https://github.com/smartcontractkit/cre-sdk-go"
 	cre-sdk-go/capabilities/networking/confidentialhttp --> cre-sdk-go
 	click cre-sdk-go/capabilities/networking/confidentialhttp href "https://github.com/smartcontractkit/cre-sdk-go"
 	cre-sdk-go/capabilities/networking/http --> cre-sdk-go
@@ -73,6 +75,7 @@ flowchart LR
 		 cre-sdk-go/capabilities/blockchain/aptos
 		 cre-sdk-go/capabilities/blockchain/evm
 		 cre-sdk-go/capabilities/blockchain/solana
+		 cre-sdk-go/capabilities/blockchain/stellar
 		 cre-sdk-go/capabilities/networking/confidentialhttp
 		 cre-sdk-go/capabilities/networking/http
 		 cre-sdk-go/capabilities/scheduler/cron

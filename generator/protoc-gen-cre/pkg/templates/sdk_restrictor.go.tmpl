@@ -1,0 +1,28 @@
+{{define "restrictor"}}
+{{- $hasActions := false }}
+{{- range .Service.Methods }}
+    {{- if and (not (MapToUntypedAPI .)) (not (isTrigger .)) }}
+        {{- $hasActions = true }}
+    {{- end }}
+{{- end }}
+{{- if $hasActions }}
+type {{.Service.GoName}}Restrictor struct {
+    {{- range Labels .Service }}
+    {{.Name}} {{.Type}}
+    {{- end }}
+}
+{{ range .Service.Methods }} {{- if not (MapToUntypedAPI .) }} {{- if not (isTrigger .) }}
+func (c *{{$.Service.GoName}}Restrictor) Limit{{.GoName}}(maxCalls int32) *sdkpb.CapabilityRestriction {
+    return &sdkpb.CapabilityRestriction{
+        Restriction: &sdkpb.CapabilityRestriction_Method{
+            Method: &sdkpb.MethodRestriction{
+                Id:       {{FullCapabilityId $.Service}},
+                Method:   "{{.GoName}}",
+                MaxCalls: maxCalls,
+            },
+        },
+    }
+}
+{{ end }} {{- end }} {{- end }}
+{{- end }}
+{{end}}
