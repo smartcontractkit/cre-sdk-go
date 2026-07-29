@@ -134,8 +134,8 @@ func TestConsensusAggregationFromTags(t *testing.T) {
 		}
 
 		desc := cre.ConsensusAggregationFromTags[S]()
-		// unexported field privateV with consensus tag on type S accessed via
-		require.ErrorContains(t, desc.Err(), "unexported field privateV with consensus tag on type S")
+		// unexported field "privateV" on type S has a consensus_aggregation tag
+		require.ErrorContains(t, desc.Err(), "consensus configuration error: unexported field \"privateV\" on type S")
 	})
 
 	t.Run("valid identical", func(t *testing.T) {
@@ -390,7 +390,7 @@ func TestConsensusAggregationFromTags(t *testing.T) {
 			Val string `consensus_aggregation:"median"`
 		}
 		desc := cre.ConsensusAggregationFromTags[S]()
-		require.ErrorContains(t, desc.Err(), "not a numeric type")
+		require.ErrorContains(t, desc.Err(), "is tagged as \"median\" but has non-numeric type")
 	})
 
 	t.Run("invalid not a struct", func(t *testing.T) {
@@ -430,7 +430,7 @@ func TestConsensusAggregationFromTags(t *testing.T) {
 			Nested Nested `consensus_aggregation:"nested"`
 		}
 		desc := cre.ConsensusAggregationFromTags[S]()
-		require.ErrorContains(t, desc.Err(), "missing consensus tag on type Nested accessed via Nested.Foo")
+		require.ErrorContains(t, desc.Err(), "consensus configuration error: missing consensus_aggregation tag on exported field \"Foo\" of type Nested (accessed via Nested.Foo)")
 	})
 
 	t.Run("invalid identical", func(t *testing.T) {
@@ -548,5 +548,5 @@ func testInvalidIdenticalFieldHelper[T any](t *testing.T) {
 	desc := cre.ConsensusAggregationFromTags[struct {
 		Val T `consensus_aggregation:"identical"`
 	}]()
-	require.ErrorContains(t, desc.Err(), "field Val marked as identical but is not a valid type")
+	require.ErrorContains(t, desc.Err(), "consensus configuration error: field \"Val\" is tagged as \"identical\" but has unsupported type")
 }
