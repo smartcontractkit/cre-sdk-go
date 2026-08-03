@@ -171,6 +171,10 @@ func (m *mockRuntime) GetSecret(_ *SecretRequest) Promise[*Secret] {
 	panic("unused in tests")
 }
 
+func (m *mockRuntime) GetSecrets(_ []*SecretRequest) Promise[[]*Secret] {
+	panic("unused in tests")
+}
+
 func (m *mockRuntime) Rand() (*rand.Rand, error) {
 	panic("unused in tests")
 }

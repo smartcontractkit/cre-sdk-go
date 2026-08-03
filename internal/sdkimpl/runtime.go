@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	"math/rand"
+	"strings"
 	"time"
 
 	"github.com/smartcontractkit/chainlink-protos/cre/go/sdk"
@@ -122,47 +123,79 @@ type Runtime struct {
 	nextNodeCallId int32
 }
 
-func (d *Runtime) GetSecret(req *sdk.SecretRequest) cre.Promise[*sdk.Secret] {
-	if d.modeErr != nil {
-		return cre.PromiseFromResult[*sdk.Secret](nil, d.modeErr)
+func normalizeSecretRequests(reqs []*sdk.SecretRequest) []*sdk.SecretRequest {
+	normalized := make([]*sdk.SecretRequest, len(reqs))
+	for i, req := range reqs {
+		if req.Namespace == "" {
+			normalized[i] = &sdk.SecretRequest{
+				Id:        req.Id,
+				Namespace: cre.DefaultSecretNamespace,
+			}
+		} else {
+			normalized[i] = req
+		}
 	}
+	return normalized
+}
+
+func (d *Runtime) GetSecret(req *sdk.SecretRequest) cre.Promise[*sdk.Secret] {
+	return cre.Then(d.GetSecrets([]*sdk.SecretRequest{req}), func(secrets []*sdk.Secret) (*sdk.Secret, error) {
+		if len(secrets) != 1 {
+			return nil, fmt.Errorf("expected 1 secret, got %d", len(secrets))
+		}
+		return secrets[0], nil
+	})
+}
+
+func (d *Runtime) GetSecrets(reqs []*sdk.SecretRequest) cre.Promise[[]*sdk.Secret] {
+	if d.modeErr != nil {
+		return cre.PromiseFromResult[[]*sdk.Secret](nil, d.modeErr)
+	}
+	if len(reqs) == 0 {
+		return cre.PromiseFromResult([]*sdk.Secret{}, nil)
+	}
+
+	normalized := normalizeSecretRequests(reqs)
 
 	d.nextCallId++
 	myId := d.nextCallId
 
 	sr := &sdk.GetSecretsRequest{
-		Requests:   []*sdk.SecretRequest{req},
-		CallbackId: d.nextCallId,
+		Requests:   normalized,
+		CallbackId: myId,
 	}
 
-	err := d.RuntimeHelpers.GetSecrets(sr, d.MaxResponseSize)
-	if err != nil {
-		return cre.PromiseFromResult[*sdk.Secret](nil, err)
+	if err := d.RuntimeHelpers.GetSecrets(sr, d.MaxResponseSize); err != nil {
+		return cre.PromiseFromResult[[]*sdk.Secret](nil, err)
 	}
 
-	return cre.NewBasicPromise(func() (*sdk.Secret, error) {
-		awaitRequest := &sdk.AwaitSecretsRequest{
-			Ids: []int32{myId},
-		}
-		awaitResponse, err := d.AwaitSecrets(awaitRequest, d.MaxResponseSize)
+	return cre.NewBasicPromise(func() ([]*sdk.Secret, error) {
+		awaitResponse, err := d.AwaitSecrets(&sdk.AwaitSecretsRequest{Ids: []int32{myId}}, d.MaxResponseSize)
 		if err != nil {
 			return nil, err
 		}
 
 		resp, ok := awaitResponse.Responses[myId]
 		if !ok {
-			return nil, fmt.Errorf("cannot find response for %d", d.nextCallId)
+			return nil, fmt.Errorf("no secret response for callback %d", myId)
+		}
+		if len(resp.Responses) != len(normalized) {
+			return nil, fmt.Errorf("expected %d secrets, got %d", len(normalized), len(resp.Responses))
 		}
 
-		if len(resp.Responses) != 1 {
-			return nil, fmt.Errorf("expected 1 response, got %d", len(resp.Responses))
+		secrets := make([]*sdk.Secret, 0, len(resp.Responses))
+		var errs []string
+		for _, r := range resp.Responses {
+			if e := r.GetError(); e != nil {
+				errs = append(errs, fmt.Sprintf("%s: %s", e.Id, e.Error))
+			} else {
+				secrets = append(secrets, r.GetSecret())
+			}
 		}
-
-		if e := resp.Responses[0].GetError(); e != nil {
-			return nil, fmt.Errorf("error getting secret %s: %s", req.Id, e.Error)
+		if len(errs) > 0 {
+			return nil, fmt.Errorf("error(s) getting secrets: %s", strings.Join(errs, "; "))
 		}
-
-		return resp.Responses[0].GetSecret(), nil
+		return secrets, nil
 	})
 }
 
@@ -254,6 +287,10 @@ func (t *TeeRuntime) Logger() *slog.Logger {
 
 func (t *TeeRuntime) GetSecret(req *sdk.SecretRequest) cre.Promise[*sdk.Secret] {
 	return t.don.GetSecret(req)
+}
+
+func (t *TeeRuntime) GetSecrets(reqs []*sdk.SecretRequest) cre.Promise[[]*sdk.Secret] {
+	return t.don.GetSecrets(reqs)
 }
 
 func (t *TeeRuntime) ReportFromDon(request *cre.ReportRequest) cre.Promise[*cre.Report] {
