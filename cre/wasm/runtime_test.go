@@ -109,14 +109,14 @@ func TestEnvironment_GetSecret(t *testing.T) {
 		runtime := &sdkimpl.Runtime{RuntimeBase: newTestRuntime(t, false, capCallOverride, nil)}
 
 		_, err := runtime.GetSecret(&sdkpb.SecretRequest{Id: "Foo"}).Await()
-		require.ErrorContains(t, err, "secret default.Foo not found")
+		require.ErrorContains(t, err, "secret main.Foo not found")
 	})
 
 	t.Run("secret is found", func(t *testing.T) {
 		capCallOverride := func() ([]byte, error) { return nil, errors.New("disabled") }
 
 		secrets := []*sdkpb.Secret{
-			{Id: "Foo", Value: "Bar"},
+			{Id: "Foo", Namespace: cre.DefaultSecretNamespace, Value: "Bar"},
 		}
 		runtime := &sdkimpl.Runtime{RuntimeBase: newTestRuntime(t, false, capCallOverride, secrets)}
 

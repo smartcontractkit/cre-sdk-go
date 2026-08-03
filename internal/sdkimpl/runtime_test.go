@@ -173,7 +173,7 @@ func TestRuntime_GetSecret(t *testing.T) {
 		}
 
 		runtime := testutils.NewRuntime(t, map[testutils.Namespace]map[testutils.ID]string{
-			"": {
+			"main": {
 				"secret1": "value1",
 				"secret2": "value2",
 			},
