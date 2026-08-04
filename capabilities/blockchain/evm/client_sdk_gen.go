@@ -405,6 +405,8 @@ const MegaethMainnet = 6093540873831549674
 
 const MegaethTestnet2 = 18241817625092392675
 
+const MonadMainnet = 8481857512324358265
+
 const PharosAtlanticTestnet = 16098325658947243212
 
 const PharosMainnet = 7801139999541420232
@@ -521,6 +523,8 @@ func ChainSelectorFromName(name string) (uint64, error) {
 		return MegaethMainnet, nil
 	case "megaeth-testnet-2":
 		return MegaethTestnet2, nil
+	case "monad-mainnet":
+		return MonadMainnet, nil
 	case "pharos-atlantic-testnet":
 		return PharosAtlanticTestnet, nil
 	case "pharos-mainnet":
