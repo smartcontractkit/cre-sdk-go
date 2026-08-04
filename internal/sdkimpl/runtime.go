@@ -1,6 +1,7 @@
 package sdkimpl
 
 import (
+	"errors"
 	"fmt"
 	"log/slog"
 	"math/rand"
@@ -27,6 +28,12 @@ type RuntimeHelpers interface {
 	Now() time.Time
 }
 
+// RuntimeBase is the internal implementation of cre.RuntimeBase.
+//
+// It is not thread safe and must not be used concurrently. The runtime is
+// designed to execute within a single-threaded WASM guest environment, so the
+// call ID counter (nextCallId) and mode state (modeErr, Mode) are intentionally
+// unsynchronized. Concurrent access would race on that state.
 type RuntimeBase struct {
 	MaxResponseSize uint64
 	RuntimeHelpers
@@ -59,6 +66,10 @@ var (
 )
 
 func (r *RuntimeBase) CallCapability(request *sdk.CapabilityRequest) cre.Promise[*sdk.CapabilityResponse] {
+	if request == nil {
+		return cre.PromiseFromResult[*sdk.CapabilityResponse](nil, errors.New("CallCapability requires a non-nil request"))
+	}
+
 	if r.Mode == sdk.Mode_MODE_DON {
 		r.nextCallId++
 	} else {
@@ -139,6 +150,10 @@ func normalizeSecretRequests(reqs []*sdk.SecretRequest) []*sdk.SecretRequest {
 }
 
 func (d *Runtime) GetSecret(req *sdk.SecretRequest) cre.Promise[*sdk.Secret] {
+	if req == nil {
+		return cre.PromiseFromResult[*sdk.Secret](nil, errors.New("GetSecret requires a non-nil request"))
+	}
+
 	return cre.Then(d.GetSecrets([]*sdk.SecretRequest{req}), func(secrets []*sdk.Secret) (*sdk.Secret, error) {
 		if len(secrets) != 1 {
 			return nil, fmt.Errorf("expected 1 secret, got %d", len(secrets))
@@ -199,6 +214,10 @@ func (d *Runtime) GetSecrets(reqs []*sdk.SecretRequest) cre.Promise[[]*sdk.Secre
 	})
 }
 
+// RunInNodeMode switches the runtime into node mode, runs fn, then switches
+// back to DON mode. It modifies the shared modeErr and Mode fields without
+// synchronization; this is safe because the runtime is single-threaded by
+// design (see the RuntimeBase godoc) and must not be used concurrently.
 func (d *Runtime) RunInNodeMode(fn func(nodeRuntime cre.NodeRuntime) *sdk.SimpleConsensusInputs) cre.Promise[values.Value] {
 	nodeBase := d.RuntimeBase
 	nodeBase.Mode = sdk.Mode_MODE_NODE

@@ -1,6 +1,7 @@
 package cre
 
 import (
+	"errors"
 	"fmt"
 	"math/big"
 	"reflect"
@@ -61,7 +62,7 @@ func ConsensusCommonSuffixAggregation[T any]() func() (ConsensusAggregation[[]T]
 			return &consensusDescriptor[[]T]{Descriptor_: &sdk.ConsensusDescriptor_Aggregation{Aggregation: sdk.AggregationType_AGGREGATION_TYPE_COMMON_SUFFIX}}, nil
 		}
 
-		return &consensusDescriptor[[]T]{}, fmt.Errorf("%T is not a valid type for common prefix consensus", t)
+		return &consensusDescriptor[[]T]{}, fmt.Errorf("%T is not a valid type for common suffix consensus", t)
 	}
 }
 
@@ -88,15 +89,34 @@ var (
 	bigIntType  = reflect.TypeOf((*big.Int)(nil))
 	timeType    = reflect.TypeOf(time.Time{})
 	decimalType = reflect.TypeOf(decimal.Decimal{})
+
+	// maxConsensusDepth bounds the recursion depth of parseConsensusTag and
+	// isIdenticalType when processing nested/squashed struct fields and
+	// composite types. It protects against deeply-nested or self-referential
+	// (via pointers) type definitions that could otherwise exhaust the call
+	// stack during reflection. The limit is generous enough for any realistic
+	// struct graph while keeping reflection bounded.
+	maxConsensusDepth = 100
 )
 
 func parseConsensusTag(t reflect.Type, path string) (*sdk.ConsensusDescriptor, error) {
+	return parseConsensusTagDepth(t, path, 0)
+}
+
+func parseConsensusTagDepth(t reflect.Type, path string, depth int) (*sdk.ConsensusDescriptor, error) {
+	if t == nil {
+		return nil, errors.New("ConsensusAggregationFromTags expects a non-nil type")
+	}
 	if t.Kind() == reflect.Pointer {
 		t = t.Elem()
 	}
 
 	if t.Kind() != reflect.Struct {
 		return nil, fmt.Errorf("ConsensusAggregationFromTags expects a struct type, got %s", t.Kind())
+	}
+
+	if depth >= maxConsensusDepth {
+		return nil, fmt.Errorf("ConsensusAggregationFromTags exceeded max recursion depth %d at %s", maxConsensusDepth, path)
 	}
 
 	descriptors := make(map[string]*sdk.ConsensusDescriptor)
@@ -125,7 +145,7 @@ func parseConsensusTag(t reflect.Type, path string) (*sdk.ConsensusDescriptor, e
 		}
 
 		if len(mapstructureTagParts) > 1 && mapstructureTagParts[1] == "squash" {
-			inner, err := parseConsensusTag(field.Type, path+field.Name+".")
+			inner, err := parseConsensusTagDepth(field.Type, path+field.Name+".", depth+1)
 			if err != nil {
 				return nil, fmt.Errorf("nested field %s: %w", field.Name, err)
 			}
@@ -164,7 +184,7 @@ func parseConsensusTag(t reflect.Type, path string) (*sdk.ConsensusDescriptor, e
 			}
 			descriptors[serializedName] = &sdk.ConsensusDescriptor{Descriptor_: &sdk.ConsensusDescriptor_Aggregation{Aggregation: sdk.AggregationType_AGGREGATION_TYPE_COMMON_SUFFIX}}
 		case "nested":
-			descriptors[serializedName], err = parseConsensusTag(field.Type, path+field.Name+".")
+			descriptors[serializedName], err = parseConsensusTagDepth(field.Type, path+field.Name+".", depth+1)
 			if err != nil {
 				return nil, fmt.Errorf("nested field %s: %w", field.Name, err)
 			}
@@ -196,6 +216,16 @@ func isNumeric(t reflect.Type) bool {
 }
 
 func isIdenticalType(t reflect.Type) bool {
+	return isIdenticalTypeDepth(t, 0)
+}
+
+func isIdenticalTypeDepth(t reflect.Type, depth int) bool {
+	if t == nil {
+		return false
+	}
+	if depth >= maxConsensusDepth {
+		return false
+	}
 	switch t.Kind() {
 	case reflect.String, reflect.Bool,
 		reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
@@ -203,22 +233,22 @@ func isIdenticalType(t reflect.Type) bool {
 		reflect.Float32, reflect.Float64:
 		return true
 	case reflect.Map:
-		return t.Key().Kind() == reflect.String && isIdenticalType(t.Elem())
+		return t.Key().Kind() == reflect.String && isIdenticalTypeDepth(t.Elem(), depth+1)
 	case reflect.Struct:
 		for i := 0; i < t.NumField(); i++ {
 			field := t.Field(i)
-			if field.IsExported() && !isIdenticalType(field.Type) {
+			if field.IsExported() && !isIdenticalTypeDepth(field.Type, depth+1) {
 				return false
 			}
 		}
 		return true
 	case reflect.Slice, reflect.Array:
-		return isIdenticalType(t.Elem())
+		return isIdenticalTypeDepth(t.Elem(), depth+1)
 	case reflect.Pointer:
 		if t == bigIntType {
 			return true
 		}
-		return t.Elem().Kind() != reflect.Pointer && isIdenticalType(t.Elem())
+		return t.Elem().Kind() != reflect.Pointer && isIdenticalTypeDepth(t.Elem(), depth+1)
 	default:
 		return false
 	}

@@ -392,3 +392,29 @@ type awaitOverride struct {
 func (a *awaitOverride) Await(request *sdk.AwaitCapabilitiesRequest, maxResponseSize uint64) (*sdk.AwaitCapabilitiesResponse, error) {
 	return a.await(request, maxResponseSize)
 }
+
+// TestRuntime_CallCapability_NilRequest verifies that a nil request returns an
+// error promise instead of panicking on a nil-pointer dereference.
+func TestRuntime_CallCapability_NilRequest(t *testing.T) {
+	runtime := testutils.NewRuntime(t, nil)
+
+	assert.NotPanics(t, func() {
+		promise := runtime.CallCapability(nil)
+		_, err := promise.Await()
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "non-nil request")
+	})
+}
+
+// TestRuntime_GetSecret_NilRequest verifies that a nil request returns an
+// error promise instead of panicking on a nil-pointer dereference.
+func TestRuntime_GetSecret_NilRequest(t *testing.T) {
+	runtime := testutils.NewRuntime(t, nil)
+
+	assert.NotPanics(t, func() {
+		promise := runtime.GetSecret(nil)
+		_, err := promise.Await()
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "non-nil request")
+	})
+}
