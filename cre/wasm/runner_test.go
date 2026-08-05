@@ -355,7 +355,7 @@ func TestHandlerWithPreHook(t *testing.T) {
 		result, ok := actual.Result.(*sdk.ExecutionResult_Restrictions)
 		require.True(t, ok, "expected Restrictions result, got %T", actual.Result)
 		require.NotNil(t, result.Restrictions.Capabilities)
-		assert.Equal(t, int32(5), result.Restrictions.Capabilities.MaxTotalCalls)
+		assert.Equal(t, uint32(5), result.Restrictions.Capabilities.MaxTotalCalls)
 		assert.Equal(t, sdk.CapabilityRestrictionType_CAPABILITY_RESTRICTION_TYPE_CLOSED, result.Restrictions.Capabilities.Type)
 		require.Len(t, result.Restrictions.Capabilities.Restrictions, 1)
 
@@ -363,7 +363,7 @@ func TestHandlerWithPreHook(t *testing.T) {
 		require.NotNil(t, method)
 		assert.Equal(t, "basic-test-action@1.0.0", method.Id)
 		assert.Equal(t, "PerformAction", method.Method)
-		assert.Equal(t, int32(2), method.MaxCalls)
+		assert.Equal(t, uint32(2), method.MaxCalls)
 	})
 
 	t.Run("returns error when no preHook is registered", func(t *testing.T) {

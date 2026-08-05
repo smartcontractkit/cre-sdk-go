@@ -19,9 +19,6 @@ func switchModes(mode int32)
 //go:wasmimport env now
 func now(response unsafe.Pointer) int32
 
-//go:wasmimport env requirements
-func requirements(data unsafe.Pointer, dataLen int32)
-
 // NewRunner creates a new cre.Runner instance with the provided function to parse config.
 func NewRunner[C Config](parse func(configBytes []byte) (C, error)) cre.Runner[C] {
 	return newRunner[C](parse, runnerInternalsImpl{}, runtimeInternalsImpl{})
@@ -53,8 +50,4 @@ func (r runnerInternalsImpl) now(response unsafe.Pointer) int32 {
 
 func (r runnerInternalsImpl) exit() {
 	os.Exit(0)
-}
-
-func (r runnerInternalsImpl) requirements(data unsafe.Pointer, dataLen int32) {
-	requirements(data, dataLen)
 }
