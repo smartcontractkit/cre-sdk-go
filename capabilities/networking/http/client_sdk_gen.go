@@ -43,6 +43,15 @@ func SendRequest[C, T any](
 }
 
 func (c *Client) SendRequest(runtime cre.NodeRuntime, input *Request) cre.Promise[*Response] {
+	return c.sendRequest(runtime, input)
+}
+
+// SendRequestInTee is the same as SendRequest but accepts a cre.TeeRuntime.
+func (c *Client) SendRequestInTee(runtime cre.TeeRuntime, input *Request) cre.Promise[*Response] {
+	return c.sendRequest(runtime, input)
+}
+
+func (c *Client) sendRequest(runtime cre.RuntimeBase, input *Request) cre.Promise[*Response] {
 	wrapped := &anypb.Any{}
 	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
@@ -68,4 +77,19 @@ func (c *Client) SendRequest(runtime cre.NodeRuntime, input *Request) cre.Promis
 
 	return capCallResponse
 
+}
+
+type ClientRestrictor struct {
+}
+
+func (c *ClientRestrictor) LimitSendRequest(maxCalls uint32) *sdkpb.CapabilityRestriction {
+	return &sdkpb.CapabilityRestriction{
+		Restriction: &sdkpb.CapabilityRestriction_Method{
+			Method: &sdkpb.MethodRestriction{
+				Id:       "http-actions@1.0.0-alpha",
+				Method:   "SendRequest",
+				MaxCalls: maxCalls,
+			},
+		},
+	}
 }
