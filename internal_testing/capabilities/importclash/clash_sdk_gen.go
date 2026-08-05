@@ -20,6 +20,10 @@ type BasicAction struct {
 }
 
 func (c *BasicAction) PerformAction(runtime cre.Runtime, input *p1.Item) cre.Promise[*p2.Item] {
+	return c.performAction(runtime, input)
+}
+
+func (c *BasicAction) performAction(runtime cre.RuntimeBase, input *p1.Item) cre.Promise[*p2.Item] {
 	wrapped := &anypb.Any{}
 	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
@@ -45,4 +49,19 @@ func (c *BasicAction) PerformAction(runtime cre.Runtime, input *p1.Item) cre.Pro
 
 	return capCallResponse
 
+}
+
+type BasicActionRestrictor struct {
+}
+
+func (c *BasicActionRestrictor) LimitPerformAction(maxCalls uint32) *sdkpb.CapabilityRestriction {
+	return &sdkpb.CapabilityRestriction{
+		Restriction: &sdkpb.CapabilityRestriction_Method{
+			Method: &sdkpb.MethodRestriction{
+				Id:       "import-clash@1.0.0",
+				Method:   "PerformAction",
+				MaxCalls: maxCalls,
+			},
+		},
+	}
 }

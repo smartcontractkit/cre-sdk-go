@@ -43,6 +43,10 @@ func PerformAction[C, T any](
 }
 
 func (c *BasicAction) PerformAction(runtime cre.NodeRuntime, input *NodeInputs) cre.Promise[*NodeOutputs] {
+	return c.performAction(runtime, input)
+}
+
+func (c *BasicAction) performAction(runtime cre.RuntimeBase, input *NodeInputs) cre.Promise[*NodeOutputs] {
 	wrapped := &anypb.Any{}
 	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
@@ -68,4 +72,19 @@ func (c *BasicAction) PerformAction(runtime cre.NodeRuntime, input *NodeInputs) 
 
 	return capCallResponse
 
+}
+
+type BasicActionRestrictor struct {
+}
+
+func (c *BasicActionRestrictor) LimitPerformAction(maxCalls uint32) *sdkpb.CapabilityRestriction {
+	return &sdkpb.CapabilityRestriction{
+		Restriction: &sdkpb.CapabilityRestriction_Method{
+			Method: &sdkpb.MethodRestriction{
+				Id:       "basic-test-node-action@1.0.0",
+				Method:   "PerformAction",
+				MaxCalls: maxCalls,
+			},
+		},
+	}
 }
