@@ -550,3 +550,61 @@ func testInvalidIdenticalFieldHelper[T any](t *testing.T) {
 	}]()
 	require.ErrorContains(t, desc.Err(), "field Val marked as identical but is not a valid type")
 }
+
+// TestConsensusCommonSuffixAggregation_ErrorMessage verifies that the error
+// message from ConsensusCommonSuffixAggregation references "suffix", not "prefix".
+func TestConsensusCommonSuffixAggregation_ErrorMessage(t *testing.T) {
+	_, err := cre.ConsensusCommonSuffixAggregation[[]chan int]()()
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "common suffix consensus")
+	assert.NotContains(t, err.Error(), "common prefix consensus")
+}
+
+// TestConsensusAggregationFromTags_SelfReferentialNested verifies that a
+// self-referential struct (via a pointer field with a "nested" tag) does not
+// cause a stack overflow. The bounded recursion returns an error instead.
+func TestConsensusAggregationFromTags_SelfReferentialNested(t *testing.T) {
+	type SelfRef struct {
+		Val  int       `consensus_aggregation:"median"`
+		Next *SelfRef `consensus_aggregation:"nested"`
+	}
+
+	assert.NotPanics(t, func() {
+		desc := cre.ConsensusAggregationFromTags[SelfRef]()
+		require.Error(t, desc.Err())
+		assert.Contains(t, desc.Err().Error(), "max recursion depth")
+	})
+}
+
+// TestConsensusAggregationFromTags_SelfReferentialSquash verifies that a
+// self-referential struct via a pointer field with a ",squash" mapstructure
+// tag is also bounded and returns an error instead of stack-overflowing.
+func TestConsensusAggregationFromTags_SelfReferentialSquash(t *testing.T) {
+	type SelfRef struct {
+		Val  int      `consensus_aggregation:"median"`
+		Next *SelfRef `consensus_aggregation:"median" mapstructure:",squash"`
+	}
+
+	assert.NotPanics(t, func() {
+		desc := cre.ConsensusAggregationFromTags[SelfRef]()
+		require.Error(t, desc.Err())
+		assert.Contains(t, desc.Err().Error(), "max recursion depth")
+	})
+}
+
+// TestConsensusIdenticalAggregation_DeeplyNested verifies that isIdenticalType
+// bounds its recursion when processing a self-referential struct used with
+// ConsensusIdenticalAggregation, returning false instead of stack-overflowing.
+func TestConsensusIdenticalAggregation_DeeplyNested(t *testing.T) {
+	type SelfRef struct {
+		Val  int
+		Next *SelfRef
+	}
+
+	assert.NotPanics(t, func() {
+		desc := cre.ConsensusIdenticalAggregation[SelfRef]()
+		// isIdenticalType returns false at the depth limit, so the descriptor
+		// carries an "is not a valid type" error rather than panicking.
+		require.Error(t, desc.Err())
+	})
+}
