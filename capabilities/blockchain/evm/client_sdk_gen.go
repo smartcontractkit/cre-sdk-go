@@ -355,7 +355,7 @@ type ClientRestrictor struct {
 	ChainSelector uint64
 }
 
-func (c *ClientRestrictor) LimitCallContract(maxCalls int32) *sdkpb.CapabilityRestriction {
+func (c *ClientRestrictor) LimitCallContract(maxCalls uint32) *sdkpb.CapabilityRestriction {
 	return &sdkpb.CapabilityRestriction{
 		Restriction: &sdkpb.CapabilityRestriction_Method{
 			Method: &sdkpb.MethodRestriction{
@@ -367,7 +367,7 @@ func (c *ClientRestrictor) LimitCallContract(maxCalls int32) *sdkpb.CapabilityRe
 	}
 }
 
-func (c *ClientRestrictor) LimitFilterLogs(maxCalls int32) *sdkpb.CapabilityRestriction {
+func (c *ClientRestrictor) LimitFilterLogs(maxCalls uint32) *sdkpb.CapabilityRestriction {
 	return &sdkpb.CapabilityRestriction{
 		Restriction: &sdkpb.CapabilityRestriction_Method{
 			Method: &sdkpb.MethodRestriction{
@@ -379,7 +379,7 @@ func (c *ClientRestrictor) LimitFilterLogs(maxCalls int32) *sdkpb.CapabilityRest
 	}
 }
 
-func (c *ClientRestrictor) LimitBalanceAt(maxCalls int32) *sdkpb.CapabilityRestriction {
+func (c *ClientRestrictor) LimitBalanceAt(maxCalls uint32) *sdkpb.CapabilityRestriction {
 	return &sdkpb.CapabilityRestriction{
 		Restriction: &sdkpb.CapabilityRestriction_Method{
 			Method: &sdkpb.MethodRestriction{
@@ -391,7 +391,7 @@ func (c *ClientRestrictor) LimitBalanceAt(maxCalls int32) *sdkpb.CapabilityRestr
 	}
 }
 
-func (c *ClientRestrictor) LimitEstimateGas(maxCalls int32) *sdkpb.CapabilityRestriction {
+func (c *ClientRestrictor) LimitEstimateGas(maxCalls uint32) *sdkpb.CapabilityRestriction {
 	return &sdkpb.CapabilityRestriction{
 		Restriction: &sdkpb.CapabilityRestriction_Method{
 			Method: &sdkpb.MethodRestriction{
@@ -403,7 +403,7 @@ func (c *ClientRestrictor) LimitEstimateGas(maxCalls int32) *sdkpb.CapabilityRes
 	}
 }
 
-func (c *ClientRestrictor) LimitGetTransactionByHash(maxCalls int32) *sdkpb.CapabilityRestriction {
+func (c *ClientRestrictor) LimitGetTransactionByHash(maxCalls uint32) *sdkpb.CapabilityRestriction {
 	return &sdkpb.CapabilityRestriction{
 		Restriction: &sdkpb.CapabilityRestriction_Method{
 			Method: &sdkpb.MethodRestriction{
@@ -415,7 +415,7 @@ func (c *ClientRestrictor) LimitGetTransactionByHash(maxCalls int32) *sdkpb.Capa
 	}
 }
 
-func (c *ClientRestrictor) LimitGetTransactionReceipt(maxCalls int32) *sdkpb.CapabilityRestriction {
+func (c *ClientRestrictor) LimitGetTransactionReceipt(maxCalls uint32) *sdkpb.CapabilityRestriction {
 	return &sdkpb.CapabilityRestriction{
 		Restriction: &sdkpb.CapabilityRestriction_Method{
 			Method: &sdkpb.MethodRestriction{
@@ -427,7 +427,7 @@ func (c *ClientRestrictor) LimitGetTransactionReceipt(maxCalls int32) *sdkpb.Cap
 	}
 }
 
-func (c *ClientRestrictor) LimitHeaderByNumber(maxCalls int32) *sdkpb.CapabilityRestriction {
+func (c *ClientRestrictor) LimitHeaderByNumber(maxCalls uint32) *sdkpb.CapabilityRestriction {
 	return &sdkpb.CapabilityRestriction{
 		Restriction: &sdkpb.CapabilityRestriction_Method{
 			Method: &sdkpb.MethodRestriction{
@@ -439,7 +439,7 @@ func (c *ClientRestrictor) LimitHeaderByNumber(maxCalls int32) *sdkpb.Capability
 	}
 }
 
-func (c *ClientRestrictor) LimitWriteReport(maxCalls int32) *sdkpb.CapabilityRestriction {
+func (c *ClientRestrictor) LimitWriteReport(maxCalls uint32) *sdkpb.CapabilityRestriction {
 	return &sdkpb.CapabilityRestriction{
 		Restriction: &sdkpb.CapabilityRestriction_Method{
 			Method: &sdkpb.MethodRestriction{

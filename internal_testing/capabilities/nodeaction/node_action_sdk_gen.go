@@ -77,7 +77,7 @@ func (c *BasicAction) performAction(runtime cre.RuntimeBase, input *NodeInputs) 
 type BasicActionRestrictor struct {
 }
 
-func (c *BasicActionRestrictor) LimitPerformAction(maxCalls int32) *sdkpb.CapabilityRestriction {
+func (c *BasicActionRestrictor) LimitPerformAction(maxCalls uint32) *sdkpb.CapabilityRestriction {
 	return &sdkpb.CapabilityRestriction{
 		Restriction: &sdkpb.CapabilityRestriction_Method{
 			Method: &sdkpb.MethodRestriction{
