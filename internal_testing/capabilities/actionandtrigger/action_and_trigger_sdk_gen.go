@@ -18,6 +18,10 @@ type Basic struct {
 }
 
 func (c *Basic) Action(runtime cre.Runtime, input *Input) cre.Promise[*Output] {
+	return c.action(runtime, input)
+}
+
+func (c *Basic) action(runtime cre.RuntimeBase, input *Input) cre.Promise[*Output] {
 	wrapped := &anypb.Any{}
 	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
@@ -78,4 +82,19 @@ func (t *basicTrigger) ConfigAsAny() *anypb.Any {
 
 func (t *basicTrigger) Adapt(trigger *TriggerEvent) (*TriggerEvent, error) {
 	return trigger, nil
+}
+
+type BasicRestrictor struct {
+}
+
+func (c *BasicRestrictor) LimitAction(maxCalls uint32) *sdkpb.CapabilityRestriction {
+	return &sdkpb.CapabilityRestriction{
+		Restriction: &sdkpb.CapabilityRestriction_Method{
+			Method: &sdkpb.MethodRestriction{
+				Id:       "basic-test-action-trigger@1.0.0",
+				Method:   "Action",
+				MaxCalls: maxCalls,
+			},
+		},
+	}
 }

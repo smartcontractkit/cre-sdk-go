@@ -20,6 +20,10 @@ type BasicAction struct {
 
 // PerformAction This comment tests the generator's ability to handle leading comments on methods.
 func (c *BasicAction) PerformAction(runtime cre.Runtime, input *Inputs) cre.Promise[*Outputs] {
+	return c.performAction(runtime, input)
+}
+
+func (c *BasicAction) performAction(runtime cre.RuntimeBase, input *Inputs) cre.Promise[*Outputs] {
 	wrapped := &anypb.Any{}
 	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
@@ -45,4 +49,19 @@ func (c *BasicAction) PerformAction(runtime cre.Runtime, input *Inputs) cre.Prom
 
 	return capCallResponse
 
+}
+
+type BasicActionRestrictor struct {
+}
+
+func (c *BasicActionRestrictor) LimitPerformAction(maxCalls uint32) *sdkpb.CapabilityRestriction {
+	return &sdkpb.CapabilityRestriction{
+		Restriction: &sdkpb.CapabilityRestriction_Method{
+			Method: &sdkpb.MethodRestriction{
+				Id:       "basic-test-action@1.0.0",
+				Method:   "PerformAction",
+				MaxCalls: maxCalls,
+			},
+		},
+	}
 }
