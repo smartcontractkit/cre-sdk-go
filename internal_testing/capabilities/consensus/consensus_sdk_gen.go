@@ -85,7 +85,7 @@ func (c *Consensus) report(runtime cre.RuntimeBase, input *sdk.ReportRequest) cr
 type ConsensusRestrictor struct {
 }
 
-func (c *ConsensusRestrictor) LimitSimple(maxCalls int32) *sdkpb.CapabilityRestriction {
+func (c *ConsensusRestrictor) LimitSimple(maxCalls uint32) *sdkpb.CapabilityRestriction {
 	return &sdkpb.CapabilityRestriction{
 		Restriction: &sdkpb.CapabilityRestriction_Method{
 			Method: &sdkpb.MethodRestriction{
@@ -97,7 +97,7 @@ func (c *ConsensusRestrictor) LimitSimple(maxCalls int32) *sdkpb.CapabilityRestr
 	}
 }
 
-func (c *ConsensusRestrictor) LimitReport(maxCalls int32) *sdkpb.CapabilityRestriction {
+func (c *ConsensusRestrictor) LimitReport(maxCalls uint32) *sdkpb.CapabilityRestriction {
 	return &sdkpb.CapabilityRestriction{
 		Restriction: &sdkpb.CapabilityRestriction_Method{
 			Method: &sdkpb.MethodRestriction{
