@@ -223,7 +223,7 @@ type ClientRestrictor struct {
 	ChainSelector uint64
 }
 
-func (c *ClientRestrictor) LimitAccountAPTBalance(maxCalls int32) *sdkpb.CapabilityRestriction {
+func (c *ClientRestrictor) LimitAccountAPTBalance(maxCalls uint32) *sdkpb.CapabilityRestriction {
 	return &sdkpb.CapabilityRestriction{
 		Restriction: &sdkpb.CapabilityRestriction_Method{
 			Method: &sdkpb.MethodRestriction{
@@ -235,7 +235,7 @@ func (c *ClientRestrictor) LimitAccountAPTBalance(maxCalls int32) *sdkpb.Capabil
 	}
 }
 
-func (c *ClientRestrictor) LimitView(maxCalls int32) *sdkpb.CapabilityRestriction {
+func (c *ClientRestrictor) LimitView(maxCalls uint32) *sdkpb.CapabilityRestriction {
 	return &sdkpb.CapabilityRestriction{
 		Restriction: &sdkpb.CapabilityRestriction_Method{
 			Method: &sdkpb.MethodRestriction{
@@ -247,7 +247,7 @@ func (c *ClientRestrictor) LimitView(maxCalls int32) *sdkpb.CapabilityRestrictio
 	}
 }
 
-func (c *ClientRestrictor) LimitTransactionByHash(maxCalls int32) *sdkpb.CapabilityRestriction {
+func (c *ClientRestrictor) LimitTransactionByHash(maxCalls uint32) *sdkpb.CapabilityRestriction {
 	return &sdkpb.CapabilityRestriction{
 		Restriction: &sdkpb.CapabilityRestriction_Method{
 			Method: &sdkpb.MethodRestriction{
@@ -259,7 +259,7 @@ func (c *ClientRestrictor) LimitTransactionByHash(maxCalls int32) *sdkpb.Capabil
 	}
 }
 
-func (c *ClientRestrictor) LimitAccountTransactions(maxCalls int32) *sdkpb.CapabilityRestriction {
+func (c *ClientRestrictor) LimitAccountTransactions(maxCalls uint32) *sdkpb.CapabilityRestriction {
 	return &sdkpb.CapabilityRestriction{
 		Restriction: &sdkpb.CapabilityRestriction_Method{
 			Method: &sdkpb.MethodRestriction{
@@ -271,7 +271,7 @@ func (c *ClientRestrictor) LimitAccountTransactions(maxCalls int32) *sdkpb.Capab
 	}
 }
 
-func (c *ClientRestrictor) LimitWriteReport(maxCalls int32) *sdkpb.CapabilityRestriction {
+func (c *ClientRestrictor) LimitWriteReport(maxCalls uint32) *sdkpb.CapabilityRestriction {
 	return &sdkpb.CapabilityRestriction{
 		Restriction: &sdkpb.CapabilityRestriction_Method{
 			Method: &sdkpb.MethodRestriction{

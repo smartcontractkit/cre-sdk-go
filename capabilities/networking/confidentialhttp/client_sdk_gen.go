@@ -52,7 +52,7 @@ func (c *Client) sendRequest(runtime cre.RuntimeBase, input *ConfidentialHTTPReq
 type ClientRestrictor struct {
 }
 
-func (c *ClientRestrictor) LimitSendRequest(maxCalls int32) *sdkpb.CapabilityRestriction {
+func (c *ClientRestrictor) LimitSendRequest(maxCalls uint32) *sdkpb.CapabilityRestriction {
 	return &sdkpb.CapabilityRestriction{
 		Restriction: &sdkpb.CapabilityRestriction_Method{
 			Method: &sdkpb.MethodRestriction{
