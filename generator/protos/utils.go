@@ -33,20 +33,59 @@ func newGeneratorAndInstallTools(install func() error) (*pkg.ProtocGen, error) {
 	}, nil
 }
 
-// installFromMod installs the protoc-gen-cre plugin from the same commit as the SDK you're using
 func installFromMod() error {
+	if localDir := getLocalReplaceDir(plugin); localDir != "" {
+		fmt.Printf("Using local replace for %s at %s\n", plugin, localDir)
+		return buildPlugin(localDir)
+	}
+
 	fmt.Printf("Finding version to use for %s\n.", sdk)
-	pluginVersion, err := getVersion(sdk, ".")
+	sdkVersion, err := getVersion(sdk, ".")
 	if err != nil {
 		return err
 	}
 
-	pluginDir, err := downloadPlugin(plugin, pluginVersion)
+	// Extract commit hash if sdkVersion is a pseudo-version (e.g. v1.16.0-capdev.1.0.20260805153504-8f3b133ebbbe -> 8f3b133ebbbe)
+	targetVersion := extractCommitOrVersion(sdkVersion)
+
+	pluginDir, err := downloadPlugin(plugin, targetVersion)
 	if err != nil {
 		return err
 	}
 
 	return buildPlugin(pluginDir)
+}
+
+// extractCommitOrVersion extracts the 12-char Git commit hash from pseudo-versions,
+// while leaving clean semver tags (e.g. v1.16.0) untouched.
+func extractCommitOrVersion(version string) string {
+	parts := strings.Split(version, "-")
+	lastPart := parts[len(parts)-1]
+
+	// Go pseudo-versions end with a 12-character hex commit hash
+	if len(parts) > 1 && len(lastPart) == 12 {
+		return lastPart
+	}
+	return version
+}
+
+// getLocalReplaceDir returns the local directory for a module's replace directive, or empty string if none.
+func getLocalReplaceDir(modulePath string) string {
+	cmd := exec.Command("go", "list", "-m", "-json", modulePath)
+	out, err := cmd.Output()
+	if err != nil {
+		return ""
+	}
+
+	var mod struct {
+		Replace *struct {
+			Dir string
+		}
+	}
+	if err = json.Unmarshal(out, &mod); err != nil || mod.Replace == nil {
+		return ""
+	}
+	return mod.Replace.Dir
 }
 
 // buildProtocGenLocally builds against the local protoc-gen-cre source code.
