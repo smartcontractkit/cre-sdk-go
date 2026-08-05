@@ -12,7 +12,7 @@ type {{.Service.GoName}}Restrictor struct {
     {{- end }}
 }
 {{ range .Service.Methods }} {{- if not (MapToUntypedAPI .) }} {{- if not (isTrigger .) }}
-func (c *{{$.Service.GoName}}Restrictor) Limit{{.GoName}}(maxCalls int32) *sdkpb.CapabilityRestriction {
+func (c *{{$.Service.GoName}}Restrictor) Limit{{.GoName}}(maxCalls uint32) *sdkpb.CapabilityRestriction {
     return &sdkpb.CapabilityRestriction{
         Restriction: &sdkpb.CapabilityRestriction_Method{
             Method: &sdkpb.MethodRestriction{

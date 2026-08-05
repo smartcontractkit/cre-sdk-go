@@ -87,7 +87,7 @@ func (t *basicTrigger) Adapt(trigger *TriggerEvent) (*TriggerEvent, error) {
 type BasicRestrictor struct {
 }
 
-func (c *BasicRestrictor) LimitAction(maxCalls int32) *sdkpb.CapabilityRestriction {
+func (c *BasicRestrictor) LimitAction(maxCalls uint32) *sdkpb.CapabilityRestriction {
 	return &sdkpb.CapabilityRestriction{
 		Restriction: &sdkpb.CapabilityRestriction_Method{
 			Method: &sdkpb.MethodRestriction{
