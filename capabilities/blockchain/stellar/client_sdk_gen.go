@@ -153,7 +153,7 @@ type ClientRestrictor struct {
 	ChainSelector uint64
 }
 
-func (c *ClientRestrictor) LimitGetLatestLedger(maxCalls int32) *sdkpb.CapabilityRestriction {
+func (c *ClientRestrictor) LimitGetLatestLedger(maxCalls uint32) *sdkpb.CapabilityRestriction {
 	return &sdkpb.CapabilityRestriction{
 		Restriction: &sdkpb.CapabilityRestriction_Method{
 			Method: &sdkpb.MethodRestriction{
@@ -165,7 +165,7 @@ func (c *ClientRestrictor) LimitGetLatestLedger(maxCalls int32) *sdkpb.Capabilit
 	}
 }
 
-func (c *ClientRestrictor) LimitReadContract(maxCalls int32) *sdkpb.CapabilityRestriction {
+func (c *ClientRestrictor) LimitReadContract(maxCalls uint32) *sdkpb.CapabilityRestriction {
 	return &sdkpb.CapabilityRestriction{
 		Restriction: &sdkpb.CapabilityRestriction_Method{
 			Method: &sdkpb.MethodRestriction{
@@ -177,7 +177,7 @@ func (c *ClientRestrictor) LimitReadContract(maxCalls int32) *sdkpb.CapabilityRe
 	}
 }
 
-func (c *ClientRestrictor) LimitWriteReport(maxCalls int32) *sdkpb.CapabilityRestriction {
+func (c *ClientRestrictor) LimitWriteReport(maxCalls uint32) *sdkpb.CapabilityRestriction {
 	return &sdkpb.CapabilityRestriction{
 		Restriction: &sdkpb.CapabilityRestriction_Method{
 			Method: &sdkpb.MethodRestriction{

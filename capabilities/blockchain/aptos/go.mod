@@ -3,8 +3,8 @@ module github.com/smartcontractkit/cre-sdk-go/capabilities/blockchain/aptos
 go 1.25.3
 
 require (
-	github.com/smartcontractkit/chainlink-protos/cre/go v0.0.0-20260623200841-e0322b819f62
-	github.com/smartcontractkit/cre-sdk-go v1.9.0-capdev.1.0.20260625132924-dcceeb57cf3c
+	github.com/smartcontractkit/chainlink-protos/cre/go v0.0.0-20260804191526-b7a850ae7648
+	github.com/smartcontractkit/cre-sdk-go v1.16.0-capdev.1.0.20260805161900-2920a8bab8f3
 	google.golang.org/protobuf v1.36.11
 )
 

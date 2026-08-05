@@ -425,7 +425,7 @@ type ClientRestrictor struct {
 	ChainSelector uint64
 }
 
-func (c *ClientRestrictor) LimitGetAccountInfoWithOpts(maxCalls int32) *sdkpb.CapabilityRestriction {
+func (c *ClientRestrictor) LimitGetAccountInfoWithOpts(maxCalls uint32) *sdkpb.CapabilityRestriction {
 	return &sdkpb.CapabilityRestriction{
 		Restriction: &sdkpb.CapabilityRestriction_Method{
 			Method: &sdkpb.MethodRestriction{
@@ -437,7 +437,7 @@ func (c *ClientRestrictor) LimitGetAccountInfoWithOpts(maxCalls int32) *sdkpb.Ca
 	}
 }
 
-func (c *ClientRestrictor) LimitGetBalance(maxCalls int32) *sdkpb.CapabilityRestriction {
+func (c *ClientRestrictor) LimitGetBalance(maxCalls uint32) *sdkpb.CapabilityRestriction {
 	return &sdkpb.CapabilityRestriction{
 		Restriction: &sdkpb.CapabilityRestriction_Method{
 			Method: &sdkpb.MethodRestriction{
@@ -449,7 +449,7 @@ func (c *ClientRestrictor) LimitGetBalance(maxCalls int32) *sdkpb.CapabilityRest
 	}
 }
 
-func (c *ClientRestrictor) LimitGetBlock(maxCalls int32) *sdkpb.CapabilityRestriction {
+func (c *ClientRestrictor) LimitGetBlock(maxCalls uint32) *sdkpb.CapabilityRestriction {
 	return &sdkpb.CapabilityRestriction{
 		Restriction: &sdkpb.CapabilityRestriction_Method{
 			Method: &sdkpb.MethodRestriction{
@@ -461,7 +461,7 @@ func (c *ClientRestrictor) LimitGetBlock(maxCalls int32) *sdkpb.CapabilityRestri
 	}
 }
 
-func (c *ClientRestrictor) LimitGetFeeForMessage(maxCalls int32) *sdkpb.CapabilityRestriction {
+func (c *ClientRestrictor) LimitGetFeeForMessage(maxCalls uint32) *sdkpb.CapabilityRestriction {
 	return &sdkpb.CapabilityRestriction{
 		Restriction: &sdkpb.CapabilityRestriction_Method{
 			Method: &sdkpb.MethodRestriction{
@@ -473,7 +473,7 @@ func (c *ClientRestrictor) LimitGetFeeForMessage(maxCalls int32) *sdkpb.Capabili
 	}
 }
 
-func (c *ClientRestrictor) LimitGetMultipleAccountsWithOpts(maxCalls int32) *sdkpb.CapabilityRestriction {
+func (c *ClientRestrictor) LimitGetMultipleAccountsWithOpts(maxCalls uint32) *sdkpb.CapabilityRestriction {
 	return &sdkpb.CapabilityRestriction{
 		Restriction: &sdkpb.CapabilityRestriction_Method{
 			Method: &sdkpb.MethodRestriction{
@@ -485,7 +485,7 @@ func (c *ClientRestrictor) LimitGetMultipleAccountsWithOpts(maxCalls int32) *sdk
 	}
 }
 
-func (c *ClientRestrictor) LimitGetProgramAccounts(maxCalls int32) *sdkpb.CapabilityRestriction {
+func (c *ClientRestrictor) LimitGetProgramAccounts(maxCalls uint32) *sdkpb.CapabilityRestriction {
 	return &sdkpb.CapabilityRestriction{
 		Restriction: &sdkpb.CapabilityRestriction_Method{
 			Method: &sdkpb.MethodRestriction{
@@ -497,7 +497,7 @@ func (c *ClientRestrictor) LimitGetProgramAccounts(maxCalls int32) *sdkpb.Capabi
 	}
 }
 
-func (c *ClientRestrictor) LimitGetSignatureStatuses(maxCalls int32) *sdkpb.CapabilityRestriction {
+func (c *ClientRestrictor) LimitGetSignatureStatuses(maxCalls uint32) *sdkpb.CapabilityRestriction {
 	return &sdkpb.CapabilityRestriction{
 		Restriction: &sdkpb.CapabilityRestriction_Method{
 			Method: &sdkpb.MethodRestriction{
@@ -509,7 +509,7 @@ func (c *ClientRestrictor) LimitGetSignatureStatuses(maxCalls int32) *sdkpb.Capa
 	}
 }
 
-func (c *ClientRestrictor) LimitGetSlotHeight(maxCalls int32) *sdkpb.CapabilityRestriction {
+func (c *ClientRestrictor) LimitGetSlotHeight(maxCalls uint32) *sdkpb.CapabilityRestriction {
 	return &sdkpb.CapabilityRestriction{
 		Restriction: &sdkpb.CapabilityRestriction_Method{
 			Method: &sdkpb.MethodRestriction{
@@ -521,7 +521,7 @@ func (c *ClientRestrictor) LimitGetSlotHeight(maxCalls int32) *sdkpb.CapabilityR
 	}
 }
 
-func (c *ClientRestrictor) LimitGetTransaction(maxCalls int32) *sdkpb.CapabilityRestriction {
+func (c *ClientRestrictor) LimitGetTransaction(maxCalls uint32) *sdkpb.CapabilityRestriction {
 	return &sdkpb.CapabilityRestriction{
 		Restriction: &sdkpb.CapabilityRestriction_Method{
 			Method: &sdkpb.MethodRestriction{
@@ -533,7 +533,7 @@ func (c *ClientRestrictor) LimitGetTransaction(maxCalls int32) *sdkpb.Capability
 	}
 }
 
-func (c *ClientRestrictor) LimitWriteReport(maxCalls int32) *sdkpb.CapabilityRestriction {
+func (c *ClientRestrictor) LimitWriteReport(maxCalls uint32) *sdkpb.CapabilityRestriction {
 	return &sdkpb.CapabilityRestriction{
 		Restriction: &sdkpb.CapabilityRestriction_Method{
 			Method: &sdkpb.MethodRestriction{
