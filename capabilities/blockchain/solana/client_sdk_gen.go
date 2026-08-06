@@ -65,6 +65,10 @@ func (i *WriteCreReportRequest) X_GeneratedCodeOnly_Unwrap() *WriteReportRequest
 }
 
 func (c *Client) WriteReport(runtime cre.Runtime, input *WriteCreReportRequest) cre.Promise[*WriteReportReply] {
+	return c.writeReport(runtime, input)
+}
+
+func (c *Client) writeReport(runtime cre.RuntimeBase, input *WriteCreReportRequest) cre.Promise[*WriteReportReply] {
 	wrapped := &anypb.Any{}
 	err := anypb.MarshalFrom(wrapped, input.X_GeneratedCodeOnly_Unwrap(), proto.MarshalOptions{Deterministic: true})
 	if err != nil {
@@ -90,6 +94,22 @@ func (c *Client) WriteReport(runtime cre.Runtime, input *WriteCreReportRequest) 
 
 	return capCallResponse
 
+}
+
+type ClientRestrictor struct {
+	ChainSelector uint64
+}
+
+func (c *ClientRestrictor) LimitWriteReport(maxCalls uint32) *sdkpb.CapabilityRestriction {
+	return &sdkpb.CapabilityRestriction{
+		Restriction: &sdkpb.CapabilityRestriction_Method{
+			Method: &sdkpb.MethodRestriction{
+				Id:       "solana" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
+				Method:   "WriteReport",
+				MaxCalls: maxCalls,
+			},
+		},
+	}
 }
 
 const SolanaDevnet = 16423721717087811551

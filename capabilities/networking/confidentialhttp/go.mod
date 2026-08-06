@@ -3,8 +3,8 @@ module github.com/smartcontractkit/cre-sdk-go/capabilities/networking/confidenti
 go 1.25.3
 
 require (
-	github.com/smartcontractkit/chainlink-protos/cre/go v0.0.0-20260707203317-661b54b51a33
-	github.com/smartcontractkit/cre-sdk-go v1.16.0
+	github.com/smartcontractkit/chainlink-protos/cre/go v0.0.0-20260804200254-c1accce563a8
+	github.com/smartcontractkit/cre-sdk-go v1.16.1-0.20260805200504-1708ea3f9933
 )
 
 require (

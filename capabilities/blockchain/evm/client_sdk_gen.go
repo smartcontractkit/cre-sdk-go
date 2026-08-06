@@ -21,6 +21,10 @@ type Client struct {
 }
 
 func (c *Client) CallContract(runtime cre.Runtime, input *CallContractRequest) cre.Promise[*CallContractReply] {
+	return c.callContract(runtime, input)
+}
+
+func (c *Client) callContract(runtime cre.RuntimeBase, input *CallContractRequest) cre.Promise[*CallContractReply] {
 	wrapped := &anypb.Any{}
 	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
@@ -49,6 +53,10 @@ func (c *Client) CallContract(runtime cre.Runtime, input *CallContractRequest) c
 }
 
 func (c *Client) FilterLogs(runtime cre.Runtime, input *FilterLogsRequest) cre.Promise[*FilterLogsReply] {
+	return c.filterLogs(runtime, input)
+}
+
+func (c *Client) filterLogs(runtime cre.RuntimeBase, input *FilterLogsRequest) cre.Promise[*FilterLogsReply] {
 	wrapped := &anypb.Any{}
 	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
@@ -77,6 +85,10 @@ func (c *Client) FilterLogs(runtime cre.Runtime, input *FilterLogsRequest) cre.P
 }
 
 func (c *Client) BalanceAt(runtime cre.Runtime, input *BalanceAtRequest) cre.Promise[*BalanceAtReply] {
+	return c.balanceAt(runtime, input)
+}
+
+func (c *Client) balanceAt(runtime cre.RuntimeBase, input *BalanceAtRequest) cre.Promise[*BalanceAtReply] {
 	wrapped := &anypb.Any{}
 	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
@@ -105,6 +117,10 @@ func (c *Client) BalanceAt(runtime cre.Runtime, input *BalanceAtRequest) cre.Pro
 }
 
 func (c *Client) EstimateGas(runtime cre.Runtime, input *EstimateGasRequest) cre.Promise[*EstimateGasReply] {
+	return c.estimateGas(runtime, input)
+}
+
+func (c *Client) estimateGas(runtime cre.RuntimeBase, input *EstimateGasRequest) cre.Promise[*EstimateGasReply] {
 	wrapped := &anypb.Any{}
 	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
@@ -133,6 +149,10 @@ func (c *Client) EstimateGas(runtime cre.Runtime, input *EstimateGasRequest) cre
 }
 
 func (c *Client) GetTransactionByHash(runtime cre.Runtime, input *GetTransactionByHashRequest) cre.Promise[*GetTransactionByHashReply] {
+	return c.getTransactionByHash(runtime, input)
+}
+
+func (c *Client) getTransactionByHash(runtime cre.RuntimeBase, input *GetTransactionByHashRequest) cre.Promise[*GetTransactionByHashReply] {
 	wrapped := &anypb.Any{}
 	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
@@ -161,6 +181,10 @@ func (c *Client) GetTransactionByHash(runtime cre.Runtime, input *GetTransaction
 }
 
 func (c *Client) GetTransactionReceipt(runtime cre.Runtime, input *GetTransactionReceiptRequest) cre.Promise[*GetTransactionReceiptReply] {
+	return c.getTransactionReceipt(runtime, input)
+}
+
+func (c *Client) getTransactionReceipt(runtime cre.RuntimeBase, input *GetTransactionReceiptRequest) cre.Promise[*GetTransactionReceiptReply] {
 	wrapped := &anypb.Any{}
 	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
@@ -189,6 +213,10 @@ func (c *Client) GetTransactionReceipt(runtime cre.Runtime, input *GetTransactio
 }
 
 func (c *Client) HeaderByNumber(runtime cre.Runtime, input *HeaderByNumberRequest) cre.Promise[*HeaderByNumberReply] {
+	return c.headerByNumber(runtime, input)
+}
+
+func (c *Client) headerByNumber(runtime cre.RuntimeBase, input *HeaderByNumberRequest) cre.Promise[*HeaderByNumberReply] {
 	wrapped := &anypb.Any{}
 	err := anypb.MarshalFrom(wrapped, input, proto.MarshalOptions{Deterministic: true})
 	if err != nil {
@@ -292,6 +320,10 @@ func (i *WriteCreReportRequest) X_GeneratedCodeOnly_Unwrap() *WriteReportRequest
 }
 
 func (c *Client) WriteReport(runtime cre.Runtime, input *WriteCreReportRequest) cre.Promise[*WriteReportReply] {
+	return c.writeReport(runtime, input)
+}
+
+func (c *Client) writeReport(runtime cre.RuntimeBase, input *WriteCreReportRequest) cre.Promise[*WriteReportReply] {
 	wrapped := &anypb.Any{}
 	err := anypb.MarshalFrom(wrapped, input.X_GeneratedCodeOnly_Unwrap(), proto.MarshalOptions{Deterministic: true})
 	if err != nil {
@@ -317,6 +349,106 @@ func (c *Client) WriteReport(runtime cre.Runtime, input *WriteCreReportRequest) 
 
 	return capCallResponse
 
+}
+
+type ClientRestrictor struct {
+	ChainSelector uint64
+}
+
+func (c *ClientRestrictor) LimitCallContract(maxCalls uint32) *sdkpb.CapabilityRestriction {
+	return &sdkpb.CapabilityRestriction{
+		Restriction: &sdkpb.CapabilityRestriction_Method{
+			Method: &sdkpb.MethodRestriction{
+				Id:       "evm" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
+				Method:   "CallContract",
+				MaxCalls: maxCalls,
+			},
+		},
+	}
+}
+
+func (c *ClientRestrictor) LimitFilterLogs(maxCalls uint32) *sdkpb.CapabilityRestriction {
+	return &sdkpb.CapabilityRestriction{
+		Restriction: &sdkpb.CapabilityRestriction_Method{
+			Method: &sdkpb.MethodRestriction{
+				Id:       "evm" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
+				Method:   "FilterLogs",
+				MaxCalls: maxCalls,
+			},
+		},
+	}
+}
+
+func (c *ClientRestrictor) LimitBalanceAt(maxCalls uint32) *sdkpb.CapabilityRestriction {
+	return &sdkpb.CapabilityRestriction{
+		Restriction: &sdkpb.CapabilityRestriction_Method{
+			Method: &sdkpb.MethodRestriction{
+				Id:       "evm" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
+				Method:   "BalanceAt",
+				MaxCalls: maxCalls,
+			},
+		},
+	}
+}
+
+func (c *ClientRestrictor) LimitEstimateGas(maxCalls uint32) *sdkpb.CapabilityRestriction {
+	return &sdkpb.CapabilityRestriction{
+		Restriction: &sdkpb.CapabilityRestriction_Method{
+			Method: &sdkpb.MethodRestriction{
+				Id:       "evm" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
+				Method:   "EstimateGas",
+				MaxCalls: maxCalls,
+			},
+		},
+	}
+}
+
+func (c *ClientRestrictor) LimitGetTransactionByHash(maxCalls uint32) *sdkpb.CapabilityRestriction {
+	return &sdkpb.CapabilityRestriction{
+		Restriction: &sdkpb.CapabilityRestriction_Method{
+			Method: &sdkpb.MethodRestriction{
+				Id:       "evm" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
+				Method:   "GetTransactionByHash",
+				MaxCalls: maxCalls,
+			},
+		},
+	}
+}
+
+func (c *ClientRestrictor) LimitGetTransactionReceipt(maxCalls uint32) *sdkpb.CapabilityRestriction {
+	return &sdkpb.CapabilityRestriction{
+		Restriction: &sdkpb.CapabilityRestriction_Method{
+			Method: &sdkpb.MethodRestriction{
+				Id:       "evm" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
+				Method:   "GetTransactionReceipt",
+				MaxCalls: maxCalls,
+			},
+		},
+	}
+}
+
+func (c *ClientRestrictor) LimitHeaderByNumber(maxCalls uint32) *sdkpb.CapabilityRestriction {
+	return &sdkpb.CapabilityRestriction{
+		Restriction: &sdkpb.CapabilityRestriction_Method{
+			Method: &sdkpb.MethodRestriction{
+				Id:       "evm" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
+				Method:   "HeaderByNumber",
+				MaxCalls: maxCalls,
+			},
+		},
+	}
+}
+
+func (c *ClientRestrictor) LimitWriteReport(maxCalls uint32) *sdkpb.CapabilityRestriction {
+	return &sdkpb.CapabilityRestriction{
+		Restriction: &sdkpb.CapabilityRestriction_Method{
+			Method: &sdkpb.MethodRestriction{
+				Id:       "evm" + ":ChainSelector:" + strconv.FormatUint(c.ChainSelector, 10) + "@1.0.0",
+				Method:   "WriteReport",
+				MaxCalls: maxCalls,
+			},
+		},
+	}
 }
 
 const AdiMainnet = 4059281736450291836
