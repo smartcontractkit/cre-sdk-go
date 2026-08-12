@@ -1791,7 +1791,7 @@ const file_capabilities_blockchain_evm_v1alpha_client_proto_rawDesc = "" +
 	"\bTxStatus\x12\x13\n" +
 	"\x0fTX_STATUS_FATAL\x10\x00\x12\x16\n" +
 	"\x12TX_STATUS_REVERTED\x10\x01\x12\x15\n" +
-	"\x11TX_STATUS_SUCCESS\x10\x022\x82\x1a\n" +
+	"\x11TX_STATUS_SUCCESS\x10\x022\x99\x1b\n" +
 	"\x06Client\x12\x80\x01\n" +
 	"\fCallContract\x128.capabilities.blockchain.evm.v1alpha.CallContractRequest\x1a6.capabilities.blockchain.evm.v1alpha.CallContractReply\x12z\n" +
 	"\n" +
@@ -1803,8 +1803,8 @@ const file_capabilities_blockchain_evm_v1alpha_client_proto_rawDesc = "" +
 	"\x0eHeaderByNumber\x12:.capabilities.blockchain.evm.v1alpha.HeaderByNumberRequest\x1a8.capabilities.blockchain.evm.v1alpha.HeaderByNumberReply\x12v\n" +
 	"\n" +
 	"LogTrigger\x12<.capabilities.blockchain.evm.v1alpha.FilterLogTriggerRequest\x1a(.capabilities.blockchain.evm.v1alpha.Log0\x01\x12}\n" +
-	"\vWriteReport\x127.capabilities.blockchain.evm.v1alpha.WriteReportRequest\x1a5.capabilities.blockchain.evm.v1alpha.WriteReportReply\x1a\xc7\x10\x82\xb5\x18\xc2\x10\b\x01\x12\tevm@1.0.0\x1a\xb2\x10\n" +
-	"\rChainSelector\x12\xa0\x10\x12\x9d\x10\n" +
+	"\vWriteReport\x127.capabilities.blockchain.evm.v1alpha.WriteReportRequest\x1a5.capabilities.blockchain.evm.v1alpha.WriteReportReply\x1a\xde\x11\x82\xb5\x18\xd9\x11\b\x01\x12\tevm@1.0.0\x1a\xc9\x11\n" +
+	"\rChainSelector\x12\xb7\x11\x12\xb4\x11\n" +
 	"\x17\n" +
 	"\vadi-mainnet\x10\xfc\xf0\xe6·\xe7ݪ8\n" +
 	"\x18\n" +
@@ -1893,6 +1893,8 @@ const file_capabilities_blockchain_evm_v1alpha_client_proto_rawDesc = "" +
 	"\x11megaeth-testnet-2\x10\xe3\x8dވ\xb1\x8f\xfd\x93\xfd\x01\n" +
 	"\x19\n" +
 	"\rmonad-mainnet\x10\xf9\xc0\xc9\xcc\xff\x8e\xe7\xdau\n" +
+	"\x19\n" +
+	"\rmonad-testnet\x10Аϑ\xa6\xf4\xe8\xa5\x1e\n" +
 	"$\n" +
 	"\x17pharos-atlantic-testnet\x10̙\xed\xe0μ\xaf\xb4\xdf\x01\n" +
 	"\x1a\n" +
@@ -1913,12 +1915,20 @@ const file_capabilities_blockchain_evm_v1alpha_client_proto_rawDesc = "" +
 	"\x19private-testnet-quartzite\x10\xf9\xf0\xa2ݬ݇\xfa9\n" +
 	"$\n" +
 	"\x18private-testnet-rhyolite\x10\x81\xfa\x89\xeb\xe1\xb4۱\b\n" +
+	"\x1d\n" +
+	"\x11robinhood-testnet\x10\xc8\xed\xfc\xbe\xa6\x91\xa8\x9b\x1c\n" +
 	"\x19\n" +
 	"\rsonic-mainnet\x10Ѳ\xe5\xed٠\xb2\x9d\x17\n" +
 	"\x19\n" +
 	"\rsonic-testnet\x10Ȉ\xfbԴ\xc6\xfa\xbc\x18\n" +
+	"\x1b\n" +
+	"\x0estable-testnet\x10\x9d\x91\x8b\xb3\xa5\xa0\xa5գ\x01\n" +
+	"\x1a\n" +
+	"\rt-rex-testnet\x10\xfd\xc0\xe3\xdc\xcb\xfd\x88\xb5\xf4\x01\n" +
 	"\x18\n" +
 	"\vtac-testnet\x10\xd5ۍ\xe3\xfb\x9f\x93׃\x01\n" +
+	"\"\n" +
+	"\x16tempo-testnet-moderato\x10\x93\x9b\xc0\xe9䄍\xb0u\n" +
 	"\x1b\n" +
 	"\x0exlayer-testnet\x10ɾ\xa1\xb4\xad̼ݍ\x01b\x06proto3"
 
