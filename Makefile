@@ -7,7 +7,7 @@ gomodtidy: gomods
 
 .PHONY: install-protoc
 install-protoc:
-	script/install-protoc.sh 29.3 /
+	scripts/install-protoc.sh 29.3 /
 	go install google.golang.org/protobuf/cmd/protoc-gen-go@`go list -m -json google.golang.org/protobuf | jq -r .Version`
 	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.5.1
 
@@ -87,3 +87,12 @@ standard_tests:
 	( cd $$mod_dir/pkg/workflows/wasm/host && go test -c -o $$abs_dir/host.test . ); \
 	echo "Running standard tests"; \
 	$$abs_dir/host.test -test.v -test.run ^TestStandard -path=standard_tests
+
+
+.PHONY: init_release
+init_release:
+	cd ./scripts/release && bash init.sh
+
+.PHONE: publish_release
+publish_release:
+	cd ./scripts/release && bash publish.sh
