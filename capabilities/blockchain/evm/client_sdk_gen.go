@@ -539,6 +539,8 @@ const MegaethTestnet2 = 18241817625092392675
 
 const MonadMainnet = 8481857512324358265
 
+const MonadTestnet = 2183018362218727504
+
 const PharosAtlanticTestnet = 16098325658947243212
 
 const PharosMainnet = 7801139999541420232
@@ -559,11 +561,19 @@ const PrivateTestnetQuartzite = 4175996748267305081
 
 const PrivateTestnetRhyolite = 604447335222770945
 
+const RobinhoodTestnet = 2032988798112970440
+
 const SonicMainnet = 1673871237479749969
 
 const SonicTestnet = 1763698235108410440
 
+const StableTestnet = 11793402411494852765
+
+const TRexTestnet = 17611928792452358269
+
 const TacTestnet = 9488606126177218005
+
+const TempoTestnetModerato = 8457817439310187923
 
 const XlayerTestnet = 10212741611335999305
 
@@ -657,6 +667,8 @@ func ChainSelectorFromName(name string) (uint64, error) {
 		return MegaethTestnet2, nil
 	case "monad-mainnet":
 		return MonadMainnet, nil
+	case "monad-testnet":
+		return MonadTestnet, nil
 	case "pharos-atlantic-testnet":
 		return PharosAtlanticTestnet, nil
 	case "pharos-mainnet":
@@ -677,12 +689,20 @@ func ChainSelectorFromName(name string) (uint64, error) {
 		return PrivateTestnetQuartzite, nil
 	case "private-testnet-rhyolite":
 		return PrivateTestnetRhyolite, nil
+	case "robinhood-testnet":
+		return RobinhoodTestnet, nil
 	case "sonic-mainnet":
 		return SonicMainnet, nil
 	case "sonic-testnet":
 		return SonicTestnet, nil
+	case "stable-testnet":
+		return StableTestnet, nil
+	case "t-rex-testnet":
+		return TRexTestnet, nil
 	case "tac-testnet":
 		return TacTestnet, nil
+	case "tempo-testnet-moderato":
+		return TempoTestnetModerato, nil
 	case "xlayer-testnet":
 		return XlayerTestnet, nil
 	default:
