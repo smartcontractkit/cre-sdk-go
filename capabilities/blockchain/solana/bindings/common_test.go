@@ -3,8 +3,11 @@ package bindings
 import (
 	"crypto/sha256"
 	"encoding/binary"
+	"fmt"
+	"math"
 	"testing"
 
+	bin "github.com/gagliardetto/binary"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -130,4 +133,121 @@ func TestCalculateAccountsHash(t *testing.T) {
 
 		assert.NotEqual(t, hash12, hash21, "hash should depend on account order")
 	})
+}
+
+func TestPrepareSubkeyValue(t *testing.T) {
+	t.Run("string", func(t *testing.T) {
+		got, err := PrepareSubkeyValue("hello")
+		require.NoError(t, err)
+		assert.Equal(t, []byte("hello"), got)
+	})
+
+	t.Run("bytes", func(t *testing.T) {
+		input := []byte{1, 2, 3}
+		got, err := PrepareSubkeyValue(input)
+		require.NoError(t, err)
+		assert.Equal(t, input, got)
+	})
+
+	t.Run("uint64 big endian", func(t *testing.T) {
+		got, err := PrepareSubkeyValue(uint64(1000))
+		require.NoError(t, err)
+		expected := make([]byte, 8)
+		binary.BigEndian.PutUint64(expected, 1000)
+		assert.Equal(t, expected, got)
+	})
+
+	t.Run("int64 two's complement", func(t *testing.T) {
+		got, err := PrepareSubkeyValue(int64(-1))
+		require.NoError(t, err)
+		expected := make([]byte, 8)
+		binary.BigEndian.PutUint64(expected, uint64(math.MaxUint64)) //nolint:gosec
+		assert.Equal(t, expected, got)
+	})
+
+	t.Run("byte array", func(t *testing.T) {
+		var arr [32]byte
+		for i := range arr {
+			arr[i] = byte(i)
+		}
+		got, err := PrepareSubkeyValue(arr)
+		require.NoError(t, err)
+		assert.Equal(t, arr[:], got)
+	})
+
+	t.Run("pointer dereference", func(t *testing.T) {
+		val := uint64(42)
+		got, err := PrepareSubkeyValue(&val)
+		require.NoError(t, err)
+		expected := make([]byte, 8)
+		binary.BigEndian.PutUint64(expected, 42)
+		assert.Equal(t, expected, got)
+	})
+
+	t.Run("uint8 widened to 8 bytes", func(t *testing.T) {
+		got, err := PrepareSubkeyValue(uint8(5))
+		require.NoError(t, err)
+		expected := make([]byte, 8)
+		binary.BigEndian.PutUint64(expected, 5)
+		assert.Equal(t, expected, got)
+	})
+
+	t.Run("float32 widened to float64 encoding", func(t *testing.T) {
+		got, err := PrepareSubkeyValue(float32(1.5))
+		require.NoError(t, err)
+		expected, err := PrepareSubkeyValue(float64(1.5))
+		require.NoError(t, err)
+		assert.Equal(t, expected, got)
+	})
+
+	t.Run("nil error", func(t *testing.T) {
+		_, err := PrepareSubkeyValue(nil)
+		require.Error(t, err)
+	})
+
+	t.Run("unsupported type", func(t *testing.T) {
+		_, err := PrepareSubkeyValue([]string{"a"})
+		require.Error(t, err)
+	})
+
+	t.Run("bool unsupported", func(t *testing.T) {
+		_, err := PrepareSubkeyValue(true)
+		require.Error(t, err)
+	})
+
+	t.Run("uint128 unsupported", func(t *testing.T) {
+		_, err := PrepareSubkeyValue(bin.Uint128{Lo: 1000, Hi: 0})
+		require.Error(t, err)
+	})
+}
+
+func TestEncodeIndexedValueMatchesPrepareSubkeyValue(t *testing.T) {
+	values := []any{
+		"hello",
+		[]byte{1, 2, 3},
+		uint64(1000),
+		int64(-1),
+		uint8(5),
+		float32(1.5),
+	}
+	for _, value := range values {
+		t.Run(fmt.Sprintf("%T", value), func(t *testing.T) {
+			prepared, err := PrepareSubkeyValue(value)
+			require.NoError(t, err)
+			encoded, err := EncodeIndexedValue(value)
+			require.NoError(t, err)
+			assert.Equal(t, prepared, encoded)
+		})
+	}
+}
+
+func TestAnchorCPILogTriggerConfig(t *testing.T) {
+	programID := make([]byte, 32)
+	for i := range programID {
+		programID[i] = byte(i)
+	}
+
+	cfg := AnchorCPILogTriggerConfig(programID)
+	require.Equal(t, programID, cfg.DestAddress)
+	require.Equal(t, []byte("anchor:event"), cfg.MethodName)
 }
