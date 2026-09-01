@@ -4,8 +4,8 @@ go 1.25.3
 
 require (
 	github.com/gagliardetto/binary v0.8.0
-	github.com/smartcontractkit/chainlink-protos/cre/go v0.0.0-20260804200254-c1accce563a8
-	github.com/smartcontractkit/cre-sdk-go v1.16.1-0.20260805200504-1708ea3f9933
+	github.com/smartcontractkit/chainlink-protos/cre/go v0.0.0-20260804191526-b7a850ae7648
+	github.com/smartcontractkit/cre-sdk-go v1.16.0-capdev.1.0.20260805161900-2920a8bab8f3
 	github.com/stretchr/testify v1.11.1
 	google.golang.org/protobuf v1.36.11
 )
@@ -26,8 +26,8 @@ require (
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/multierr v1.6.0 // indirect
 	go.uber.org/zap v1.21.0 // indirect
-	golang.org/x/crypto v0.52.0 // indirect
-	golang.org/x/sys v0.45.0 // indirect
-	golang.org/x/term v0.43.0 // indirect
+	golang.org/x/crypto v0.48.0 // indirect
+	golang.org/x/sys v0.41.0 // indirect
+	golang.org/x/term v0.40.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
