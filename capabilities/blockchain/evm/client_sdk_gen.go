@@ -555,6 +555,8 @@ const PolygonTestnetAmoy = 16281711391670634445
 
 const PrivateTestnetAndesite = 6915682381028791124
 
+const PrivateTestnetBasalt = 18362000170840307455
+
 const PrivateTestnetPumice = 1564738277398880633
 
 const PrivateTestnetQuartzite = 4175996748267305081
@@ -683,6 +685,8 @@ func ChainSelectorFromName(name string) (uint64, error) {
 		return PolygonTestnetAmoy, nil
 	case "private-testnet-andesite":
 		return PrivateTestnetAndesite, nil
+	case "private-testnet-basalt":
+		return PrivateTestnetBasalt, nil
 	case "private-testnet-pumice":
 		return PrivateTestnetPumice, nil
 	case "private-testnet-quartzite":
