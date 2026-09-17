@@ -1791,7 +1791,7 @@ const file_capabilities_blockchain_evm_v1alpha_client_proto_rawDesc = "" +
 	"\bTxStatus\x12\x13\n" +
 	"\x0fTX_STATUS_FATAL\x10\x00\x12\x16\n" +
 	"\x12TX_STATUS_REVERTED\x10\x01\x12\x15\n" +
-	"\x11TX_STATUS_SUCCESS\x10\x022\xbe\x1b\n" +
+	"\x11TX_STATUS_SUCCESS\x10\x022\xe3\x1b\n" +
 	"\x06Client\x12\x80\x01\n" +
 	"\fCallContract\x128.capabilities.blockchain.evm.v1alpha.CallContractRequest\x1a6.capabilities.blockchain.evm.v1alpha.CallContractReply\x12z\n" +
 	"\n" +
@@ -1803,8 +1803,8 @@ const file_capabilities_blockchain_evm_v1alpha_client_proto_rawDesc = "" +
 	"\x0eHeaderByNumber\x12:.capabilities.blockchain.evm.v1alpha.HeaderByNumberRequest\x1a8.capabilities.blockchain.evm.v1alpha.HeaderByNumberReply\x12v\n" +
 	"\n" +
 	"LogTrigger\x12<.capabilities.blockchain.evm.v1alpha.FilterLogTriggerRequest\x1a(.capabilities.blockchain.evm.v1alpha.Log0\x01\x12}\n" +
-	"\vWriteReport\x127.capabilities.blockchain.evm.v1alpha.WriteReportRequest\x1a5.capabilities.blockchain.evm.v1alpha.WriteReportReply\x1a\x83\x12\x82\xb5\x18\xfe\x11\b\x01\x12\tevm@1.0.0\x1a\xee\x11\n" +
-	"\rChainSelector\x12\xdc\x11\x12\xd9\x11\n" +
+	"\vWriteReport\x127.capabilities.blockchain.evm.v1alpha.WriteReportRequest\x1a5.capabilities.blockchain.evm.v1alpha.WriteReportReply\x1a\xa8\x12\x82\xb5\x18\xa3\x12\b\x01\x12\tevm@1.0.0\x1a\x93\x12\n" +
+	"\rChainSelector\x12\x81\x12\x12\xfe\x11\n" +
 	"\x17\n" +
 	"\vadi-mainnet\x10\xfc\xf0\xe6·\xe7ݪ8\n" +
 	"\x18\n" +
@@ -1853,6 +1853,8 @@ const file_capabilities_blockchain_evm_v1alpha_client_proto_rawDesc = "" +
 	"\x19ethereum-mainnet-xlayer-1\x10\x96\xa5\xfc\x9c\xa6\xa8\xef\xed)\n" +
 	"%\n" +
 	"\x19ethereum-mainnet-zksync-1\x10\x94\xee\x97\xd9\xed\xb4\xb1\xd7\x15\n" +
+	"#\n" +
+	"\x16ethereum-testnet-hoodi\x10\x83\xa4\xaf\x89\xf2ڭ\x88\x90\x01\n" +
 	"%\n" +
 	"\x18ethereum-testnet-sepolia\x10ٵ\xe4\xce\xfc\xc9\xee\xa0\xde\x01\n" +
 	"/\n" +

@@ -499,6 +499,8 @@ const EthereumMainnetXlayer1 = 3016212468291539606
 
 const EthereumMainnetZksync1 = 1562403441176082196
 
+const EthereumTestnetHoodi = 10380998176179737091
+
 const EthereumTestnetSepolia = 16015286601757825753
 
 const EthereumTestnetSepoliaArbitrum1 = 3478487238524512106
@@ -629,6 +631,8 @@ func ChainSelectorFromName(name string) (uint64, error) {
 		return EthereumMainnetXlayer1, nil
 	case "ethereum-mainnet-zksync-1":
 		return EthereumMainnetZksync1, nil
+	case "ethereum-testnet-hoodi":
+		return EthereumTestnetHoodi, nil
 	case "ethereum-testnet-sepolia":
 		return EthereumTestnetSepolia, nil
 	case "ethereum-testnet-sepolia-arbitrum-1":
