@@ -499,6 +499,8 @@ const EthereumMainnetXlayer1 = 3016212468291539606
 
 const EthereumMainnetZksync1 = 1562403441176082196
 
+const EthereumTestnetHoodi = 10380998176179737091
+
 const EthereumTestnetSepolia = 16015286601757825753
 
 const EthereumTestnetSepoliaArbitrum1 = 3478487238524512106
@@ -554,6 +556,8 @@ const PolygonMainnet = 4051577828743386545
 const PolygonTestnetAmoy = 16281711391670634445
 
 const PrivateTestnetAndesite = 6915682381028791124
+
+const PrivateTestnetBasalt = 18362000170840307455
 
 const PrivateTestnetPumice = 1564738277398880633
 
@@ -627,6 +631,8 @@ func ChainSelectorFromName(name string) (uint64, error) {
 		return EthereumMainnetXlayer1, nil
 	case "ethereum-mainnet-zksync-1":
 		return EthereumMainnetZksync1, nil
+	case "ethereum-testnet-hoodi":
+		return EthereumTestnetHoodi, nil
 	case "ethereum-testnet-sepolia":
 		return EthereumTestnetSepolia, nil
 	case "ethereum-testnet-sepolia-arbitrum-1":
@@ -683,6 +689,8 @@ func ChainSelectorFromName(name string) (uint64, error) {
 		return PolygonTestnetAmoy, nil
 	case "private-testnet-andesite":
 		return PrivateTestnetAndesite, nil
+	case "private-testnet-basalt":
+		return PrivateTestnetBasalt, nil
 	case "private-testnet-pumice":
 		return PrivateTestnetPumice, nil
 	case "private-testnet-quartzite":
