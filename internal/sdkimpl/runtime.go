@@ -293,7 +293,15 @@ func (t *TeeRuntime) CallCapability(request *sdk.CapabilityRequest) cre.Promise[
 }
 
 func (t *TeeRuntime) Rand() (*rand.Rand, error) {
-	return t.don.Rand()
+	nodeBase := t.don.RuntimeBase
+	nodeBase.Mode = sdk.Mode_MODE_NODE
+	nodeBase.source = nil
+	nodeBase.source64 = nil
+	nrt := &NodeRuntime{RuntimeBase: nodeBase}
+	t.don.SwitchModes(sdk.Mode_MODE_NODE)
+	r, err := nrt.Rand()
+	t.don.SwitchModes(sdk.Mode_MODE_DON)
+	return r, err
 }
 
 func (t *TeeRuntime) Now() time.Time {
