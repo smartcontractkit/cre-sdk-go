@@ -70,6 +70,12 @@ func TestConsensusCommonSuffixAggregation(t *testing.T) {
 	})
 }
 
+func TestConsensusFrequencyListAggregation(t *testing.T) {
+	descriptor := cre.ConsensusFrequencyListAggregation[int64]()
+	require.NoError(t, descriptor.Err())
+	assert.Equal(t, descriptor.Descriptor().GetAggregation(), sdk.AggregationType_AGGREGATION_TYPE_FREQUENCY_LIST)
+}
+
 func TestConsensusAggregationFromTags(t *testing.T) {
 	t.Run("valid median - all numeric types", func(t *testing.T) {
 		t.Run("int", func(t *testing.T) { testMedianField[int](t) })
@@ -87,6 +93,27 @@ func TestConsensusAggregationFromTags(t *testing.T) {
 		t.Run("*big.Int", func(t *testing.T) { testMedianField[*big.Int](t) })
 		t.Run("decimal", func(t *testing.T) { testMedianField[decimal.Decimal](t) })
 		t.Run("time", func(t *testing.T) { testMedianField[time.Time](t) })
+	})
+
+	t.Run("valid frequency_list", func(t *testing.T) {
+		type S struct {
+			Val int32 `consensus_aggregation:"frequency_list"`
+		}
+		desc := cre.ConsensusAggregationFromTags[S]()
+		require.NoError(t, desc.Err())
+		assert.Equal(t, &sdk.ConsensusDescriptor{
+			Descriptor_: &sdk.ConsensusDescriptor_FieldsMap{
+				FieldsMap: &sdk.FieldsMap{
+					Fields: map[string]*sdk.ConsensusDescriptor{
+						"Val": {
+							Descriptor_: &sdk.ConsensusDescriptor_Aggregation{
+								Aggregation: sdk.AggregationType_AGGREGATION_TYPE_FREQUENCY_LIST,
+							},
+						},
+					},
+				},
+			},
+		}, desc.Descriptor())
 	})
 
 	t.Run("private fields are ignored", func(t *testing.T) {
