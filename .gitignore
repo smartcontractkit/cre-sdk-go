@@ -31,3 +31,6 @@ proto_vendor/
 
 # Generated files
 *.wasm
+
+# Protos fetched by protofetch, from the commits in protofetch.lock
+**/.deps/

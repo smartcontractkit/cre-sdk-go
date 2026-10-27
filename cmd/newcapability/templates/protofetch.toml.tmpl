@@ -1,0 +1,11 @@
+name = "{{.Category}}-{{.Pkg}}"
+description = "Protos the {{.Pkg}} capability's SDK is generated from"
+proto_out_dir = ".deps"
+
+# The revision is the commit of what generate/go.mod requires of the capabilities repo's libs: generating keeps it
+# there. The base protos come with it, at the commit the capabilities repo pins, which go.mod's
+# chainlink-protos/cre/go follows.
+[capabilities]
+url = "github.com/smartcontractkit/capabilities"
+revision = ""
+content_roots = ["/{{.CapabilityDir}}/protos/production"]
