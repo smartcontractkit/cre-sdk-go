@@ -1,0 +1,13 @@
+version = 2
+
+[[dependencies]]
+name = "capabilities"
+url = "github.com/smartcontractkit/capabilities"
+revision = "7c3a1982aba9871e08d52267030e3bd61d8b4e7a"
+commit_hash = "7c3a1982aba9871e08d52267030e3bd61d8b4e7a"
+
+[[dependencies]]
+name = "chainlink-protos"
+url = "github.com/smartcontractkit/chainlink-protos"
+revision = "e622e8b83b6b28c99a9c12270e4d5a39c87381af"
+commit_hash = "e622e8b83b6b28c99a9c12270e4d5a39c87381af"
