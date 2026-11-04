@@ -462,6 +462,64 @@ func Test_ParseReportWithConfig(t *testing.T) {
 
 		require.ErrorContains(t, err, "invalid registry address \""+invalidAddress+"\"")
 	})
+
+	t.Run("evm encoder is accepted", func(t *testing.T) {
+		for _, encoder := range []string{"evm", "EVM"} {
+			t.Run(encoder, func(t *testing.T) {
+				setupDonSettingRead(t, productionEnvironmentReplay)
+				runtime := testutils.NewRuntime(t, testutils.Secrets{})
+
+				config := cre.ReportParseConfig{
+					AcceptedEnvironments: []cre.Environment{cre.ProductionEnvironment()},
+					Encoder:              encoder,
+				}
+				report, err := cre.ParseReportWithConfig(runtime, rawReport, reportSigs, reportContext, config)
+
+				require.NoError(t, err)
+				require.NotNil(t, report)
+			})
+		}
+	})
+
+	t.Run("non-evm encoder returns an error without reading from chain", func(t *testing.T) {
+		for _, encoder := range []string{"aptos", "solana", "stellar"} {
+			for _, skipSignatureVerification := range []bool{true, false} {
+				t.Run(fmt.Sprintf("%s/skipSignatureVerification=%t", encoder, skipSignatureVerification), func(t *testing.T) {
+					mock := setupDonSettingRead(t, productionEnvironmentReplay)
+					runtime := testutils.NewRuntime(t, testutils.Secrets{})
+
+					config := cre.ReportParseConfig{
+						AcceptedEnvironments:      []cre.Environment{cre.ProductionEnvironment()},
+						SkipSignatureVerification: skipSignatureVerification,
+						Encoder:                   encoder,
+					}
+					_, err := cre.ParseReportWithConfig(runtime, rawReport, reportSigs, reportContext, config)
+
+					require.ErrorIs(t, err, cre.ErrUnsupportedEncoder)
+					assert.Equal(t, 0, mock.actualCalls)
+				})
+			}
+		}
+	})
+}
+
+func Test_VerifySignaturesWithConfig(t *testing.T) {
+	t.Run("non-evm encoder returns an error without reading from chain", func(t *testing.T) {
+		mock := setupDonSettingRead(t, productionEnvironmentReplay)
+		runtime := testutils.NewRuntime(t, testutils.Secrets{})
+
+		report, err := cre.ParseReportWithConfig(runtime, rawReport, reportSigs, reportContext, cre.ReportParseConfig{SkipSignatureVerification: true})
+		require.NoError(t, err)
+
+		config := cre.ReportParseConfig{
+			AcceptedEnvironments: []cre.Environment{cre.ProductionEnvironment()},
+			Encoder:              "aptos",
+		}
+		err = report.VerifySignaturesWithConfig(runtime, config)
+
+		require.ErrorIs(t, err, cre.ErrUnsupportedEncoder)
+		assert.Equal(t, 0, mock.actualCalls)
+	})
 }
 
 func Test_ValidateReportRequest(t *testing.T) {

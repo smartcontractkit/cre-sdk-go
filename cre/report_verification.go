@@ -56,6 +56,20 @@ type ReportParseConfig struct {
 	// SkipSignatureVerification skips the signature verification step. This can be used for testing or in environments where trust is established by other means, but should be used with caution as it disables a critical security check.
 	// It should only be used alongside Report.Verify if filtering reports first to avoid unnecessary calls to the blockchain.
 	SkipSignatureVerification bool
+	// Encoder is the encoder name the report was generated with (ReportRequest.EncoderName).
+	// An empty value defaults to EncoderEVM. Only EVM reports can currently be parsed and verified;
+	// any other value returns ErrUnsupportedEncoder.
+	Encoder string
+}
+
+// EncoderEVM is the encoder name for reports signed with the EVM (ECDSA secp256k1) key bundle.
+const EncoderEVM = "evm"
+
+func (c ReportParseConfig) validateEncoder() error {
+	if c.Encoder == "" || strings.EqualFold(c.Encoder, EncoderEVM) {
+		return nil
+	}
+	return fmt.Errorf("%w %q: only %q reports can be parsed and verified", ErrUnsupportedEncoder, c.Encoder, EncoderEVM)
 }
 
 // encoderSigningAlgos maps each public encoder to the signing algorithm of the key bundle it selects.
@@ -78,6 +92,7 @@ func ValidateReportRequest(request *ReportRequest) error {
 var defaultVerificationConfig = ReportParseConfig{AcceptedEnvironments: []Environment{ProductionEnvironment()}}
 
 // ParseReport parses a CRE report and verifies it against the production CRE environment.
+// Only reports generated with the "evm" encoder are supported; see ReportParseConfig.Encoder.
 // The first time a DON's report is seen, the signatures will be fetched from chain. It will be cached for later report parsing.
 func ParseReport(runtime Runtime, rawReport []byte, signatures [][]byte, reportContext []byte) (*Report, error) {
 	return ParseReportWithConfig(runtime, rawReport, signatures, reportContext, defaultVerificationConfig)
@@ -86,6 +101,10 @@ func ParseReport(runtime Runtime, rawReport []byte, signatures [][]byte, reportC
 // ParseReportWithConfig parses a CRE report and verifies it as specified by the config.
 // The first time a DON's report is seen, and SkipSignatureVerification is false, the signatures will be fetched from chain. It will be cached for later report parsing.
 func ParseReportWithConfig(runtime Runtime, rawReport []byte, signatures [][]byte, reportContext []byte, config ReportParseConfig) (*Report, error) {
+	if err := config.validateEncoder(); err != nil {
+		return nil, err
+	}
+
 	attrSigs := make([]*sdk.AttributedSignature, len(signatures))
 	for i, s := range signatures {
 		attrSigs[i] = &sdk.AttributedSignature{Signature: s}
@@ -126,6 +145,7 @@ func ParseReportWithConfig(runtime Runtime, rawReport []byte, signatures [][]byt
 }
 
 // VerifySignatures verifies the signatures on a Report against the CRE's production environment.
+// Only reports generated with the "evm" encoder are supported; see ReportParseConfig.Encoder.
 // VerifySignatures only needs to be called if SkipSignatureVerification was used with ParseReportWithConfig.
 // The first time a DON's report is seen, the signatures will be fetched from the chain. It will be cached for later report parsing.
 func (r *Report) VerifySignatures(runtime Runtime) error {
@@ -138,6 +158,10 @@ func (r *Report) VerifySignatures(runtime Runtime) error {
 // Note config.SkipSignatureVerification is ignored by this method since if it were true, signatures would not be verified at all.
 func (r *Report) VerifySignaturesWithConfig(runtime Runtime, config ReportParseConfig) error {
 	config.SkipSignatureVerification = false
+	if err := config.validateEncoder(); err != nil {
+		return err
+	}
+
 	header, err := r.parseHeader()
 	if err != nil {
 		return err

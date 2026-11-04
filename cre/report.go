@@ -26,6 +26,8 @@ var (
 	ErrRawReportTooShort = errors.New("raw report too short to contain metadata header")
 	// ErrInvalidSigningAlgo is returned when a ReportRequest's SigningAlgo does not match the key bundle selected by its EncoderName.
 	ErrInvalidSigningAlgo = errors.New("signing algorithm does not match encoder")
+	// ErrUnsupportedEncoder is returned when parsing or verifying a report produced by an encoder other than "evm".
+	ErrUnsupportedEncoder = errors.New("unsupported report encoder")
 )
 
 // Report contains a signed report from the CRE workflow DON.
