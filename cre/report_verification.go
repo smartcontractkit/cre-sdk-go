@@ -72,6 +72,23 @@ func (c ReportParseConfig) validateEncoder() error {
 	return fmt.Errorf("%w %q: only %q reports can be parsed and verified", ErrUnsupportedEncoder, c.Encoder, EncoderEVM)
 }
 
+// encoderSigningAlgos maps each public encoder to the signing algorithm of the key bundle it selects.
+// Consensus picks the key bundle from EncoderName alone, so a mismatched SigningAlgo would otherwise be silently ignored.
+var encoderSigningAlgos = map[string]string{
+	"evm":    "ecdsa",
+	"solana": "ecdsa",
+}
+
+// ValidateReportRequest checks that the request's SigningAlgo matches the algorithm used by the key bundle
+// for its EncoderName. An empty SigningAlgo and encoders not listed in encoderSigningAlgos are not checked.
+func ValidateReportRequest(request *ReportRequest) error {
+	expected, ok := encoderSigningAlgos[strings.ToLower(request.GetEncoderName())]
+	if !ok || request.GetSigningAlgo() == "" || strings.EqualFold(request.GetSigningAlgo(), expected) {
+		return nil
+	}
+	return fmt.Errorf("%w: encoder %q signs with %q, got %q", ErrInvalidSigningAlgo, request.GetEncoderName(), expected, request.GetSigningAlgo())
+}
+
 var defaultVerificationConfig = ReportParseConfig{AcceptedEnvironments: []Environment{ProductionEnvironment()}}
 
 // ParseReport parses a CRE report and verifies it against the production CRE environment.

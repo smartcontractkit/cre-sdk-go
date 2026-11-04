@@ -122,6 +122,9 @@ func (r *RuntimeBase) Rand() (*rand.Rand, error) {
 }
 
 func (d *Runtime) GenerateReport(request *sdk.ReportRequest) cre.Promise[*cre.Report] {
+	if err := cre.ValidateReportRequest(request); err != nil {
+		return cre.PromiseFromResult[*cre.Report](nil, err)
+	}
 	return (&consensus.Consensus{}).Report(d, request)
 }
 

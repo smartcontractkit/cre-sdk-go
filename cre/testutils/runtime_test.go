@@ -131,6 +131,19 @@ func TestRuntime_CallsReportMethod(t *testing.T) {
 	assert.Equal(t, []byte("default_signature_2"), unwrapped.Sigs[1].Signature)
 }
 
+func TestRuntime_ReportWithMismatchedSigningAlgoFails(t *testing.T) {
+	runtime := testutils.NewRuntime(t, nil)
+	reportRequest := &sdk.ReportRequest{
+		EncodedPayload: []byte("some_encoded_report_data"),
+		EncoderName:    "evm",
+		SigningAlgo:    "ed25519",
+		HashingAlgo:    "keccak256",
+	}
+
+	_, err := runtime.GenerateReport(reportRequest).Await()
+	require.ErrorIs(t, err, cre.ErrInvalidSigningAlgo)
+}
+
 func TestRuntime_GetSecrets(t *testing.T) {
 	t.Run("returns multiple secrets", func(t *testing.T) {
 		rt := testutils.NewRuntime(t, map[testutils.Namespace]map[testutils.ID]string{

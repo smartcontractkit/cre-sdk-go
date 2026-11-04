@@ -521,3 +521,30 @@ func Test_VerifySignaturesWithConfig(t *testing.T) {
 		assert.Equal(t, 0, mock.actualCalls)
 	})
 }
+
+func Test_ValidateReportRequest(t *testing.T) {
+	tests := []struct {
+		encoder     string
+		signingAlgo string
+		valid       bool
+	}{
+		{encoder: "evm", signingAlgo: "ecdsa", valid: true},
+		{encoder: "EVM", signingAlgo: "ECDSA", valid: true},
+		{encoder: "evm", signingAlgo: "", valid: true},
+		{encoder: "evm", signingAlgo: "ed25519", valid: false},
+		{encoder: "solana", signingAlgo: "ecdsa", valid: true},
+		{encoder: "solana", signingAlgo: "ed25519", valid: false},
+		{encoder: "my-encoder", signingAlgo: "my-signer", valid: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(fmt.Sprintf("%s/%s", tt.encoder, tt.signingAlgo), func(t *testing.T) {
+			err := cre.ValidateReportRequest(&sdk.ReportRequest{EncoderName: tt.encoder, SigningAlgo: tt.signingAlgo})
+			if tt.valid {
+				require.NoError(t, err)
+			} else {
+				require.ErrorIs(t, err, cre.ErrInvalidSigningAlgo)
+			}
+		})
+	}
+}
