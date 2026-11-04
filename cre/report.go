@@ -24,6 +24,8 @@ var (
 	ErrDuplicateSigner = errors.New("duplicate signer")
 	// ErrRawReportTooShort is returned when the raw report is shorter than the 109-byte metadata header.
 	ErrRawReportTooShort = errors.New("raw report too short to contain metadata header")
+	// ErrUnsupportedEncoder is returned when parsing or verifying a report produced by an encoder other than "evm".
+	ErrUnsupportedEncoder = errors.New("unsupported report encoder")
 )
 
 // Report contains a signed report from the CRE workflow DON.
