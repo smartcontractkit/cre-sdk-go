@@ -1,6 +1,7 @@
 package cre
 
 import (
+	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
 	"errors"
@@ -23,6 +24,18 @@ type donInfo struct {
 	f int
 	// signers maps signer address → nodeOperatorId (slot 0 of NodeInfo ABI tuple).
 	signers map[common.Address]uint32
+	// solanaSigners maps Solana signer address → nodeOperatorId, read from the consensus capability's OCR3 config.
+	// solanaSignersErr is set when the DON does not publish Solana signers; it only fails Solana report verification.
+	solanaSigners    map[common.Address]uint32
+	solanaSignersErr error
+}
+
+// signersFor returns the authorized signers for reports produced by the given encoder.
+func (d donInfo) signersFor(encoder string) (map[common.Address]uint32, error) {
+	if encoder == EncoderSolana {
+		return d.solanaSigners, d.solanaSignersErr
+	}
+	return d.signers, nil
 }
 
 type Environment struct {
@@ -57,25 +70,34 @@ type ReportParseConfig struct {
 	// It should only be used alongside Report.Verify if filtering reports first to avoid unnecessary calls to the blockchain.
 	SkipSignatureVerification bool
 	// Encoder is the encoder name the report was generated with (ReportRequest.EncoderName).
-	// An empty value defaults to EncoderEVM. Only EVM reports can currently be parsed and verified;
-	// any other value returns ErrUnsupportedEncoder.
+	// An empty value defaults to EncoderEVM. Only EncoderEVM and EncoderSolana reports can currently be parsed and
+	// verified; any other value returns ErrUnsupportedEncoder.
 	Encoder string
 }
 
-// EncoderEVM is the encoder name for reports signed with the EVM (ECDSA secp256k1) key bundle.
-const EncoderEVM = "evm"
+const (
+	// EncoderEVM is the encoder name for reports signed with the EVM (ECDSA secp256k1) key bundle.
+	EncoderEVM = "evm"
+	// EncoderSolana is the encoder name for reports signed with the Solana (ECDSA secp256k1) key bundle.
+	EncoderSolana = "solana"
+)
 
-func (c ReportParseConfig) validateEncoder() error {
-	if c.Encoder == "" || strings.EqualFold(c.Encoder, EncoderEVM) {
-		return nil
+// encoder returns the normalized encoder name, defaulting to EncoderEVM.
+func (c ReportParseConfig) encoder() (string, error) {
+	switch encoder := strings.ToLower(c.Encoder); encoder {
+	case "":
+		return EncoderEVM, nil
+	case EncoderEVM, EncoderSolana:
+		return encoder, nil
+	default:
+		return "", fmt.Errorf("%w %q: only %q and %q reports can be parsed and verified", ErrUnsupportedEncoder, c.Encoder, EncoderEVM, EncoderSolana)
 	}
-	return fmt.Errorf("%w %q: only %q reports can be parsed and verified", ErrUnsupportedEncoder, c.Encoder, EncoderEVM)
 }
 
 var defaultVerificationConfig = ReportParseConfig{AcceptedEnvironments: []Environment{ProductionEnvironment()}}
 
 // ParseReport parses a CRE report and verifies it against the production CRE environment.
-// Only reports generated with the "evm" encoder are supported; see ReportParseConfig.Encoder.
+// Only reports generated with the "evm" encoder are supported; use the WithConfig variant and ReportParseConfig.Encoder for other encoders.
 // The first time a DON's report is seen, the signatures will be fetched from chain. It will be cached for later report parsing.
 func ParseReport(runtime Runtime, rawReport []byte, signatures [][]byte, reportContext []byte) (*Report, error) {
 	return ParseReportWithConfig(runtime, rawReport, signatures, reportContext, defaultVerificationConfig)
@@ -84,7 +106,7 @@ func ParseReport(runtime Runtime, rawReport []byte, signatures [][]byte, reportC
 // ParseReportWithConfig parses a CRE report and verifies it as specified by the config.
 // The first time a DON's report is seen, and SkipSignatureVerification is false, the signatures will be fetched from chain. It will be cached for later report parsing.
 func ParseReportWithConfig(runtime Runtime, rawReport []byte, signatures [][]byte, reportContext []byte, config ReportParseConfig) (*Report, error) {
-	if err := config.validateEncoder(); err != nil {
+	if _, err := config.encoder(); err != nil {
 		return nil, err
 	}
 
@@ -128,7 +150,7 @@ func ParseReportWithConfig(runtime Runtime, rawReport []byte, signatures [][]byt
 }
 
 // VerifySignatures verifies the signatures on a Report against the CRE's production environment.
-// Only reports generated with the "evm" encoder are supported; see ReportParseConfig.Encoder.
+// Only reports generated with the "evm" encoder are supported; use the WithConfig variant and ReportParseConfig.Encoder for other encoders.
 // VerifySignatures only needs to be called if SkipSignatureVerification was used with ParseReportWithConfig.
 // The first time a DON's report is seen, the signatures will be fetched from the chain. It will be cached for later report parsing.
 func (r *Report) VerifySignatures(runtime Runtime) error {
@@ -141,7 +163,8 @@ func (r *Report) VerifySignatures(runtime Runtime) error {
 // Note config.SkipSignatureVerification is ignored by this method since if it were true, signatures would not be verified at all.
 func (r *Report) VerifySignaturesWithConfig(runtime Runtime, config ReportParseConfig) error {
 	config.SkipSignatureVerification = false
-	if err := config.validateEncoder(); err != nil {
+	encoder, err := config.encoder()
+	if err != nil {
 		return err
 	}
 
@@ -162,10 +185,12 @@ func (r *Report) VerifySignaturesWithConfig(runtime Runtime, config ReportParseC
 		return fmt.Errorf("DON ID %d is not in accepted zones", header.donID)
 	}
 
+	reportHash := hashReport(encoder, r.report)
+
 	var sigErr error
 	var fetchFailures []error
 	for _, env := range candidates {
-		f, signers, err := fetchDONInfo(runtime, env, header.donID)
+		info, err := fetchDONInfo(runtime, env, header.donID)
 		if err != nil {
 			readErr := fmt.Errorf(
 				"could not read from chain %d contract %s: %w",
@@ -177,7 +202,20 @@ func (r *Report) VerifySignaturesWithConfig(runtime Runtime, config ReportParseC
 			continue
 		}
 
-		if sigErr = verifySigs(r.report, f, signers); sigErr == nil {
+		signers, err := info.signersFor(encoder)
+		if err != nil {
+			fetchFailures = append(fetchFailures, fmt.Errorf(
+				"no %s signers for DON %d on chain %d contract %s: %w",
+				encoder,
+				header.donID,
+				env.ChainSelector,
+				env.RegistryAddress,
+				err,
+			))
+			continue
+		}
+
+		if sigErr = verifySigs(r.report, info.f, signers, reportHash); sigErr == nil {
 			return nil
 		}
 	}
@@ -192,22 +230,22 @@ func (r *Report) VerifySignaturesWithConfig(runtime Runtime, config ReportParseC
 // fetchDONInfo performs a two-step on-chain lookup to retrieve the fault-
 // tolerance parameter (f) and the authorized signer addresses for a DON:
 //
-//  1. getDON(donID)           → DONInfo containing f and nodeP2PIds
+//  1. getDON(donID)           → DONInfo containing f, nodeP2PIds and capabilityConfigurations
 //  2. getNodesByP2PIds(ids)   → NodeInfo[] containing signer bytes32 per node
 //
+// Solana signers are read from the consensus capability's OCR3 config in capabilityConfigurations.
 // Results are cached per chain+DON.
-func fetchDONInfo(runtime Runtime, env Environment, donID uint32) (int, map[common.Address]uint32, error) {
+func fetchDONInfo(runtime Runtime, env Environment, donID uint32) (donInfo, error) {
 	cacheKey := fmt.Sprintf("%d:%d", env.ChainSelector, donID)
 	if cached, ok := keyCache.Load(cacheKey); ok {
-		info := cached.(donInfo)
-		return info.f, info.signers, nil
+		return cached.(donInfo), nil
 	}
 
 	registryAddrHex := strings.TrimPrefix(env.RegistryAddress, "0x")
 	registryAddrHex = strings.TrimPrefix(registryAddrHex, "0X")
 	registryAddr, err := hex.DecodeString(registryAddrHex)
 	if err != nil {
-		return 0, nil, fmt.Errorf("invalid registry address %q: %w", env.RegistryAddress, err)
+		return donInfo{}, fmt.Errorf("invalid registry address %q: %w", env.RegistryAddress, err)
 	}
 
 	capID := "evm:ChainSelector:" + strconv.FormatUint(env.ChainSelector, 10) + "@1.0.0"
@@ -219,7 +257,7 @@ func fetchDONInfo(runtime Runtime, env Environment, donID uint32) (int, map[comm
 
 	getDONABI, err := callContract(runtime, capID, registryAddr, getDONCallData)
 	if err != nil {
-		return 0, nil, err
+		return donInfo{}, err
 	}
 
 	// ABI layout for getDON (tuple with outer pointer at byte 0):
@@ -235,7 +273,7 @@ func fetchDONInfo(runtime Runtime, env Environment, donID uint32) (int, map[comm
 	//   slot 9  (bytes 288-319): ptr[config]      (bytes)
 	//   slot 10 (bytes 320-351): ptr[capabilityConfigurations] (tuple[])
 	if len(getDONABI) < 224 {
-		return 0, nil, fmt.Errorf("getDON ABI response too short: %d bytes", len(getDONABI))
+		return donInfo{}, fmt.Errorf("getDON ABI response too short: %d bytes", len(getDONABI))
 	}
 
 	f := int(new(big.Int).SetBytes(getDONABI[96:128]).Int64())
@@ -246,11 +284,11 @@ func fetchDONInfo(runtime Runtime, env Environment, donID uint32) (int, map[comm
 	nodeP2PIdsPtr := int(new(big.Int).SetBytes(getDONABI[192:224]).Int64())
 	nodeCountOff := tupleStart + nodeP2PIdsPtr
 	if nodeCountOff+32 > len(getDONABI) {
-		return 0, nil, fmt.Errorf("getDON ABI: nodeP2PIds pointer out of range")
+		return donInfo{}, fmt.Errorf("getDON ABI: nodeP2PIds pointer out of range")
 	}
 	nodeCount := int(new(big.Int).SetBytes(getDONABI[nodeCountOff : nodeCountOff+32]).Int64())
 	if nodeCountOff+32+nodeCount*32 > len(getDONABI) {
-		return 0, nil, fmt.Errorf("getDON ABI: nodeP2PIds data out of range")
+		return donInfo{}, fmt.Errorf("getDON ABI: nodeP2PIds data out of range")
 	}
 	nodeP2PIds := make([][]byte, nodeCount)
 	for i := 0; i < nodeCount; i++ {
@@ -261,9 +299,9 @@ func fetchDONInfo(runtime Runtime, env Environment, donID uint32) (int, map[comm
 	}
 
 	if nodeCount == 0 {
-		info := donInfo{f: f, signers: nil}
+		info := donInfo{f: f}
 		keyCache.Store(cacheKey, info)
-		return f, nil, nil
+		return info, nil
 	}
 
 	// keccak256("getNodesByP2PIds(bytes32[])")[0:4] = 0x05a51966
@@ -279,7 +317,7 @@ func fetchDONInfo(runtime Runtime, env Environment, donID uint32) (int, map[comm
 
 	getNodesABI, err := callContract(runtime, capID, registryAddr, getNodesCallData)
 	if err != nil {
-		return 0, nil, err
+		return donInfo{}, err
 	}
 
 	// ABI layout for getNodesByP2PIds: NodeInfo[] (tuple array).
@@ -296,13 +334,13 @@ func fetchDONInfo(runtime Runtime, env Environment, donID uint32) (int, map[comm
 	//
 	// The outer array encoding: [outer-ptr=32][count][tuple0-head][tuple1-head]...
 	if len(getNodesABI) < 64 {
-		return 0, nil, fmt.Errorf("getNodesByP2PIds ABI response too short: %d bytes", len(getNodesABI))
+		return donInfo{}, fmt.Errorf("getNodesByP2PIds ABI response too short: %d bytes", len(getNodesABI))
 	}
 
 	// The outer pointer (slot 0) points to the array data relative to byte 0.
 	outerPtr := int(new(big.Int).SetBytes(getNodesABI[0:32]).Int64())
 	if outerPtr+32 > len(getNodesABI) {
-		return 0, nil, fmt.Errorf("getNodesByP2PIds ABI: outer pointer out of range")
+		return donInfo{}, fmt.Errorf("getNodesByP2PIds ABI: outer pointer out of range")
 	}
 	returnedCount := int(new(big.Int).SetBytes(getNodesABI[outerPtr : outerPtr+32]).Int64())
 
@@ -329,9 +367,10 @@ func fetchDONInfo(runtime Runtime, env Environment, donID uint32) (int, map[comm
 	}
 
 	info := donInfo{f: f, signers: signers}
+	info.solanaSigners, info.solanaSignersErr = solanaSignersFromDON(getDONABI, signers)
 
 	keyCache.Store(cacheKey, info)
-	return f, signers, nil
+	return info, nil
 }
 
 // callContract sends a CallContractRequest via the EVM capability and returns
@@ -439,17 +478,13 @@ func decodeCallContractReplyData(protoBytes []byte) ([]byte, error) {
 // first f+1 valid signatures from that list are accepted regardless of how
 // many total signatures are present. When no signer list is available (e.g.
 // an older contract version), exactly f+1 valid unique signatures are required.
-func verifySigs(report *sdk.ReportResponse, f int, authorizedSigners map[common.Address]uint32) error {
+func verifySigs(report *sdk.ReportResponse, f int, authorizedSigners map[common.Address]uint32, reportHash []byte) error {
 	required := f + 1
 	sigs := report.GetSigs()
 
 	if len(sigs) < required {
 		return fmt.Errorf("%w: got %d, need at least %d (f+1)", ErrWrongSignatureCount, len(sigs), required)
 	}
-
-	reportHash := crypto.Keccak256Hash(
-		append(crypto.Keccak256(report.GetRawReport()), report.GetReportContext()...),
-	)
 
 	seen := make(map[common.Address]bool, len(sigs))
 	accepted := make([]*sdk.AttributedSignature, 0, required)
@@ -474,7 +509,7 @@ func verifySigs(report *sdk.ReportResponse, f int, authorizedSigners map[common.
 			sigBytes[64] -= 27
 		}
 
-		pubKey, err := crypto.SigToPub(reportHash.Bytes(), sigBytes)
+		pubKey, err := crypto.SigToPub(reportHash, sigBytes)
 		if err != nil {
 			skipErrs = append(skipErrs, fmt.Errorf("index %d: %w: %s", i, ErrRecoverSigner, err))
 			continue
@@ -507,4 +542,241 @@ func verifySigs(report *sdk.ReportResponse, f int, authorizedSigners map[common.
 	// Replace Sigs with only the accepted f+1 entries.
 	report.Sigs = accepted
 	return nil
+}
+
+// hashReport returns the digest the encoder's key bundle signs.
+func hashReport(encoder string, report *sdk.ReportResponse) []byte {
+	if encoder == EncoderSolana {
+		return solanaReportHash(report)
+	}
+	return crypto.Keccak256(crypto.Keccak256(report.GetRawReport()), report.GetReportContext())
+}
+
+// solanaReportHash matches the Solana keyring and forwarder program:
+// sha256(uint8(len(rawReport)) || rawReport || reportContext). The length prefix is a single, truncated byte.
+func solanaReportHash(report *sdk.ReportResponse) []byte {
+	h := sha256.New()
+	h.Write([]byte{byte(len(report.GetRawReport()))})
+	h.Write(report.GetRawReport())
+	h.Write(report.GetReportContext())
+	return h.Sum(nil)
+}
+
+const (
+	// consensusCapabilityPrefix identifies the consensus capability in a DON's capabilityConfigurations.
+	consensusCapabilityPrefix = "consensus@"
+	// defaultOCR3ConfigKey is the OCR instance name used by single-instance capabilities.
+	defaultOCR3ConfigKey = "__default__"
+
+	// Chain type identifiers used in multichain onchain public keys (see corekeys.ChainType.Type).
+	chainTypeEVM    = 1
+	chainTypeSolana = 2
+
+	// Protobuf field numbers from chainlink-common capabilities/pb/registry.proto.
+	capabilityConfigOCR3ConfigsField = 9 // CapabilityConfig.ocr3_configs (map<string, OCR3Config>)
+	mapEntryKeyField                 = 1
+	mapEntryValueField               = 2
+	ocr3ConfigSignersField           = 1 // OCR3Config.signers (repeated bytes)
+)
+
+// solanaSignersFromDON maps each Solana signer in the consensus capability's OCR3 config to its node operator.
+// Every OCR3 signer is a multichain key containing the node's EVM and Solana keys; the EVM key is matched against
+// the registry's node signers so that only signers belonging to the DON's nodes are accepted.
+func solanaSignersFromDON(getDONABI []byte, evmSigners map[common.Address]uint32) (map[common.Address]uint32, error) {
+	ocrSigners, err := consensusOCR3Signers(getDONABI)
+	if err != nil {
+		return nil, err
+	}
+
+	solanaSigners := make(map[common.Address]uint32, len(ocrSigners))
+	for _, ocrSigner := range ocrSigners {
+		keys, err := parseMultichainPublicKey(ocrSigner)
+		if err != nil {
+			return nil, err
+		}
+
+		evmKey, solanaKey := keys[chainTypeEVM], keys[chainTypeSolana]
+		if len(evmKey) != common.AddressLength || len(solanaKey) != common.AddressLength {
+			continue
+		}
+
+		nodeOperatorId, ok := evmSigners[common.BytesToAddress(evmKey)]
+		if !ok {
+			continue
+		}
+		solanaSigners[common.BytesToAddress(solanaKey)] = nodeOperatorId
+	}
+
+	if len(solanaSigners) == 0 {
+		return nil, errors.New("consensus OCR3 config has no solana signers")
+	}
+	return solanaSigners, nil
+}
+
+// consensusOCR3Signers reads the signers of the consensus capability's default OCR3 config from
+// slot 10 (capabilityConfigurations) of the getDON ABI response.
+//
+// ABI layout of capabilityConfigurations (tuple(string capabilityId, bytes config)[]):
+//
+//	[count][elem0-ptr]...[elemN-ptr] then per element: [ptr[capabilityId]][ptr[config]] + string/bytes data
+//
+// Element pointers are relative to the first element pointer; field pointers are relative to the element.
+func consensusOCR3Signers(getDONABI []byte) ([][]byte, error) {
+	const tupleStart = 32
+	capConfigsPtr, err := readABIOffset(getDONABI, 320)
+	if err != nil {
+		return nil, fmt.Errorf("getDON ABI: capabilityConfigurations pointer: %w", err)
+	}
+
+	arrayStart := tupleStart + capConfigsPtr
+	count, err := readABIOffset(getDONABI, arrayStart)
+	if err != nil {
+		return nil, fmt.Errorf("getDON ABI: capabilityConfigurations count: %w", err)
+	}
+
+	elemsStart := arrayStart + 32
+	for i := 0; i < count; i++ {
+		elemPtr, err := readABIOffset(getDONABI, elemsStart+i*32)
+		if err != nil {
+			return nil, fmt.Errorf("getDON ABI: capabilityConfigurations[%d]: %w", i, err)
+		}
+
+		elem := elemsStart + elemPtr
+		capabilityID, err := readABIDynamicField(getDONABI, elem, 0)
+		if err != nil {
+			return nil, fmt.Errorf("getDON ABI: capabilityConfigurations[%d].capabilityId: %w", i, err)
+		}
+		if !strings.HasPrefix(string(capabilityID), consensusCapabilityPrefix) {
+			continue
+		}
+
+		config, err := readABIDynamicField(getDONABI, elem, 1)
+		if err != nil {
+			return nil, fmt.Errorf("getDON ABI: capabilityConfigurations[%d].config: %w", i, err)
+		}
+		return ocr3SignersFromCapabilityConfig(config)
+	}
+
+	return nil, errors.New("consensus capability is not configured on the DON")
+}
+
+// readABIOffset reads the 32-byte word at off as a non-negative int that fits within data.
+func readABIOffset(data []byte, off int) (int, error) {
+	if off < 0 || off+32 > len(data) {
+		return 0, fmt.Errorf("offset %d out of range", off)
+	}
+	v := new(big.Int).SetBytes(data[off : off+32])
+	if !v.IsInt64() || v.Int64() > int64(len(data)) {
+		return 0, fmt.Errorf("value at offset %d out of range", off)
+	}
+	return int(v.Int64()), nil
+}
+
+// readABIDynamicField reads the string/bytes value referenced by the given head slot of the tuple at tupleBase.
+func readABIDynamicField(data []byte, tupleBase, slot int) ([]byte, error) {
+	ptr, err := readABIOffset(data, tupleBase+slot*32)
+	if err != nil {
+		return nil, err
+	}
+	length, err := readABIOffset(data, tupleBase+ptr)
+	if err != nil {
+		return nil, err
+	}
+	start := tupleBase + ptr + 32
+	if start+length > len(data) {
+		return nil, fmt.Errorf("data at offset %d out of range", start)
+	}
+	return data[start : start+length], nil
+}
+
+// ocr3SignersFromCapabilityConfig extracts ocr3_configs["__default__"].signers from a proto-encoded CapabilityConfig.
+func ocr3SignersFromCapabilityConfig(config []byte) ([][]byte, error) {
+	var signers [][]byte
+	found := false
+	err := forEachProtoBytesField(config, func(num protowire.Number, entry []byte) error {
+		if num != capabilityConfigOCR3ConfigsField || found {
+			return nil
+		}
+
+		var key string
+		var ocr3Config []byte
+		if err := forEachProtoBytesField(entry, func(num protowire.Number, v []byte) error {
+			switch num {
+			case mapEntryKeyField:
+				key = string(v)
+			case mapEntryValueField:
+				ocr3Config = v
+			}
+			return nil
+		}); err != nil {
+			return err
+		}
+		if key != defaultOCR3ConfigKey {
+			return nil
+		}
+
+		found = true
+		return forEachProtoBytesField(ocr3Config, func(num protowire.Number, v []byte) error {
+			if num == ocr3ConfigSignersField {
+				signers = append(signers, v)
+			}
+			return nil
+		})
+	})
+	if err != nil {
+		return nil, fmt.Errorf("malformed consensus capability config: %w", err)
+	}
+	if !found {
+		return nil, fmt.Errorf("consensus capability config has no %q OCR3 config", defaultOCR3ConfigKey)
+	}
+	return signers, nil
+}
+
+// forEachProtoBytesField calls fn for every length-delimited field in a proto message, skipping all other fields.
+func forEachProtoBytesField(msg []byte, fn func(protowire.Number, []byte) error) error {
+	for len(msg) > 0 {
+		num, typ, n := protowire.ConsumeTag(msg)
+		if n < 0 {
+			return protowire.ParseError(n)
+		}
+		msg = msg[n:]
+
+		if typ != protowire.BytesType {
+			n = protowire.ConsumeFieldValue(num, typ, msg)
+			if n < 0 {
+				return protowire.ParseError(n)
+			}
+			msg = msg[n:]
+			continue
+		}
+
+		v, n := protowire.ConsumeBytes(msg)
+		if n < 0 {
+			return protowire.ParseError(n)
+		}
+		if err := fn(num, v); err != nil {
+			return err
+		}
+		msg = msg[n:]
+	}
+	return nil
+}
+
+// parseMultichainPublicKey splits an OCR3 multichain onchain public key into its per-chain keys.
+// Encoding: repeated [chainType uint8][length uint16 little-endian][key].
+func parseMultichainPublicKey(data []byte) (map[uint8][]byte, error) {
+	keys := make(map[uint8][]byte)
+	for len(data) > 0 {
+		if len(data) < 3 {
+			return nil, errors.New("malformed multichain public key: truncated header")
+		}
+		chainType := data[0]
+		length := int(binary.LittleEndian.Uint16(data[1:3]))
+		if len(data) < 3+length {
+			return nil, errors.New("malformed multichain public key: truncated key")
+		}
+		keys[chainType] = data[3 : 3+length]
+		data = data[3+length:]
+	}
+	return keys, nil
 }
