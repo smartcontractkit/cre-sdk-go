@@ -1,15 +1,18 @@
 package cre
 
 import (
+	_ "embed"
 	"encoding/binary"
 	"encoding/hex"
 	"errors"
 	"fmt"
 	"math/big"
+	"reflect"
 	"strconv"
 	"strings"
 	"sync"
 
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/smartcontractkit/chainlink-protos/cre/go/sdk"
@@ -189,6 +192,44 @@ func (r *Report) VerifySignaturesWithConfig(runtime Runtime, config ReportParseC
 	return sigErr
 }
 
+//go:embed capreg_abi.json
+var capabilitiesRegistryABIJSON string
+
+// capabilitiesRegistryABI is parsed on first use so workflows that never verify reports don't pay for it.
+var capabilitiesRegistryABI = sync.OnceValues(func() (abi.ABI, error) {
+	return abi.JSON(strings.NewReader(capabilitiesRegistryABIJSON))
+})
+
+// capabilitiesRegistryDONInfo mirrors CapabilitiesRegistry.DONInfo; ABI unpacking matches fields by name.
+type capabilitiesRegistryDONInfo struct {
+	Id                       uint32
+	ConfigCount              uint32
+	F                        uint8
+	IsPublic                 bool
+	AcceptsWorkflows         bool
+	NodeP2PIds               [][32]byte
+	DonFamilies              []string
+	Name                     string
+	Config                   []byte
+	CapabilityConfigurations []struct {
+		CapabilityId string
+		Config       []byte
+	}
+}
+
+// capabilitiesRegistryNodeInfo mirrors CapabilitiesRegistry.NodeInfo; ABI unpacking matches fields by name.
+type capabilitiesRegistryNodeInfo struct {
+	NodeOperatorId      uint32
+	ConfigCount         uint32
+	WorkflowDONId       uint32
+	Signer              [32]byte
+	P2pId               [32]byte
+	EncryptionPublicKey [32]byte
+	CsaKey              [32]byte
+	CapabilityIds       []string
+	CapabilitiesDONIds  []*big.Int
+}
+
 // fetchDONInfo performs a two-step on-chain lookup to retrieve the fault-
 // tolerance parameter (f) and the authorized signer addresses for a DON:
 //
@@ -210,128 +251,90 @@ func fetchDONInfo(runtime Runtime, env Environment, donID uint32) (int, map[comm
 		return 0, nil, fmt.Errorf("invalid registry address %q: %w", env.RegistryAddress, err)
 	}
 
+	registryABI, err := capabilitiesRegistryABI()
+	if err != nil {
+		return 0, nil, fmt.Errorf("failed to parse capabilities registry ABI: %w", err)
+	}
+
 	capID := "evm:ChainSelector:" + strconv.FormatUint(env.ChainSelector, 10) + "@1.0.0"
 
-	// keccak256("getDON(uint32)")[0:4] = 0x23537405
-	var donIDPadded [32]byte
-	binary.BigEndian.PutUint32(donIDPadded[28:], donID)
-	getDONCallData := append([]byte{0x23, 0x53, 0x74, 0x05}, donIDPadded[:]...)
-
-	getDONABI, err := callContract(runtime, capID, registryAddr, getDONCallData)
+	don, err := callRegistry[capabilitiesRegistryDONInfo](runtime, capID, registryAddr, registryABI, "getDON", donID)
 	if err != nil {
 		return 0, nil, err
 	}
+	f := int(don.F)
 
-	// ABI layout for getDON (tuple with outer pointer at byte 0):
-	//   slot 0  (bytes   0-31):  outer pointer (=32)
-	//   slot 1  (bytes  32-63):  id            (uint32)
-	//   slot 2  (bytes  64-95):  configCount   (uint32)
-	//   slot 3  (bytes  96-127): f             (uint8, zero-padded to 32)
-	//   slot 4  (bytes 128-159): isPublic      (bool)
-	//   slot 5  (bytes 160-191): acceptsWorkflows (bool)
-	//   slot 6  (bytes 192-223): ptr[nodeP2PIds]  (bytes32[])
-	//   slot 7  (bytes 224-255): ptr[donFamilies] (string[])
-	//   slot 8  (bytes 256-287): ptr[name]        (string)
-	//   slot 9  (bytes 288-319): ptr[config]      (bytes)
-	//   slot 10 (bytes 320-351): ptr[capabilityConfigurations] (tuple[])
-	if len(getDONABI) < 224 {
-		return 0, nil, fmt.Errorf("getDON ABI response too short: %d bytes", len(getDONABI))
-	}
-
-	f := int(new(big.Int).SetBytes(getDONABI[96:128]).Int64())
-
-	// Read nodeP2PIds from slot 6.
-	// Pointer is tuple-relative; tuple starts at byte 32.
-	const tupleStart = 32
-	nodeP2PIdsPtr := int(new(big.Int).SetBytes(getDONABI[192:224]).Int64())
-	nodeCountOff := tupleStart + nodeP2PIdsPtr
-	if nodeCountOff+32 > len(getDONABI) {
-		return 0, nil, fmt.Errorf("getDON ABI: nodeP2PIds pointer out of range")
-	}
-	nodeCount := int(new(big.Int).SetBytes(getDONABI[nodeCountOff : nodeCountOff+32]).Int64())
-	if nodeCountOff+32+nodeCount*32 > len(getDONABI) {
-		return 0, nil, fmt.Errorf("getDON ABI: nodeP2PIds data out of range")
-	}
-	nodeP2PIds := make([][]byte, nodeCount)
-	for i := 0; i < nodeCount; i++ {
-		start := nodeCountOff + 32 + i*32
-		id := make([]byte, 32)
-		copy(id, getDONABI[start:start+32])
-		nodeP2PIds[i] = id
-	}
-
-	if nodeCount == 0 {
+	if len(don.NodeP2PIds) == 0 {
 		info := donInfo{f: f, signers: nil}
 		keyCache.Store(cacheKey, info)
 		return f, nil, nil
 	}
 
-	// keccak256("getNodesByP2PIds(bytes32[])")[0:4] = 0x05a51966
-	//
-	// ABI-encode bytes32[]: [ptr=32][count][id0]...[idN]
-	var p2pIdsABI []byte
-	p2pIdsABI = append(p2pIdsABI, padUint256(32)...)
-	p2pIdsABI = append(p2pIdsABI, padUint256(uint64(nodeCount))...)
-	for _, id := range nodeP2PIds {
-		p2pIdsABI = append(p2pIdsABI, id...)
-	}
-	getNodesCallData := append([]byte{0x05, 0xa5, 0x19, 0x66}, p2pIdsABI...)
-
-	getNodesABI, err := callContract(runtime, capID, registryAddr, getNodesCallData)
+	nodes, err := callRegistry[[]capabilitiesRegistryNodeInfo](runtime, capID, registryAddr, registryABI, "getNodesByP2PIds", don.NodeP2PIds)
 	if err != nil {
 		return 0, nil, err
 	}
 
-	// ABI layout for getNodesByP2PIds: NodeInfo[] (tuple array).
-	// Each NodeInfo tuple head (9 slots × 32 bytes = 288 bytes per node):
-	//   slot 0: nodeOperatorId (uint32)
-	//   slot 1: configCount    (uint32)
-	//   slot 2: workflowDONId  (uint32)
-	//   slot 3: signer         (bytes32)  ← address left-aligned (first 20 bytes, rest zero)
-	//   slot 4: p2pId          (bytes32)
-	//   slot 5: encryptionPublicKey (bytes32)
-	//   slot 6: csaKey         (bytes32)
-	//   slot 7: ptr[capabilityIds]    (dynamic)
-	//   slot 8: ptr[capabilitiesDONIds] (dynamic)
-	//
-	// The outer array encoding: [outer-ptr=32][count][tuple0-head][tuple1-head]...
-	if len(getNodesABI) < 64 {
-		return 0, nil, fmt.Errorf("getNodesByP2PIds ABI response too short: %d bytes", len(getNodesABI))
-	}
-
-	// The outer pointer (slot 0) points to the array data relative to byte 0.
-	outerPtr := int(new(big.Int).SetBytes(getNodesABI[0:32]).Int64())
-	if outerPtr+32 > len(getNodesABI) {
-		return 0, nil, fmt.Errorf("getNodesByP2PIds ABI: outer pointer out of range")
-	}
-	returnedCount := int(new(big.Int).SetBytes(getNodesABI[outerPtr : outerPtr+32]).Int64())
-
-	const nodeTupleHeadSize = 288 // 9 slots × 32 bytes
-	signers := make(map[common.Address]uint32, returnedCount)
-	for i := 0; i < returnedCount; i++ {
-		// Each tuple in a dynamic array is referenced via a per-element pointer
-		// stored at outerPtr+32+i*32, which is tuple-relative to outerPtr+32.
-		elemPtrOff := outerPtr + 32 + i*32
-		if elemPtrOff+32 > len(getNodesABI) {
-			break
-		}
-		elemPtr := int(new(big.Int).SetBytes(getNodesABI[elemPtrOff : elemPtrOff+32]).Int64())
-		tupleBase := outerPtr + 32 + elemPtr
-		if tupleBase+nodeTupleHeadSize > len(getNodesABI) {
-			break
-		}
-		// slot 0 of the tuple = nodeOperatorId (uint32).
-		nodeOperatorId := uint32(new(big.Int).SetBytes(getNodesABI[tupleBase : tupleBase+32]).Uint64())
-		// slot 3 of the tuple = signer bytes32; address is the first 20 bytes (left-aligned).
-		signerSlot := tupleBase + 3*32
-		addr := common.BytesToAddress(getNodesABI[signerSlot : signerSlot+20])
-		signers[addr] = nodeOperatorId
+	signers := make(map[common.Address]uint32, len(nodes))
+	for _, node := range nodes {
+		// The signer is an address left-aligned in a bytes32.
+		signers[common.BytesToAddress(node.Signer[:common.AddressLength])] = node.NodeOperatorId
 	}
 
 	info := donInfo{f: f, signers: signers}
 
 	keyCache.Store(cacheKey, info)
 	return f, signers, nil
+}
+
+// callRegistry ABI-encodes a call to the capabilities registry, sends it via the EVM capability,
+// and unpacks its single return value into T.
+func callRegistry[T any](runtime Runtime, capID string, registryAddr []byte, registryABI abi.ABI, method string, args ...any) (T, error) {
+	var out T
+	callData, err := registryABI.Pack(method, args...)
+	if err != nil {
+		return out, fmt.Errorf("failed to encode %s call: %w", method, err)
+	}
+
+	result, err := callContract(runtime, capID, registryAddr, callData)
+	if err != nil {
+		return out, err
+	}
+
+	values, err := registryABI.Unpack(method, result)
+	if err != nil {
+		return out, fmt.Errorf("failed to decode %s response: %w", method, err)
+	}
+	if len(values) != 1 {
+		return out, fmt.Errorf("failed to decode %s response: expected 1 value, got %d", method, len(values))
+	}
+
+	value, ok := convertABIValue(reflect.ValueOf(values[0]), reflect.TypeOf(out))
+	if !ok {
+		return out, fmt.Errorf("failed to decode %s response: cannot convert %T to %T", method, values[0], out)
+	}
+	return value.Interface().(T), nil
+}
+
+// convertABIValue converts an ABI-generated struct (or slice of structs) to an equivalent named type.
+// Struct conversions ignore tags, but slices of different element types must be converted element by element.
+func convertABIValue(value reflect.Value, to reflect.Type) (reflect.Value, bool) {
+	if value.Type().ConvertibleTo(to) {
+		return value.Convert(to), true
+	}
+	if value.Kind() != reflect.Slice || to.Kind() != reflect.Slice {
+		return reflect.Value{}, false
+	}
+
+	out := reflect.MakeSlice(to, value.Len(), value.Len())
+	for i := 0; i < value.Len(); i++ {
+		elem, ok := convertABIValue(value.Index(i), to.Elem())
+		if !ok {
+			return reflect.Value{}, false
+		}
+		out.Index(i).Set(elem)
+	}
+	return out, true
 }
 
 // callContract sends a CallContractRequest via the EVM capability and returns
@@ -383,13 +386,6 @@ func callContract(runtime Runtime, capID string, registryAddr []byte, callData [
 	default:
 		return nil, fmt.Errorf("unexpected EVM capability response type")
 	}
-}
-
-// padUint256 encodes a uint64 as a big-endian 32-byte value.
-func padUint256(v uint64) []byte {
-	b := make([]byte, 32)
-	binary.BigEndian.PutUint64(b[24:], v)
-	return b
 }
 
 // decodeCallContractReplyData extracts the ABI-encoded data bytes from the
