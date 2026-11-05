@@ -26,8 +26,6 @@ var anyResponse = &http.Response{
 }
 
 var anyContext = mustDecodeHex("000e8ce31db48e5e44619d24d9dadfc5f22a34db8205b2b25cd831eab02244c500000000000000000000000000000000000000000000000000000001612bcb000000000000000000000000000000000000000000000000000000000000000000")
-
-var anyContext = []byte{4, 5, 6}
 var anyReportBody = []byte(`{"data": "example"}`)
 var anyReport = func() []byte {
 	metadata := make([]byte, cre.ReportMetadataHeaderLength)
