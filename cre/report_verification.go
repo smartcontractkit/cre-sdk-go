@@ -378,56 +378,6 @@ func convertABIValue(value reflect.Value, to reflect.Type) (reflect.Value, bool)
 	return out, true
 }
 
-// callRegistry ABI-encodes a call to the capabilities registry, sends it via the EVM capability,
-// and unpacks its single return value into T.
-func callRegistry[T any](runtime Runtime, capID string, registryAddr []byte, registryABI abi.ABI, method string, args ...any) (T, error) {
-	var out T
-	callData, err := registryABI.Pack(method, args...)
-	if err != nil {
-		return out, fmt.Errorf("failed to encode %s call: %w", method, err)
-	}
-
-	result, err := callContract(runtime, capID, registryAddr, callData)
-	if err != nil {
-		return out, err
-	}
-
-	values, err := registryABI.Unpack(method, result)
-	if err != nil {
-		return out, fmt.Errorf("failed to decode %s response: %w", method, err)
-	}
-	if len(values) != 1 {
-		return out, fmt.Errorf("failed to decode %s response: expected 1 value, got %d", method, len(values))
-	}
-
-	value, ok := convertABIValue(reflect.ValueOf(values[0]), reflect.TypeOf(out))
-	if !ok {
-		return out, fmt.Errorf("failed to decode %s response: cannot convert %T to %T", method, values[0], out)
-	}
-	return value.Interface().(T), nil
-}
-
-// convertABIValue converts an ABI-generated struct (or slice of structs) to an equivalent named type.
-// Struct conversions ignore tags, but slices of different element types must be converted element by element.
-func convertABIValue(value reflect.Value, to reflect.Type) (reflect.Value, bool) {
-	if value.Type().ConvertibleTo(to) {
-		return value.Convert(to), true
-	}
-	if value.Kind() != reflect.Slice || to.Kind() != reflect.Slice {
-		return reflect.Value{}, false
-	}
-
-	out := reflect.MakeSlice(to, value.Len(), value.Len())
-	for i := 0; i < value.Len(); i++ {
-		elem, ok := convertABIValue(value.Index(i), to.Elem())
-		if !ok {
-			return reflect.Value{}, false
-		}
-		out.Index(i).Set(elem)
-	}
-	return out, true
-}
-
 // callContract sends a CallContractRequest via the EVM capability and returns
 // the raw ABI-encoded response bytes.
 func callContract(runtime Runtime, capID string, registryAddr []byte, callData []byte) ([]byte, error) {
