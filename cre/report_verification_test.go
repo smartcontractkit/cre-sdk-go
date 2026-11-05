@@ -481,8 +481,8 @@ func Test_ParseReportWithConfig(t *testing.T) {
 		}
 	})
 
-	t.Run("non-evm encoder returns an error without reading from chain", func(t *testing.T) {
-		for _, encoder := range []string{"aptos", "solana", "stellar"} {
+	t.Run("unsupported encoder returns an error without reading from chain", func(t *testing.T) {
+		for _, encoder := range []string{"aptos", "stellar", "ton"} {
 			for _, skipSignatureVerification := range []bool{true, false} {
 				t.Run(fmt.Sprintf("%s/skipSignatureVerification=%t", encoder, skipSignatureVerification), func(t *testing.T) {
 					mock := setupDonSettingRead(t, productionEnvironmentReplay)
@@ -504,7 +504,7 @@ func Test_ParseReportWithConfig(t *testing.T) {
 }
 
 func Test_VerifySignaturesWithConfig(t *testing.T) {
-	t.Run("non-evm encoder returns an error without reading from chain", func(t *testing.T) {
+	t.Run("unsupported encoder returns an error without reading from chain", func(t *testing.T) {
 		mock := setupDonSettingRead(t, productionEnvironmentReplay)
 		runtime := testutils.NewRuntime(t, testutils.Secrets{})
 
