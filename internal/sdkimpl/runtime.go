@@ -150,6 +150,10 @@ func normalizeSecretRequests(reqs []*sdk.SecretRequest) []*sdk.SecretRequest {
 }
 
 func (d *Runtime) GetSecret(req *sdk.SecretRequest) cre.Promise[*sdk.Secret] {
+	if req == nil {
+		return cre.PromiseFromResult[*sdk.Secret](nil, errors.New("GetSecret requires a non-nil request"))
+	}
+
 	return cre.Then(d.GetSecrets([]*sdk.SecretRequest{req}), func(secrets []*sdk.Secret) (*sdk.Secret, error) {
 		if len(secrets) != 1 {
 			return nil, fmt.Errorf("expected 1 secret, got %d", len(secrets))
@@ -289,7 +293,15 @@ func (t *TeeRuntime) CallCapability(request *sdk.CapabilityRequest) cre.Promise[
 }
 
 func (t *TeeRuntime) Rand() (*rand.Rand, error) {
-	return t.don.Rand()
+	nodeBase := t.don.RuntimeBase
+	nodeBase.Mode = sdk.Mode_MODE_NODE
+	nodeBase.source = nil
+	nodeBase.source64 = nil
+	nrt := &NodeRuntime{RuntimeBase: nodeBase}
+	t.don.SwitchModes(sdk.Mode_MODE_NODE)
+	r, err := nrt.Rand()
+	t.don.SwitchModes(sdk.Mode_MODE_DON)
+	return r, err
 }
 
 func (t *TeeRuntime) Now() time.Time {

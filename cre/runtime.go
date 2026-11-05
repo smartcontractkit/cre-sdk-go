@@ -79,21 +79,6 @@ type TeeRuntime interface {
 }
 
 // Runtime provides access to DON capabilities and allows NodeRuntime use with consensus.
-// It is not thread safe and must not be used concurrently.
-type TeeRuntime interface {
-	RuntimeBase
-	SecretsProvider
-
-	// ReportFromDon generates a report from the DON.
-	// Data requested through this method will be routed outside the TEE.
-	ReportFromDon(*ReportRequest) Promise[*Report]
-
-	// UsingTheDons returns the DON runtime.
-	// Requests made through this runtime can therefore be routed outside the TEE.
-	UsingTheDons() Runtime
-}
-
-// Runtime provides access to DON capabilities and allows NodeRuntime use with consensus.
 //
 // It is not thread safe and must not be used concurrently. The runtime targets
 // the single-threaded WASM guest environment, so shared state such as the call
