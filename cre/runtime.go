@@ -2,6 +2,7 @@ package cre
 
 import (
 	"errors"
+	"fmt"
 	"log/slog"
 	"math/rand"
 	"reflect"
@@ -17,7 +18,12 @@ type Secret = sdk.Secret
 const DefaultSecretNamespace = "main"
 
 // RuntimeBase provides the basic functionality of a CRE runtime.
-// It is not thread safe and must not be used concurrently.
+//
+// It is not thread safe and must not be used concurrently. The runtime is
+// designed to execute within a single-threaded WASM guest environment, so the
+// internal state it tracks (including the call ID counter and the current mode)
+// is intentionally unsynchronized. Concurrent access from multiple goroutines
+// would race on that state and is unsupported by design.
 type RuntimeBase interface {
 	// CallCapability is meant to be called by generated code
 	CallCapability(request *sdk.CapabilityRequest) Promise[*sdk.CapabilityResponse]
@@ -43,8 +49,11 @@ type SecretsProvider interface {
 	GetSecrets([]*SecretRequest) Promise[[]*Secret]
 }
 
-// NodeRuntime provides access to Node capabilities
-// It is not thread safe and must not be used concurrently.
+// NodeRuntime provides access to Node capabilities.
+//
+// It is not thread safe and must not be used concurrently. Like RuntimeBase,
+// it is intended for the single-threaded WASM guest environment and its state
+// (including the call ID counter) is intentionally unsynchronized.
 type NodeRuntime interface {
 	RuntimeBase
 
@@ -71,6 +80,25 @@ type TeeRuntime interface {
 
 // Runtime provides access to DON capabilities and allows NodeRuntime use with consensus.
 // It is not thread safe and must not be used concurrently.
+type TeeRuntime interface {
+	RuntimeBase
+	SecretsProvider
+
+	// ReportFromDon generates a report from the DON.
+	// Data requested through this method will be routed outside the TEE.
+	ReportFromDon(*ReportRequest) Promise[*Report]
+
+	// UsingTheDons returns the DON runtime.
+	// Requests made through this runtime can therefore be routed outside the TEE.
+	UsingTheDons() Runtime
+}
+
+// Runtime provides access to DON capabilities and allows NodeRuntime use with consensus.
+//
+// It is not thread safe and must not be used concurrently. The runtime targets
+// the single-threaded WASM guest environment, so shared state such as the call
+// ID counter and the mode/modeErr fields modified by RunInNodeMode is
+// intentionally unsynchronized. Concurrent use would race on that state.
 type Runtime interface {
 	RuntimeBase
 
@@ -95,10 +123,13 @@ type ConsensusAggregation[T any] interface {
 	// Descriptor is meant to be used by the Runtime
 	Descriptor() *sdk.ConsensusDescriptor
 
-	// Default returns the default value or nil when there is no default value
+	// Default returns the default value or nil when there is no default value.
+	// Callers must check for nil before dereferencing the returned pointer.
 	Default() *T
 
-	// Err is meant to be used by the Runtime
+	// Err is meant to be used by the Runtime. It returns nil when the
+	// ConsensusAggregation was constructed successfully, or a non-nil error
+	// (e.g. from an invalid type) otherwise. Callers must check for nil.
 	Err() error
 
 	// WithDefault returns a new ConsensusAggregation with the given default value
@@ -235,6 +266,9 @@ func RunInNodeMode[C, T any](
 		var err error
 
 		typ := reflect.TypeOf(t)
+		if typ == nil {
+			return t, fmt.Errorf("RunInNodeMode requires a concrete type for T, got nil reflect.Type")
+		}
 		// If T is a pointer type, we need to allocate the underlying type and pass its pointer to UnwrapTo
 		if typ.Kind() == reflect.Ptr {
 			elem := reflect.New(typ.Elem())

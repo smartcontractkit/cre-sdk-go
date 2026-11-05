@@ -26,7 +26,16 @@ var anyResponse = &http.Response{
 }
 
 var anyContext = mustDecodeHex("000e8ce31db48e5e44619d24d9dadfc5f22a34db8205b2b25cd831eab02244c500000000000000000000000000000000000000000000000000000001612bcb000000000000000000000000000000000000000000000000000000000000000000")
-var anyReport = mustDecodeHex("010d46e9e05b28a322cd96c94f1f60c236a1b52bd446d98396f1a84afae388836a69c96faa000000010000000100a3bb3b17a1053fe409147c2b170af4866c182070905e5a0f314be04c8296a336613263393832646464b0f2d38245dd6d397ebbdb5a814b753d56c30715000148656c6c6f2c20576f726c6421")
+
+// var anyReport = mustDecodeHex("010d46e9e05b28a322cd96c94f1f60c236a1b52bd446d98396f1a84afae388836a69c96faa000000010000000100a3bb3b17a1053fe409147c2b170af4866c182070905e5a0f314be04c8296a336613263393832646464b0f2d38245dd6d397ebbdb5a814b753d56c30715000148656c6c6f2c20576f726c6421")
+var anyReportBody = []byte(`{"data": "example"}`)
+var anyReport = func() []byte {
+	metadata := make([]byte, cre.ReportMetadataHeaderLength)
+	for i := range cre.ReportMetadataHeaderLength {
+		metadata[i] = byte(i % 256)
+	}
+	return append(metadata, anyReportBody...)
+}()
 var anySigs = []*sdk.AttributedSignature{
 	{
 		Signature: []byte{7, 8, 9},
@@ -41,7 +50,7 @@ var anyReportResponse = &sdk.ReportResponse{
 	ConfigDigest:  []byte{1, 2, 3},
 	SeqNr:         112,
 	ReportContext: anyContext,
-	RawReport:     []byte(anyReport),
+	RawReport:     anyReport,
 	Sigs:          anySigs,
 }
 

@@ -4,7 +4,7 @@
 
 Run `make clean-generate` to generate all necessary protos.
 
-## Updating the SDK in all capabilities
+## Updating  the SDK in all capabilities
 
 `make update-capabilities` will update all capabilities to the latest commit of the SDK (defaulting to the `main` branch) and re-generate them.
 

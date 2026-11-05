@@ -313,6 +313,42 @@ func TestDonRuntime_RunInNodeMode(t *testing.T) {
 	})
 }
 
+func TestTeeRuntime_Rand(t *testing.T) {
+	t.Run("uses node-mode randomness", func(t *testing.T) {
+		runtime := testutils.NewRuntime(t, nil)
+		runtime.SetRandomSource(rand.NewSource(1))
+		runtime.SetNodeRandomSource(rand.NewSource(42))
+
+		tee := sdkimpl.NewTeeRuntime(&runtime.Runtime)
+		r, err := tee.Rand()
+		require.NoError(t, err)
+
+		assert.Equal(t, rand.New(rand.NewSource(42)).Uint64(), r.Uint64())
+		assert.NotEqual(t, rand.New(rand.NewSource(1)).Uint64(), r.Uint64())
+	})
+
+	t.Run("does not consume or replace the DON-mode randomness", func(t *testing.T) {
+		runtime := testutils.NewRuntime(t, nil)
+		tee := sdkimpl.NewTeeRuntime(&runtime.Runtime)
+
+		_, err := tee.Rand()
+		require.NoError(t, err)
+
+		donR, err := runtime.Rand()
+		require.NoError(t, err)
+		assert.Equal(t, rand.New(rand.NewSource(123)).Uint64(), donR.Uint64())
+	})
+
+	t.Run("stays in DON mode after use", func(t *testing.T) {
+		runtime := testutils.NewRuntime(t, nil)
+		tee := sdkimpl.NewTeeRuntime(&runtime.Runtime)
+
+		_, err := tee.Rand()
+		require.NoError(t, err)
+		assert.Equal(t, sdk.Mode_MODE_DON, runtime.Mode)
+	})
+}
+
 func testRuntime[T any](t *testing.T, testFn func(config string, rt cre.Runtime, _ *basictrigger.Outputs) (T, error)) (any, error) {
 	runtime := testutils.NewRuntime(t, nil)
 	return testFn(anyEnvConfig, runtime, anyTrigger)
@@ -391,4 +427,30 @@ type awaitOverride struct {
 
 func (a *awaitOverride) Await(request *sdk.AwaitCapabilitiesRequest, maxResponseSize uint64) (*sdk.AwaitCapabilitiesResponse, error) {
 	return a.await(request, maxResponseSize)
+}
+
+// TestRuntime_CallCapability_NilRequest verifies that a nil request returns an
+// error promise instead of panicking on a nil-pointer dereference.
+func TestRuntime_CallCapability_NilRequest(t *testing.T) {
+	runtime := testutils.NewRuntime(t, nil)
+
+	assert.NotPanics(t, func() {
+		promise := runtime.CallCapability(nil)
+		_, err := promise.Await()
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "non-nil request")
+	})
+}
+
+// TestRuntime_GetSecret_NilRequest verifies that a nil request returns an
+// error promise instead of panicking on a nil-pointer dereference.
+func TestRuntime_GetSecret_NilRequest(t *testing.T) {
+	runtime := testutils.NewRuntime(t, nil)
+
+	assert.NotPanics(t, func() {
+		promise := runtime.GetSecret(nil)
+		_, err := promise.Await()
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "non-nil request")
+	})
 }
