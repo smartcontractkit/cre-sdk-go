@@ -167,6 +167,14 @@ func (m mockNodeRuntime) IsNodeRuntime() {}
 
 type mockRuntime struct{}
 
+func (m *mockRuntime) ExecutionMetadata() WorkflowExecutionMetadata {
+	return WorkflowExecutionMetadata{}
+}
+
+func (m mockNodeRuntime) ExecutionMetadata() WorkflowExecutionMetadata {
+	return WorkflowExecutionMetadata{}
+}
+
 func (m *mockRuntime) GetSecret(_ *SecretRequest) Promise[*Secret] {
 	panic("unused in tests")
 }

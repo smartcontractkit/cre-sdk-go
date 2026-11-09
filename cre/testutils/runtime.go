@@ -63,6 +63,11 @@ type TestRuntime struct {
 
 var _ cre.Runtime = (*TestRuntime)(nil)
 
+// SetExecutionMetadata sets the workflow execution metadata exposed by all runtime modes.
+func (t *TestRuntime) SetExecutionMetadata(executionMetadata cre.WorkflowExecutionMetadata) {
+	t.ExecutionMeta = executionMetadata
+}
+
 // GetLogs returns a copy of all logs written to the TestRuntime's logger.
 func (t *TestRuntime) GetLogs() [][]byte {
 	logs := make([][]byte, len(t.testWriter.logs))
