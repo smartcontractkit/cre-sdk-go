@@ -79,9 +79,10 @@ func (r *RuntimeBase) SetExecutionRequest(request *sdk.ExecuteRequest) {
 }
 
 var (
-	_ cre.RuntimeBase = (*RuntimeBase)(nil)
-	_ rand.Source     = (*RuntimeBase)(nil)
-	_ rand.Source64   = (*RuntimeBase)(nil)
+	_ cre.RuntimeBase               = (*RuntimeBase)(nil)
+	_ cre.ExecutionMetadataProvider = (*RuntimeBase)(nil)
+	_ rand.Source                   = (*RuntimeBase)(nil)
+	_ rand.Source64                 = (*RuntimeBase)(nil)
 )
 
 func (r *RuntimeBase) CallCapability(request *sdk.CapabilityRequest) cre.Promise[*sdk.CapabilityResponse] {
@@ -302,6 +303,8 @@ type TeeRuntime struct {
 }
 
 var _ cre.TeeRuntime = &TeeRuntime{}
+
+var _ cre.ExecutionMetadataProvider = (*TeeRuntime)(nil)
 
 func NewTeeRuntime(don *Runtime) *TeeRuntime {
 	return &TeeRuntime{don: don}

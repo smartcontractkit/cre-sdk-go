@@ -36,20 +36,14 @@ func TestTeeRuntime_ExecutionMetadataMatchesDON(t *testing.T) {
 	don := &sdkimpl.Runtime{RuntimeBase: sdkimpl.RuntimeBase{ExecutionMeta: want}}
 	tee := sdkimpl.NewTeeRuntime(don)
 
-	require.Equal(t, want, tee.ExecutionMetadata())
+	require.Equal(t, want, cre.ExecutionMetadata(tee))
+	require.Equal(t, want, cre.ExecutionMetadata(tee.UsingTheDons()))
 	require.Same(t, don, tee.UsingTheDons())
 }
 
 func TestRuntime_ExecutionMetadataDefaultsToZero(t *testing.T) {
 	var rt sdkimpl.RuntimeBase
 	require.Zero(t, rt.ExecutionMetadata())
-}
-
-func TestRuntime_SetExecutionMetadata(t *testing.T) {
-	rt := testutils.NewRuntime(t, nil)
-	want := metadataValueFixture()
-	rt.SetExecutionMetadata(want)
-	require.Equal(t, want, rt.ExecutionMetadata())
 }
 
 func TestNodeRuntime_ExecutionMetadataMatchesDON(t *testing.T) {
@@ -60,20 +54,35 @@ func TestNodeRuntime_ExecutionMetadataMatchesDON(t *testing.T) {
 
 	// The node callback runs synchronously; this test does not await consensus.
 	rt.RunInNodeMode(func(node cre.NodeRuntime) *sdk.SimpleConsensusInputs {
-		observed = node.ExecutionMetadata()
+		observed = cre.ExecutionMetadata(node)
 		return &sdk.SimpleConsensusInputs{}
 	})
 
 	require.Equal(t, want, observed)
-	require.Equal(t, want, rt.ExecutionMetadata())
+	require.Equal(t, want, cre.ExecutionMetadata(rt))
 }
 
 func TestRuntime_SetExecutionRequestMapsMetadata(t *testing.T) {
-	var rt sdkimpl.RuntimeBase
-	rt.SetExecutionRequest(metadataRequestFixture())
+	for _, tc := range []struct {
+		name string
+		f    uint32
+	}{
+		{name: "fault tolerant DON", f: 3},
+		{name: "zero fault tolerance", f: 0},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			request := metadataRequestFixture()
+			request.ExecutionMetadata.DonF = tc.f
+			want := metadataValueFixture()
+			want.DonF = tc.f
+			var rt sdkimpl.RuntimeBase
 
-	require.Equal(t, metadataValueFixture(), rt.ExecutionMetadata())
-	require.Equal(t, uint64(2048), rt.MaxResponseSize)
+			rt.SetExecutionRequest(request)
+
+			require.Equal(t, want, rt.ExecutionMetadata())
+			require.Equal(t, uint64(2048), rt.MaxResponseSize)
+		})
+	}
 }
 
 func TestRuntime_SetExecutionRequestMissingMetadataClearsPreviousValues(t *testing.T) {
@@ -95,17 +104,6 @@ func TestRuntime_SetExecutionRequestMissingMetadataClearsPreviousValues(t *testi
 			require.Equal(t, tc.wantMaxResponseSize, rt.MaxResponseSize)
 		})
 	}
-}
-
-func TestRuntime_SetExecutionRequestPreservesZeroF(t *testing.T) {
-	request := metadataRequestFixture()
-	request.ExecutionMetadata.DonF = 0
-	want := metadataValueFixture()
-	want.DonF = 0
-	var rt sdkimpl.RuntimeBase
-	rt.SetExecutionRequest(request)
-
-	require.Equal(t, want, rt.ExecutionMetadata())
 }
 
 func TestRuntime_SetExecutionRequestCopiesSourceMetadata(t *testing.T) {

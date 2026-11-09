@@ -25,9 +25,6 @@ const DefaultSecretNamespace = "main"
 // is intentionally unsynchronized. Concurrent access from multiple goroutines
 // would race on that state and is unsupported by design.
 type RuntimeBase interface {
-	// ExecutionMetadata returns a copy of the workflow execution metadata.
-	ExecutionMetadata() WorkflowExecutionMetadata
-
 	// CallCapability is meant to be called by generated code
 	CallCapability(request *sdk.CapabilityRequest) Promise[*sdk.CapabilityResponse]
 

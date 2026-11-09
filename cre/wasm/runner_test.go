@@ -521,39 +521,51 @@ const (
 	metadataOwnerFixture       = "5366890c26e8737b89d9084b4c632f7de73d1674"
 )
 
-var runnerMetadataFixture = &sdk.WorkflowExecutionMetadata{
-	WorkflowId: metadataWorkflowIDFixture, ExecutionId: metadataExecutionIDFixture, WorkflowOwner: metadataOwnerFixture, DonId: 17, DonF: 3,
+func runnerMetadataFixture() *sdk.WorkflowExecutionMetadata {
+	return &sdk.WorkflowExecutionMetadata{
+		WorkflowId:    metadataWorkflowIDFixture,
+		ExecutionId:   metadataExecutionIDFixture,
+		WorkflowOwner: metadataOwnerFixture,
+		DonId:         17,
+		DonF:          3,
+	}
 }
 
-var runnerMetadataWant = cre.WorkflowExecutionMetadata{
-	WorkflowID: metadataWorkflowIDFixture, ExecutionID: metadataExecutionIDFixture, WorkflowOwner: metadataOwnerFixture, DonID: 17, DonF: 3,
+func runnerMetadataWant() cre.WorkflowExecutionMetadata {
+	return cre.WorkflowExecutionMetadata{
+		WorkflowID:    metadataWorkflowIDFixture,
+		ExecutionID:   metadataExecutionIDFixture,
+		WorkflowOwner: metadataOwnerFixture,
+		DonID:         17,
+		DonF:          3,
+	}
 }
 
 func TestRunner_SubscribeExecutionMetadata(t *testing.T) {
 	request := proto.Clone(subscribeRequest).(*sdk.ExecuteRequest)
-	request.ExecutionMetadata = proto.Clone(runnerMetadataFixture).(*sdk.WorkflowExecutionMetadata)
+	request.ExecutionMetadata = runnerMetadataFixture()
 	request.ExecutionMetadata.ExecutionId = ""
-	want := runnerMetadataWant
+	want := runnerMetadataWant()
 	want.ExecutionID = ""
 
 	dr := getTestRunner(t, request).(runnerWrapper[string])
 	subscriber := dr.baseRunner.(*subscriber[string, cre.Runtime])
 	runtime := subscriber.sp.(cre.Runtime)
-	require.Equal(t, want, runtime.ExecutionMetadata())
+	require.Equal(t, want, cre.ExecutionMetadata(runtime))
 }
 
 func TestRunner_TriggerExecutionMetadata(t *testing.T) {
 	request := proto.Clone(anyExecuteRequest).(*sdk.ExecuteRequest)
-	request.ExecutionMetadata = proto.Clone(runnerMetadataFixture).(*sdk.WorkflowExecutionMetadata)
+	request.ExecutionMetadata = runnerMetadataFixture()
 
 	dr := getTestRunner(t, request).(runnerWrapper[string])
 	runner := dr.baseRunner.(*runner[string, cre.Runtime])
-	require.Equal(t, runnerMetadataWant, runner.runtime.ExecutionMetadata())
+	require.Equal(t, runnerMetadataWant(), cre.ExecutionMetadata(runner.runtime))
 }
 
 func TestRunner_PreHookInitializesExecutionMetadata(t *testing.T) {
 	request := proto.Clone(anyPreHookRequest).(*sdk.ExecuteRequest)
-	request.ExecutionMetadata = proto.Clone(runnerMetadataFixture).(*sdk.WorkflowExecutionMetadata)
+	request.ExecutionMetadata = runnerMetadataFixture()
 	internals := testRunnerInternals(t, request)
 	var runtime sdkimpl.RuntimeBase
 	preHook := &preHookRunner[string, cre.Runtime]{setRuntime: runtime.SetExecutionRequest}
@@ -566,5 +578,5 @@ func TestRunner_PreHookInitializesExecutionMetadata(t *testing.T) {
 	)
 
 	require.Same(t, preHook, selected)
-	require.Equal(t, runnerMetadataWant, runtime.ExecutionMetadata())
+	require.Equal(t, runnerMetadataWant(), runtime.ExecutionMetadata())
 }

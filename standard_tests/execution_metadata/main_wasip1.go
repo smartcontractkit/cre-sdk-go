@@ -25,5 +25,5 @@ func initWorkflow([]byte, *slog.Logger, cre.SecretsProvider) (cre.Workflow[[]byt
 }
 
 func readExecutionMetadata(_ []byte, runtime cre.Runtime, _ *basictrigger.Outputs) (cre.WorkflowExecutionMetadata, error) {
-	return runtime.ExecutionMetadata(), nil
+	return cre.ExecutionMetadata(runtime), nil
 }
