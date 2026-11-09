@@ -19,6 +19,14 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestRuntime_ExecutionMetadataDefaultsToZero(t *testing.T) {
+	runtime := testutils.NewRuntime(t, nil)
+
+	executionMetadata := runtime.ExecutionMetadata()
+
+	require.Equal(t, cre.WorkflowExecutionMetadata{}, executionMetadata)
+}
+
 func TestRuntime_CallCapability(t *testing.T) {
 	t.Run("response too large", func(t *testing.T) {
 		action, err := basicactionmock.NewBasicActionCapability(t)
