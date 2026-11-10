@@ -24,6 +24,7 @@ type ID string
 type Secrets map[Namespace]map[ID]string
 
 // NewRuntime creates a new TestRuntime for use in tests.
+// Execution metadata defaults to zero/empty (not nil) values until SetExecutionMetadata is called.
 // A nil Secrets map is treated as an empty map, but entries cannot be added later.
 // The secrets map is used directly by the TestRuntime; changes to entries will be reflected in subsequent calls to GetSecret.
 func NewRuntime(tb testing.TB, secrets Secrets) *TestRuntime {
@@ -62,6 +63,11 @@ type TestRuntime struct {
 }
 
 var _ cre.Runtime = (*TestRuntime)(nil)
+
+// SetExecutionMetadata sets the workflow execution metadata exposed by all runtime modes.
+func (t *TestRuntime) SetExecutionMetadata(executionMetadata cre.WorkflowExecutionMetadata) {
+	t.ExecutionMeta = executionMetadata
+}
 
 // GetLogs returns a copy of all logs written to the TestRuntime's logger.
 func (t *TestRuntime) GetLogs() [][]byte {

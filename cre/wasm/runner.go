@@ -28,8 +28,8 @@ func newRunner[C Config](parse func(configBytes []byte) (C, error), runnerIntern
 	runnerInternals.versionV2()
 	runnerInternals.switchModes(int32(sdk.Mode_MODE_DON))
 	drt := &sdkimpl.Runtime{RuntimeBase: newRuntime(runtimeInternals, sdk.Mode_MODE_DON)}
-	setRuntime := func(maxResponseSize uint64) {
-		drt.MaxResponseSize = maxResponseSize
+	setRuntime := func(request *sdk.ExecuteRequest) {
+		drt.RuntimeBase.SetExecutionRequest(request)
 	}
 	return runnerWrapper[C]{
 		baseRunner: getRunner(
@@ -60,7 +60,7 @@ type runner[C, T any] struct {
 	id            string
 	runtime       T
 	switchRuntime T
-	setRuntime    func(maxResponseSize uint64)
+	setRuntime    func(request *sdk.ExecuteRequest)
 	config        C
 	sp            cre.SecretsProvider
 }
@@ -104,7 +104,7 @@ type subscriber[C, T any] struct {
 	id         string
 	config     C
 	sp         cre.SecretsProvider
-	setRuntime func(maxResponseSize uint64)
+	setRuntime func(request *sdk.ExecuteRequest)
 }
 
 var _ baseRunner[any, cre.Runtime] = &subscriber[any, cre.Runtime]{}
@@ -155,7 +155,7 @@ type preHookRunner[C, T any] struct {
 	trigger    *sdk.Trigger
 	config     C
 	sp         cre.SecretsProvider
-	setRuntime func(maxResponseSize uint64)
+	setRuntime func(request *sdk.ExecuteRequest)
 }
 
 var _ baseRunner[any, cre.Runtime] = (*preHookRunner[any, cre.Runtime])(nil)
@@ -227,17 +227,17 @@ func getRunner[C, T any](parse func(configBytes []byte) (C, error), subscribe *s
 	switch req := execRequest.Request.(type) {
 	case *sdk.ExecuteRequest_Subscribe:
 		subscribe.config = c
-		subscribe.setRuntime(execRequest.MaxResponseSize)
+		subscribe.setRuntime(execRequest)
 		return subscribe
 	case *sdk.ExecuteRequest_Trigger:
 		run.trigger = req.Trigger
 		run.config = c
-		run.setRuntime(execRequest.MaxResponseSize)
+		run.setRuntime(execRequest)
 		return run
 	case *sdk.ExecuteRequest_PreHook:
 		preHook.trigger = req.PreHook
 		preHook.config = c
-		preHook.setRuntime(execRequest.MaxResponseSize)
+		preHook.setRuntime(execRequest)
 		return preHook
 	}
 

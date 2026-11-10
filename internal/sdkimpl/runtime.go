@@ -35,6 +35,7 @@ type RuntimeHelpers interface {
 // call ID counter (nextCallId) and mode state (modeErr, Mode) are intentionally
 // unsynchronized. Concurrent access would race on that state.
 type RuntimeBase struct {
+	ExecutionMeta   cre.WorkflowExecutionMetadata
 	MaxResponseSize uint64
 	RuntimeHelpers
 	Lggr *slog.Logger
@@ -59,10 +60,29 @@ func (r *RuntimeBase) Logger() *slog.Logger {
 	return r.Lggr
 }
 
+func (r *RuntimeBase) ExecutionMetadata() cre.WorkflowExecutionMetadata {
+	return r.ExecutionMeta
+}
+
+// SetExecutionRequest initializes the runtime from a host invocation, clearing
+// metadata when an older host does not supply it.
+func (r *RuntimeBase) SetExecutionRequest(request *sdk.ExecuteRequest) {
+	r.MaxResponseSize = request.GetMaxResponseSize()
+	metadata := request.GetExecutionMetadata()
+	r.ExecutionMeta = cre.WorkflowExecutionMetadata{
+		WorkflowID:    metadata.GetWorkflowId(),
+		ExecutionID:   metadata.GetExecutionId(),
+		WorkflowOwner: metadata.GetWorkflowOwner(),
+		DonID:         metadata.GetDonId(),
+		DonF:          metadata.GetDonF(),
+	}
+}
+
 var (
-	_ cre.RuntimeBase = (*RuntimeBase)(nil)
-	_ rand.Source     = (*RuntimeBase)(nil)
-	_ rand.Source64   = (*RuntimeBase)(nil)
+	_ cre.RuntimeBase               = (*RuntimeBase)(nil)
+	_ cre.ExecutionMetadataProvider = (*RuntimeBase)(nil)
+	_ rand.Source                   = (*RuntimeBase)(nil)
+	_ rand.Source64                 = (*RuntimeBase)(nil)
 )
 
 func (r *RuntimeBase) CallCapability(request *sdk.CapabilityRequest) cre.Promise[*sdk.CapabilityResponse] {
@@ -284,6 +304,8 @@ type TeeRuntime struct {
 
 var _ cre.TeeRuntime = &TeeRuntime{}
 
+var _ cre.ExecutionMetadataProvider = (*TeeRuntime)(nil)
+
 func NewTeeRuntime(don *Runtime) *TeeRuntime {
 	return &TeeRuntime{don: don}
 }
@@ -310,6 +332,10 @@ func (t *TeeRuntime) Now() time.Time {
 
 func (t *TeeRuntime) Logger() *slog.Logger {
 	return t.don.Logger()
+}
+
+func (t *TeeRuntime) ExecutionMetadata() cre.WorkflowExecutionMetadata {
+	return t.don.ExecutionMetadata()
 }
 
 func (t *TeeRuntime) GetSecret(req *sdk.SecretRequest) cre.Promise[*sdk.Secret] {
