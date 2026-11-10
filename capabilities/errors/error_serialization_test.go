@@ -23,6 +23,22 @@ func capabilityErrorsEqual(a, b caperrs.Error) bool {
 		a.Error() == b.Error()
 }
 
+func TestObservationErrorsCode(t *testing.T) {
+	require.Equal(t, caperrs.ErrorCode(103), caperrs.ObservationErrors)
+	require.Equal(t, "ObservationErrors", caperrs.ObservationErrors.String())
+}
+
+func TestDeserializeErrorFromStringObservationErrors(t *testing.T) {
+	serialized := "Public:System:ObservationErrors:consensus failed because f+1 nodes reported errors"
+
+	err := requireCapabilityError(t, caperrs.DeserializeErrorFromString(serialized))
+
+	require.Equal(t, caperrs.ObservationErrors, err.Code())
+	require.Equal(t, caperrs.VisibilityPublic, err.Visibility())
+	require.Equal(t, caperrs.OriginSystem, err.Origin())
+	require.EqualError(t, err, "[103]ObservationErrors: consensus failed because f+1 nodes reported errors")
+}
+
 // TestDeserializeErrorFromStringInvalidFields verifies that DeserializeErrorFromString can handle invalid visibility,
 // origin, and error code fields gracefully, preserving unrecognized tokens as typed sentinel values (-1) and still
 // returning a capability error when the format is correct. This ensures backwards compatibility for any new values

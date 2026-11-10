@@ -19,6 +19,42 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestRuntime_ExecutionMetadataDefaultsToZero(t *testing.T) {
+	runtime := testutils.NewRuntime(t, nil)
+
+	executionMetadata := cre.ExecutionMetadata(runtime)
+
+	require.Equal(t, cre.WorkflowExecutionMetadata{}, executionMetadata)
+}
+
+func TestRuntime_SetExecutionMetadata(t *testing.T) {
+	metadata := cre.WorkflowExecutionMetadata{
+		WorkflowID:    "0020350fb4f89856a031268826d6e9b9340996637aa27859baa7b07db58bb020",
+		ExecutionID:   "9f38bdece8892b3452c401a7a2d5a170f078ab9b2c98c591e24028ce94b33ed2",
+		WorkflowOwner: "5366890c26e8737b89d9084b4c632f7de73d1674",
+		DonID:         17,
+		DonF:          3,
+	}
+	for _, tc := range []struct {
+		name     string
+		metadata cre.WorkflowExecutionMetadata
+	}{
+		{name: "replace", metadata: metadata},
+		{name: "clear"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			runtime := testutils.NewRuntime(t, nil)
+			previous := metadata
+			previous.WorkflowID = "0052457bc477e58cad894372b8a80d1f0b03322c8a070d93bcf9bbd1f21cbd09"
+			runtime.SetExecutionMetadata(previous)
+
+			runtime.SetExecutionMetadata(tc.metadata)
+
+			require.Equal(t, tc.metadata, cre.ExecutionMetadata(runtime))
+		})
+	}
+}
+
 func TestRuntime_CallCapability(t *testing.T) {
 	t.Run("response too large", func(t *testing.T) {
 		action, err := basicactionmock.NewBasicActionCapability(t)
