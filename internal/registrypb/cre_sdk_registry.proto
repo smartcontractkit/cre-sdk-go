@@ -3,6 +3,8 @@ syntax = "proto3";
 // Wire-compatible subset of chainlink-common pkg/capabilities/pb/registry.proto, containing only the fields
 // needed to read a DON's OCR3 signers from the capabilities registry. Field numbers must match the original.
 // The package name differs from the original so both can be linked into the same binary.
+// The file name also differs: the protobuf registry requires globally unique file paths, and the original registers
+// as "registry.proto", so reusing that name panics at init in any binary that links both (e.g. the chainlink node).
 package cre.sdk.internal.registry;
 
 option go_package = "github.com/smartcontractkit/cre-sdk-go/internal/registrypb";
