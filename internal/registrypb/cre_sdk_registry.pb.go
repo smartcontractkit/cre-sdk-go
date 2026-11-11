@@ -2,11 +2,13 @@
 // versions:
 // 	protoc-gen-go v1.36.11
 // 	protoc        v5.29.3
-// source: registry.proto
+// source: cre_sdk_registry.proto
 
 // Wire-compatible subset of chainlink-common pkg/capabilities/pb/registry.proto, containing only the fields
 // needed to read a DON's OCR3 signers from the capabilities registry. Field numbers must match the original.
 // The package name differs from the original so both can be linked into the same binary.
+// The file name also differs: the protobuf registry requires globally unique file paths, and the original registers
+// as "registry.proto", so reusing that name panics at init in any binary that links both (e.g. the chainlink node).
 
 package registrypb
 
@@ -34,7 +36,7 @@ type OCR3Config struct {
 
 func (x *OCR3Config) Reset() {
 	*x = OCR3Config{}
-	mi := &file_registry_proto_msgTypes[0]
+	mi := &file_cre_sdk_registry_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -46,7 +48,7 @@ func (x *OCR3Config) String() string {
 func (*OCR3Config) ProtoMessage() {}
 
 func (x *OCR3Config) ProtoReflect() protoreflect.Message {
-	mi := &file_registry_proto_msgTypes[0]
+	mi := &file_cre_sdk_registry_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -59,7 +61,7 @@ func (x *OCR3Config) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OCR3Config.ProtoReflect.Descriptor instead.
 func (*OCR3Config) Descriptor() ([]byte, []int) {
-	return file_registry_proto_rawDescGZIP(), []int{0}
+	return file_cre_sdk_registry_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *OCR3Config) GetSigners() [][]byte {
@@ -78,7 +80,7 @@ type CapabilityConfig struct {
 
 func (x *CapabilityConfig) Reset() {
 	*x = CapabilityConfig{}
-	mi := &file_registry_proto_msgTypes[1]
+	mi := &file_cre_sdk_registry_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -90,7 +92,7 @@ func (x *CapabilityConfig) String() string {
 func (*CapabilityConfig) ProtoMessage() {}
 
 func (x *CapabilityConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_registry_proto_msgTypes[1]
+	mi := &file_cre_sdk_registry_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -103,7 +105,7 @@ func (x *CapabilityConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CapabilityConfig.ProtoReflect.Descriptor instead.
 func (*CapabilityConfig) Descriptor() ([]byte, []int) {
-	return file_registry_proto_rawDescGZIP(), []int{1}
+	return file_cre_sdk_registry_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *CapabilityConfig) GetOcr3Configs() map[string]*OCR3Config {
@@ -113,11 +115,11 @@ func (x *CapabilityConfig) GetOcr3Configs() map[string]*OCR3Config {
 	return nil
 }
 
-var File_registry_proto protoreflect.FileDescriptor
+var File_cre_sdk_registry_proto protoreflect.FileDescriptor
 
-const file_registry_proto_rawDesc = "" +
+const file_cre_sdk_registry_proto_rawDesc = "" +
 	"\n" +
-	"\x0eregistry.proto\x12\x19cre.sdk.internal.registry\"&\n" +
+	"\x16cre_sdk_registry.proto\x12\x19cre.sdk.internal.registry\"&\n" +
 	"\n" +
 	"OCR3Config\x12\x18\n" +
 	"\asigners\x18\x01 \x03(\fR\asigners\"\xda\x01\n" +
@@ -128,24 +130,24 @@ const file_registry_proto_rawDesc = "" +
 	"\x05value\x18\x02 \x01(\v2%.cre.sdk.internal.registry.OCR3ConfigR\x05value:\x028\x01B<Z:github.com/smartcontractkit/cre-sdk-go/internal/registrypbb\x06proto3"
 
 var (
-	file_registry_proto_rawDescOnce sync.Once
-	file_registry_proto_rawDescData []byte
+	file_cre_sdk_registry_proto_rawDescOnce sync.Once
+	file_cre_sdk_registry_proto_rawDescData []byte
 )
 
-func file_registry_proto_rawDescGZIP() []byte {
-	file_registry_proto_rawDescOnce.Do(func() {
-		file_registry_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_registry_proto_rawDesc), len(file_registry_proto_rawDesc)))
+func file_cre_sdk_registry_proto_rawDescGZIP() []byte {
+	file_cre_sdk_registry_proto_rawDescOnce.Do(func() {
+		file_cre_sdk_registry_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_cre_sdk_registry_proto_rawDesc), len(file_cre_sdk_registry_proto_rawDesc)))
 	})
-	return file_registry_proto_rawDescData
+	return file_cre_sdk_registry_proto_rawDescData
 }
 
-var file_registry_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
-var file_registry_proto_goTypes = []any{
+var file_cre_sdk_registry_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_cre_sdk_registry_proto_goTypes = []any{
 	(*OCR3Config)(nil),       // 0: cre.sdk.internal.registry.OCR3Config
 	(*CapabilityConfig)(nil), // 1: cre.sdk.internal.registry.CapabilityConfig
 	nil,                      // 2: cre.sdk.internal.registry.CapabilityConfig.Ocr3ConfigsEntry
 }
-var file_registry_proto_depIdxs = []int32{
+var file_cre_sdk_registry_proto_depIdxs = []int32{
 	2, // 0: cre.sdk.internal.registry.CapabilityConfig.ocr3_configs:type_name -> cre.sdk.internal.registry.CapabilityConfig.Ocr3ConfigsEntry
 	0, // 1: cre.sdk.internal.registry.CapabilityConfig.Ocr3ConfigsEntry.value:type_name -> cre.sdk.internal.registry.OCR3Config
 	2, // [2:2] is the sub-list for method output_type
@@ -155,26 +157,26 @@ var file_registry_proto_depIdxs = []int32{
 	0, // [0:2] is the sub-list for field type_name
 }
 
-func init() { file_registry_proto_init() }
-func file_registry_proto_init() {
-	if File_registry_proto != nil {
+func init() { file_cre_sdk_registry_proto_init() }
+func file_cre_sdk_registry_proto_init() {
+	if File_cre_sdk_registry_proto != nil {
 		return
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_registry_proto_rawDesc), len(file_registry_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_cre_sdk_registry_proto_rawDesc), len(file_cre_sdk_registry_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   3,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
-		GoTypes:           file_registry_proto_goTypes,
-		DependencyIndexes: file_registry_proto_depIdxs,
-		MessageInfos:      file_registry_proto_msgTypes,
+		GoTypes:           file_cre_sdk_registry_proto_goTypes,
+		DependencyIndexes: file_cre_sdk_registry_proto_depIdxs,
+		MessageInfos:      file_cre_sdk_registry_proto_msgTypes,
 	}.Build()
-	File_registry_proto = out.File
-	file_registry_proto_goTypes = nil
-	file_registry_proto_depIdxs = nil
+	File_cre_sdk_registry_proto = out.File
+	file_cre_sdk_registry_proto_goTypes = nil
+	file_cre_sdk_registry_proto_depIdxs = nil
 }
