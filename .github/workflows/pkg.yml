@@ -16,8 +16,8 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
         with:
-          # Highest go directive across all modules; the generator module requires 1.26.2.
-          go-version-file: "generator/protoc-gen-cre/go.mod"
+          # Highest go directive across all modules; cron's generator requires what the capabilities repo's libs does.
+          go-version-file: "capabilities/scheduler/cron/generate/go.mod"
 
       - name: Unit tests
         run: make test
@@ -51,8 +51,8 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
         with:
-          # Highest go directive across all modules; the generator module requires 1.26.2.
-          go-version-file: "generator/protoc-gen-cre/go.mod"
+          # Highest go directive across all modules; cron's generator requires what the capabilities repo's libs does.
+          go-version-file: "capabilities/scheduler/cron/generate/go.mod"
       - name: Ensure "make gomodtidy" has been run
         run: |
           make gomodtidy

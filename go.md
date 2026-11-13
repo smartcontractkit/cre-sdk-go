@@ -2,6 +2,9 @@
 ```mermaid
 flowchart LR
 
+	capabilities/libs --> chainlink-common
+	capabilities/libs --> chainlink-common/x/config
+	click capabilities/libs href "https://github.com/smartcontractkit/capabilities"
 	chain-selectors
 	click chain-selectors href "https://github.com/smartcontractkit/chain-selectors"
 	chainlink-common --> chainlink-common/pkg/chipingress
@@ -18,6 +21,8 @@ flowchart LR
 	click chainlink-common href "https://github.com/smartcontractkit/chainlink-common"
 	chainlink-common/pkg/chipingress
 	click chainlink-common/pkg/chipingress href "https://github.com/smartcontractkit/chainlink-common"
+	chainlink-common/x/config
+	click chainlink-common/x/config href "https://github.com/smartcontractkit/chainlink-common"
 	chainlink-protos/billing/go
 	click chainlink-protos/billing/go href "https://github.com/smartcontractkit/chainlink-protos"
 	chainlink-protos/cre/go --> chain-selectors
@@ -46,8 +51,12 @@ flowchart LR
 	click cre-sdk-go/capabilities/networking/confidentialhttp href "https://github.com/smartcontractkit/cre-sdk-go"
 	cre-sdk-go/capabilities/networking/http --> cre-sdk-go
 	click cre-sdk-go/capabilities/networking/http href "https://github.com/smartcontractkit/cre-sdk-go"
+	cre-sdk-go/capabilities/scheduler/cron --> capabilities/libs
 	cre-sdk-go/capabilities/scheduler/cron --> cre-sdk-go
 	click cre-sdk-go/capabilities/scheduler/cron href "https://github.com/smartcontractkit/cre-sdk-go"
+	cre-sdk-go/capabilities/scheduler/cron/generate --> capabilities/libs
+	cre-sdk-go/capabilities/scheduler/cron/generate --> cre-sdk-go
+	click cre-sdk-go/capabilities/scheduler/cron/generate href "https://github.com/smartcontractkit/cre-sdk-go"
 	cre-sdk-go/generator/protoc-gen-cre --> chainlink-common
 	click cre-sdk-go/generator/protoc-gen-cre href "https://github.com/smartcontractkit/cre-sdk-go"
 	freeport
@@ -60,6 +69,7 @@ flowchart LR
 	subgraph chainlink-common-repo[chainlink-common]
 		 chainlink-common
 		 chainlink-common/pkg/chipingress
+		 chainlink-common/x/config
 	end
 	click chainlink-common-repo href "https://github.com/smartcontractkit/chainlink-common"
 
@@ -83,6 +93,7 @@ flowchart LR
 		 cre-sdk-go/capabilities/networking/confidentialhttp
 		 cre-sdk-go/capabilities/networking/http
 		 cre-sdk-go/capabilities/scheduler/cron
+		 cre-sdk-go/capabilities/scheduler/cron/generate
 		 cre-sdk-go/generator/protoc-gen-cre
 	end
 	click cre-sdk-go-repo href "https://github.com/smartcontractkit/cre-sdk-go"
