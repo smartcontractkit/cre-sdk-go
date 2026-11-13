@@ -22,6 +22,15 @@ func NewGeneratorAndInstallToolsForSdk() (*pkg.ProtocGen, error) {
 	return newGeneratorAndInstallTools(buildProtocGenLocally)
 }
 
+// InstallPluginForCapability builds the protoc-gen-cre of the SDK version the capability module in the current
+// directory requires, or of its local replace, into .tools, returning its path.
+func InstallPluginForCapability() (string, error) {
+	if err := installFromMod(); err != nil {
+		return "", err
+	}
+	return filepath.Abs(filepath.Join(".tools", "protoc-gen-cre"))
+}
+
 func newGeneratorAndInstallTools(install func() error) (*pkg.ProtocGen, error) {
 	if err := install(); err != nil {
 		return nil, err
