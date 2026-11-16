@@ -15,7 +15,11 @@ install-protoc:
 PROTOFETCH_VERSION := 0.1.21
 .PHONY: install-protofetch
 install-protofetch:
-	protofetch --version | grep -qx "protofetch $(PROTOFETCH_VERSION)" || cargo install protofetch --version $(PROTOFETCH_VERSION) --locked
+	script/install-protofetch.sh $(PROTOFETCH_VERSION)
+
+# protofetch fetches the public protos over https, which needs no SSH agent; set PROTOFETCH_GIT_PROTOCOL=ssh to
+# prefer it.
+export PROTOFETCH_GIT_PROTOCOL ?= https
 
 .PHONY: generate
 generate: install-protoc install-protofetch gomods modgraph
