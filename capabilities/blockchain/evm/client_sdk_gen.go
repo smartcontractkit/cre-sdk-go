@@ -467,6 +467,8 @@ const BinanceSmartChainMainnet = 11344663589394136015
 
 const BinanceSmartChainTestnet = 13264668187771770619
 
+const BitcoinTestnetSepoliaBob1 = 5535534526963509396
+
 const CeloMainnet = 1346049177634351622
 
 const CeloSepolia = 3761762704474186180
@@ -599,6 +601,8 @@ func ChainSelectorFromName(name string) (uint64, error) {
 		return BinanceSmartChainMainnet, nil
 	case "binance_smart_chain-testnet":
 		return BinanceSmartChainTestnet, nil
+	case "bitcoin-testnet-sepolia-bob-1":
+		return BitcoinTestnetSepoliaBob1, nil
 	case "celo-mainnet":
 		return CeloMainnet, nil
 	case "celo-sepolia":
