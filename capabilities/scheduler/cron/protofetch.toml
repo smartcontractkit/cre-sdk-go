@@ -1,0 +1,12 @@
+name = "scheduler-cron"
+description = "Protos the cron capability's SDK is generated from"
+proto_out_dir = ".deps"
+
+# The revision is the commit of what generate/go.mod requires of the capabilities repo's libs: generating keeps it
+# there. The releases the SDK generates from are in the production directory, at their versioned path, which never
+# changes. The base protos come with them, at the commit the capabilities repo pins, which go.mod's
+# chainlink-protos/cre/go follows.
+[capabilities]
+url = "github.com/smartcontractkit/capabilities"
+revision = "43bd476ce739561ae9473279d6461ccbece81a90"
+content_roots = ["/scheduler/cron/protos/production/capabilities/scheduler/cron/v1"]
